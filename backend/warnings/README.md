@@ -1,7 +1,7 @@
-# Scam warning notifier (Twilio)
+# Scam warning notifier (Textbelt)
 
 Turns the scam detector's output into **severity-tiered SMS warnings** that always
-deep-link to the site. This is the "Warnings (Twilio)" surface from the spec (§5).
+deep-link to the site. This is the "Warnings" surface from the spec (§5).
 
 It takes the fields the [`detector`](../detector) already emits — `notification_tier`,
 `reason`, `scam_confidence`, and an optional `scam_type` — plus a destination number,
@@ -13,15 +13,15 @@ and sends the right number of messages with tier-appropriate copy.
 | --- | --- |
 | `low` | Soft single SMS, **optional** — suppressed by default (`SEND_LOW_TIER=true` to enable). |
 | `medium` | One clear warning SMS + site link. |
-| `high` | **Repeated** texts (`HIGH_REPEAT_COUNT`, default 3); all copy redirects to the site. |
+| `high` | **Repeated** texts (`HIGH_REPEAT_COUNT`, default 3); all copy redirects to the site. Free Textbelt key is capped at **1 SMS/day**, so high-tier repeats are skipped. |
 
-Every message states a potential scam was flagged, gives the **specific reason**, and
-points to `SITE_URL`.
+Every message states a potential scam was flagged and gives the **specific reason**.
+Links are omitted: Textbelt rejects URLs in SMS.
 
 ## Dry-run mode
 
-If any Twilio credential is missing, the service runs in **dry-run**: it builds the exact
-SMS copy and returns it without contacting Twilio. This keeps the demo working without
+If `TEXTBELT_KEY` is missing, the service runs in **dry-run**: it builds the exact
+SMS copy and returns it without contacting Textbelt. This keeps the demo working without
 live SMS or opt-in, which the spec flags as a real constraint. `dry_run: true` in the
 response tells you nothing was actually sent.
 
@@ -32,7 +32,7 @@ cd backend/warnings
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env   # optional: fill in Twilio creds, else dry-run
+cp .env.example .env   # optional: TEXTBELT_KEY=textbelt for the free daily SMS, else dry-run
 uvicorn app:app --reload --port 8002
 ```
 
@@ -54,10 +54,13 @@ Response includes the final `body`, `messages_sent`, `dry_run`, and per-message 
 
 | Var | Default | Notes |
 | --- | --- | --- |
-| `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_FROM_NUMBER` | empty | All three required to actually send; else dry-run. |
-| `SITE_URL` | `https://wehatescammers.com` | The link every warning points to. |
+| `TEXTBELT_KEY` | empty | Required to actually send; else dry-run. Use `textbelt` for 1 free SMS/day. |
+| `SITE_URL` | `https://wehatescammers.com` | Kept for other surfaces. **Not** put in SMS — Textbelt rejects URLs. |
 | `SEND_LOW_TIER` | `false` | Enable the optional low-tier soft SMS. |
-| `HIGH_REPEAT_COUNT` | `3` | How many times the high tier repeats. |
+| `HIGH_REPEAT_COUNT` | `3` | How many times the high tier repeats (paid keys only). |
+
+When the detector runs `/v1/process` or `/v1/ingest`, put the same `TEXTBELT_KEY` in
+`backend/detector/.env` (uvicorn's cwd) so notify is not dry-run.
 
 ## Tests
 

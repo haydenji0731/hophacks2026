@@ -3,12 +3,16 @@ from __future__ import annotations
 from warn_config import Settings, settings
 from models import NotificationTier
 
-# Per-tier opener. Every warning still states a potential scam was flagged,
-# gives a specific reason, and points to the site (see build_body).
+# Copy is written as a text you'd actually receive.
 _TIER_OPENER = {
-    "low": "Heads up: this call/text has a few scam-like signs.",
-    "medium": "Warning: this looks like a likely scam.",
-    "high": "STOP - this is very likely a scam. Do not send money or share codes.",
+    "low": "Heads up — this call has a few scam-like signs",
+    "medium": "Warning — this call looks like a scam",
+    "high": "Urgent — this call is very likely a scam",
+}
+_TIER_CLOSE = {
+    "low": "",
+    "medium": "Don't send money.",
+    "high": "Do not send money or share codes.",
 }
 
 
@@ -40,18 +44,15 @@ def build_body(
     cfg: Settings | None = None,
 ) -> str:
     cfg = cfg or settings
-    url = site_url or cfg.site_url
 
     opener = _TIER_OPENER[tier]
     why = _clean_reason(reason, scam_type)
-    parts = [opener, f"Why: {why}."]
+    parts = [f"{opener} ({why})."]
+    close = _TIER_CLOSE[tier]
+    if close:
+        parts.append(close)
 
     if scam_confidence is not None:
-        parts.append(f"Confidence {scam_confidence:.0%}.")
-
-    if tier == "high":
-        parts.append(f"Learn what to do and confirm it here: {url}")
-    else:
-        parts.append(f"Check it here: {url}")
+        parts.append(f"{scam_confidence:.0%} sure.")
 
     return " ".join(parts)
