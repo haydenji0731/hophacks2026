@@ -522,6 +522,20 @@
     mark.dataset.score = String(result.score);
     mark.dataset.category = result.category || "other";
     mark.dataset.reasons = JSON.stringify(result.reasons || []);
+    wireMarkHover(mark);
+  }
+
+  function wireMarkHover(mark) {
+    if (!mark || mark.dataset.sherpaHover === "1") return;
+    mark.dataset.sherpaHover = "1";
+    mark.addEventListener("pointerenter", () => {
+      showPop(mark.ownerDocument, mark);
+    });
+    mark.addEventListener("pointerleave", (event) => {
+      const next = event.relatedTarget;
+      if (next && next.closest && next.closest(".discord-hl-pop")) return;
+      hidePop(mark.ownerDocument);
+    });
   }
 
   function clickWarning(band) {
@@ -631,13 +645,22 @@
     pop.id = POP_ID;
     pop.className = "discord-hl-pop";
     pop.hidden = true;
-    (doc.body || doc.documentElement).appendChild(pop);
+    pop.setAttribute("popover", "manual");
+    (doc.documentElement || doc.body).appendChild(pop);
     return pop;
   }
 
   function hidePop(doc) {
     const pop = doc && doc.getElementById && doc.getElementById(POP_ID);
-    if (pop) pop.hidden = true;
+    if (!pop) return;
+    pop.hidden = true;
+    if (typeof pop.hidePopover === "function") {
+      try {
+        pop.hidePopover();
+      } catch {
+        // already closed
+      }
+    }
   }
 
   function showPop(doc, mark) {
@@ -655,6 +678,13 @@
         ? `<ul>${reasons.map((reason) => `<li>${escapeHtml(reason)}</li>`).join("")}</ul>`
         : `<p>This wording matches common scam pressure tactics. It is a warning, not a verdict.</p>`);
     pop.hidden = false;
+    if (typeof pop.showPopover === "function") {
+      try {
+        pop.showPopover();
+      } catch {
+        // already open
+      }
+    }
     pop.style.top = "0px";
     pop.style.left = "0px";
     void pop.offsetHeight;
@@ -689,31 +719,27 @@
     const clearHide = () => {
       if (view && view.clearTimeout) view.clearTimeout(hideTimer);
     };
-    doc.addEventListener(
-      "mouseover",
-      (event) => {
-        if (!event.target || !event.target.closest) return;
-        const mark = event.target.closest("." + HIGHLIGHT_CLASS);
-        if (!mark) return;
-        clearHide();
-        showPop(doc, mark);
-      },
-      true,
-    );
-    doc.addEventListener(
-      "mouseout",
-      (event) => {
-        if (!event.target || !event.target.closest) return;
-        const mark = event.target.closest("." + HIGHLIGHT_CLASS);
-        if (!mark) return;
-        const next = event.relatedTarget;
-        if (next && next.closest && (next.closest("." + HIGHLIGHT_CLASS) || next.closest(".discord-hl-pop"))) {
-          return;
-        }
-        hideTimer = (view && view.setTimeout ? view.setTimeout : setTimeout)(() => hidePop(doc), 120);
-      },
-      true,
-    );
+    const onOver = (event) => {
+      if (!event.target || !event.target.closest) return;
+      const mark = event.target.closest("." + HIGHLIGHT_CLASS);
+      if (!mark) return;
+      clearHide();
+      showPop(doc, mark);
+    };
+    const onOut = (event) => {
+      if (!event.target || !event.target.closest) return;
+      const mark = event.target.closest("." + HIGHLIGHT_CLASS);
+      if (!mark) return;
+      const next = event.relatedTarget;
+      if (next && next.closest && (next.closest("." + HIGHLIGHT_CLASS) || next.closest(".discord-hl-pop"))) {
+        return;
+      }
+      hideTimer = (view && view.setTimeout ? view.setTimeout : setTimeout)(() => hidePop(doc), 120);
+    };
+    doc.addEventListener("pointerover", onOver, true);
+    doc.addEventListener("mouseover", onOver, true);
+    doc.addEventListener("pointerout", onOut, true);
+    doc.addEventListener("mouseout", onOut, true);
   }
 
   function highlightContext(anchor, baseHref) {
@@ -905,17 +931,124 @@
     return bar;
   }
 
-  function fillSelectBar(bar, result) {
+  function fillSelectBar(bar, result, source) {
     const band = result.band || "caution";
     const title = band === "high" ? "High risk signals" : "Caution";
     const reasons = (result.reasons || []).slice(0, 3);
     bar.dataset.band = band;
+    bar.dataset.source = source || "selected text";
     bar.innerHTML =
       `<p class="discord-hl-warn">${clickWarning(band)}</p>` +
-      `<strong>${title} · selected text</strong>` +
+      `<strong>${title} · ${escapeHtml(source || "selected text")}</strong>` +
       (settings.descriptions && reasons.length
         ? `<ul>${reasons.map((reason) => `<li>${escapeHtml(reason)}</li>`).join("")}</ul>`
-        : `<p>This selection matches common scam pressure tactics.</p>`);
+        : "");
+  }
+
+  function scoreLiveText(doc, text, source) {
+    const view = doc && doc.defaultView;
+    if (view && view.parent && view.parent !== view) {
+      try {
+        view.parent.postMessage({ type: "sherpa-live", text: String(text || ""), source: source || "typed text" }, view.location.origin);
+        return analyze(String(text || ""));
+      } catch {
+        // stay in this frame
+      }
+    }
+    const bar = ensureSelectBar(doc);
+    const cleaned = String(text || "").replace(/\s+/g, " ").trim();
+    if (cleaned.length < 8) {
+      bar.hidden = true;
+      return { score: 0, band: "ok", reasons: [] };
+    }
+    const result = analyze(cleaned);
+    if (result.band === "ok") {
+      bar.hidden = true;
+      return result;
+    }
+    fillSelectBar(bar, result, source || "typed text");
+    bar.hidden = false;
+    return result;
+  }
+
+  function bindGoogleTyping(doc) {
+    if (!doc || !doc.documentElement || doc.documentElement.dataset.sherpaType === "1") return;
+    if (!isGoogleSurface(doc)) return;
+    doc.documentElement.dataset.sherpaType = "1";
+    const view = doc.defaultView;
+    const wired = new WeakSet();
+    let typed = "";
+
+    const fromEditor = (el) => String((el && (el.value || el.innerText || el.textContent)) || "").replace(/\s+/g, " ").trim();
+
+    const scoreEditor = (el) => {
+      const live = fromEditor(el);
+      scoreLiveText(doc, live.length >= 8 ? live : typed, "typed text");
+    };
+
+    const attach = (el) => {
+      if (!el || wired.has(el)) return;
+      if (el.closest && el.closest("." + SELECT_BAR + ", ." + GATE_CLASS + ", .discord-hl-pop")) return;
+      wired.add(el);
+      const bump = () => scoreEditor(el);
+      el.addEventListener("input", bump, true);
+      el.addEventListener("keyup", bump, true);
+    };
+
+    const bindIframe = (iframe) => {
+      if (!iframe || wired.has(iframe)) return;
+      wired.add(iframe);
+      const hook = () => {
+        let idoc = null;
+        try {
+          idoc = iframe.contentDocument;
+        } catch {
+          return;
+        }
+        if (!idoc || !idoc.documentElement || idoc.documentElement.dataset.sherpaType === "1") return;
+        idoc.documentElement.dataset.sherpaType = "1";
+        const read = () => {
+          const body = idoc.body ? String(idoc.body.innerText || idoc.body.textContent || "").trim() : "";
+          scoreLiveText(doc, body.length >= 8 ? body : typed, "typed text");
+        };
+        idoc.addEventListener("input", read, true);
+        idoc.addEventListener("keyup", read, true);
+        idoc.addEventListener(
+          "keydown",
+          (event) => {
+            if (event.key === "Enter") typed += " ";
+            else if (event.key === "Backspace") typed = typed.slice(0, -1);
+            else if (event.key && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+              typed += event.key;
+            }
+            if (typed.length > 2000) typed = typed.slice(-2000);
+            read();
+          },
+          true,
+        );
+      };
+      iframe.addEventListener("load", hook);
+      hook();
+    };
+
+    const scanEditors = (root) => {
+      if (!root || !root.querySelectorAll) return;
+      root.querySelectorAll('[contenteditable="true"], textarea, [role="textbox"]').forEach(attach);
+      root.querySelectorAll("iframe.docs-texteventtarget-iframe, iframe[class*='texteventtarget']").forEach(bindIframe);
+    };
+
+    scanEditors(doc);
+    if (view && typeof view.addEventListener === "function") {
+      view.addEventListener("message", (event) => {
+        if (!event || !event.data || event.data.type !== "sherpa-live") return;
+        if (event.origin && view.location && event.origin !== view.location.origin) return;
+        scoreLiveText(doc, event.data.text, event.data.source || "typed text");
+      });
+    }
+    const ua = (view && view.navigator && view.navigator.userAgent) || "";
+    if (view && typeof view.setInterval === "function" && !/jsdom/i.test(ua)) {
+      view.setInterval(() => scanEditors(doc), 900);
+    }
   }
 
   function bindGoogleSelection(doc) {
@@ -994,6 +1127,7 @@
     bindPop(doc);
     bindIntercepts(doc);
     bindGoogleSelection(doc);
+    bindGoogleTyping(doc);
     scan(doc);
     const view = doc.defaultView;
     const Observer =
@@ -1088,7 +1222,8 @@
         return;
       }
       if (msg.type === "sherpa-prefs") {
-        if (prefsApi) {
+        if (msg.settings) applySettings(msg.settings);
+        else if (prefsApi) {
           prefsApi.load((value) => {
             applySettings(value);
             sendResponse({ ok: true, settings });
@@ -1121,6 +1256,7 @@
     hidePop,
     showGate,
     hideGate,
+    scoreLiveText,
     adaptersFor,
     pingStatus,
   };
