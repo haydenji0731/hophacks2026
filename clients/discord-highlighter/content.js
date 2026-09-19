@@ -3,8 +3,9 @@
   const WHY_CLASS = "sherpa-why-panel";
   const GATE_CLASS = "sherpa-gate";
   const SELECT_BAR = "sherpa-select-bar";
+  const POP_ID = "sherpa-hl-pop";
   const prefsApi = globalThis.SherpaPrefs;
-  let settings = prefsApi ? prefsApi.normalize(prefsApi.DEFAULTS) : { aggression: "point", descriptions: true };
+  let settings = prefsApi ? prefsApi.normalize(prefsApi.DEFAULTS) : { aggression: "warn", descriptions: true };
   const BLOCK_TAGS = /^(PRE|UL|OL|BLOCKQUOTE|DIV|TABLE|H[1-6]|HR)$/;
   const SKIP_CHROME = "nav, header, footer, aside, [role='navigation'], [role='banner'], [role='tablist'], button, [role='button'], time, textarea, [contenteditable='true'], form";
   const IG_UI =
@@ -524,15 +525,17 @@
   }
 
   function clickWarning(band) {
-    return band === "high" ? "DO NOT CLICK ANY LINKS." : "BE MINDFUL OF LINKS";
+    return band === "high" ? "SCAM LIKELY: AVOID LINKS" : "SUSPICIOUS";
   }
 
   function applySettings(next) {
-    settings = prefsApi ? prefsApi.normalize(next) : { aggression: "point", descriptions: true };
-    if (typeof document !== "undefined" && document.querySelectorAll) {
-      document.querySelectorAll("." + WHY_CLASS).forEach((panel) => {
-        if (!settings.descriptions) panel.hidden = true;
-      });
+    settings = prefsApi ? prefsApi.normalize(next) : { aggression: "warn", descriptions: true };
+    if (typeof document !== "undefined") {
+      if (!settings.descriptions) hidePop(document);
+      document.querySelectorAll &&
+        document.querySelectorAll("." + WHY_CLASS + ", ." + SELECT_BAR).forEach((panel) => {
+          if (!settings.descriptions) panel.hidden = true;
+        });
     }
     return settings;
   }
@@ -583,10 +586,7 @@
   }
 
   function shouldIntercept(aggression, ctx) {
-    if (aggression === "point") return false;
-    if (aggression === "block") return Boolean(ctx && ctx.inHighlight);
-    if (!ctx) return false;
-    return Boolean(ctx.mismatch || (ctx.inHighlight && ctx.band === "high"));
+    return aggression === "block" && Boolean(ctx && ctx.inHighlight);
   }
 
   function escapeHtml(value) {
@@ -604,65 +604,116 @@
     }
   }
 
-  function whyHost(mark) {
-    return (mark && mark.closest && mark.closest("[data-scam-key]")) || mark;
+  function popupPosition(markRect, popSize, viewport, gap = 8, margin = 8) {
+    const maxWidth = Math.max(0, viewport.width - margin * 2);
+    const width = Math.min(popSize.width || 268, maxWidth);
+    const height = popSize.height > 1 ? popSize.height : 140;
+    let left = markRect.left;
+    left = Math.min(Math.max(margin, left), viewport.width - width - margin);
+    if (!Number.isFinite(left) || left < margin) left = margin;
+
+    const below = markRect.bottom + gap;
+    const above = markRect.top - height - gap;
+    const fitsBelow = below + height <= viewport.height - margin;
+    const fitsAbove = above >= margin;
+    let top;
+    if (fitsBelow) top = below;
+    else if (fitsAbove) top = above;
+    else top = Math.max(margin, viewport.height - height - margin);
+
+    return { top, left };
   }
 
-  function findWhy(mark) {
-    const host = whyHost(mark);
-    if (!host) return null;
-    const next = host.nextElementSibling;
-    if (next && next.classList && next.classList.contains(WHY_CLASS)) return next;
-    return host.querySelector ? host.querySelector("." + WHY_CLASS) : null;
+  function ensurePop(doc) {
+    let pop = doc.getElementById(POP_ID);
+    if (pop) return pop;
+    pop = doc.createElement("div");
+    pop.id = POP_ID;
+    pop.className = "discord-hl-pop";
+    pop.hidden = true;
+    (doc.body || doc.documentElement).appendChild(pop);
+    return pop;
   }
 
-  function mismatchedIn(mark, baseHref) {
-    const host = whyHost(mark) || mark;
-    if (!host || !host.querySelectorAll) return [];
-    return Array.from(host.querySelectorAll("a[href]")).filter((anchor) => linkMismatch(anchor, baseHref));
+  function hidePop(doc) {
+    const pop = doc && doc.getElementById && doc.getElementById(POP_ID);
+    if (pop) pop.hidden = true;
   }
 
-  function fillWhy(panel, mark, baseHref) {
-    const band = (mark && mark.dataset && mark.dataset.band) || "caution";
-    const category = CATEGORY_LABEL[mark && mark.dataset && mark.dataset.category] || "Suspicious message";
+  function showPop(doc, mark) {
+    if (!settings.descriptions || !doc || !mark) return null;
+    const pop = ensurePop(doc);
+    const band = mark.dataset.band || "caution";
+    const category = CATEGORY_LABEL[mark.dataset.category] || "Suspicious message";
     const reasons = parseReasons(mark);
     const title = band === "high" ? "High risk signals" : "Caution";
-    const mismatches = mismatchedIn(mark, baseHref);
-    panel.dataset.band = band;
-    panel.innerHTML =
+    pop.dataset.band = band;
+    pop.innerHTML =
       `<p class="discord-hl-warn">${clickWarning(band)}</p>` +
       `<strong>${title} · ${category}</strong>` +
       (reasons.length
         ? `<ul>${reasons.map((reason) => `<li>${escapeHtml(reason)}</li>`).join("")}</ul>`
-        : `<p>This wording matches common scam pressure tactics. It is a warning, not a verdict.</p>`)
-      +
-      (mismatches.length
-        ? `<p>Link text does not match the site it actually opens.</p>`
-        : "");
+        : `<p>This wording matches common scam pressure tactics. It is a warning, not a verdict.</p>`);
+    pop.hidden = false;
+    pop.style.top = "0px";
+    pop.style.left = "0px";
+    void pop.offsetHeight;
+    const view = doc.defaultView;
+    if (!view) return pop;
+    const pos = popupPosition(
+      mark.getBoundingClientRect(),
+      pop.getBoundingClientRect(),
+      { width: view.innerWidth, height: view.innerHeight },
+    );
+    pop.style.top = `${pos.top}px`;
+    pop.style.left = `${pos.left}px`;
+    const r = pop.getBoundingClientRect();
+    const margin = 8;
+    if (r.bottom > view.innerHeight - margin || r.top < margin || r.right > view.innerWidth - margin) {
+      const fixed = popupPosition(
+        mark.getBoundingClientRect(),
+        { width: r.width, height: r.height },
+        { width: view.innerWidth, height: view.innerHeight },
+      );
+      pop.style.top = `${fixed.top}px`;
+      pop.style.left = `${fixed.left}px`;
+    }
+    return pop;
   }
 
-  function toggleWhy(mark, force) {
-    if (!mark) return null;
-    const host = whyHost(mark);
-    if (!host || !host.parentNode) return null;
-    let panel = findWhy(mark);
-    const shouldOpen = force === true || (force !== false && (!panel || panel.hidden));
-    if (!settings.descriptions || !shouldOpen) {
-      if (panel) panel.hidden = true;
-      return panel || null;
-    }
-    if (!panel) {
-      panel = mark.ownerDocument.createElement("div");
-      panel.className = WHY_CLASS;
-      panel.hidden = true;
-      if (host.nextSibling) host.parentNode.insertBefore(panel, host.nextSibling);
-      else host.parentNode.appendChild(panel);
-    }
-    const view = mark.ownerDocument.defaultView;
-    const baseHref = view && view.location ? view.location.href : "";
-    fillWhy(panel, mark, baseHref);
-    panel.hidden = false;
-    return panel;
+  function bindPop(doc) {
+    if (!doc || !doc.documentElement || doc.documentElement.dataset.sherpaPop === "1") return;
+    doc.documentElement.dataset.sherpaPop = "1";
+    let hideTimer = 0;
+    const view = doc.defaultView;
+    const clearHide = () => {
+      if (view && view.clearTimeout) view.clearTimeout(hideTimer);
+    };
+    doc.addEventListener(
+      "mouseover",
+      (event) => {
+        if (!event.target || !event.target.closest) return;
+        const mark = event.target.closest("." + HIGHLIGHT_CLASS);
+        if (!mark) return;
+        clearHide();
+        showPop(doc, mark);
+      },
+      true,
+    );
+    doc.addEventListener(
+      "mouseout",
+      (event) => {
+        if (!event.target || !event.target.closest) return;
+        const mark = event.target.closest("." + HIGHLIGHT_CLASS);
+        if (!mark) return;
+        const next = event.relatedTarget;
+        if (next && next.closest && (next.closest("." + HIGHLIGHT_CLASS) || next.closest(".discord-hl-pop"))) {
+          return;
+        }
+        hideTimer = (view && view.setTimeout ? view.setTimeout : setTimeout)(() => hidePop(doc), 120);
+      },
+      true,
+    );
   }
 
   function highlightContext(anchor, baseHref) {
@@ -729,23 +780,6 @@
     });
     (doc.body || doc.documentElement).appendChild(root);
     return root;
-  }
-
-  function bindGuides(doc) {
-    if (!doc || !doc.documentElement || doc.documentElement.dataset.sherpaGuides === "1") return;
-    doc.documentElement.dataset.sherpaGuides = "1";
-    doc.addEventListener(
-      "click",
-      (event) => {
-        if (!event.target || !event.target.closest) return;
-        if (event.target.closest("." + GATE_CLASS)) return;
-        if (event.target.closest("a[href]")) return;
-        const mark = event.target.closest("." + HIGHLIGHT_CLASS);
-        if (!mark) return;
-        toggleWhy(mark);
-      },
-      true,
-    );
   }
 
   function bindIntercepts(doc) {
@@ -838,7 +872,8 @@
       (node.classList.contains(HIGHLIGHT_CLASS) ||
         node.classList.contains(WHY_CLASS) ||
         node.classList.contains(GATE_CLASS) ||
-        node.classList.contains(SELECT_BAR))
+        node.classList.contains(SELECT_BAR) ||
+        node.classList.contains("discord-hl-pop"))
     ) {
       return true;
     }
@@ -847,7 +882,8 @@
         (node.closest("." + HIGHLIGHT_CLASS) ||
           node.closest("." + WHY_CLASS) ||
           node.closest("." + GATE_CLASS) ||
-          node.closest("." + SELECT_BAR)),
+          node.closest("." + SELECT_BAR) ||
+          node.closest(".discord-hl-pop")),
     );
   }
 
@@ -893,7 +929,7 @@
       const bar = ensureSelectBar(doc);
       const sel = doc.getSelection ? doc.getSelection() : null;
       const text = sel ? String(sel).replace(/\s+/g, " ").trim() : "";
-      if (!text || text.length < 12) {
+      if (!settings.descriptions || !text || text.length < 12) {
         bar.hidden = true;
         return;
       }
@@ -955,7 +991,7 @@
       prefsApi.load(applySettings);
       prefsApi.subscribe(applySettings);
     }
-    bindGuides(doc);
+    bindPop(doc);
     bindIntercepts(doc);
     bindGoogleSelection(doc);
     scan(doc);
@@ -1080,7 +1116,9 @@
     linkMismatch,
     shouldIntercept,
     highlightContext,
-    toggleWhy,
+    popupPosition,
+    showPop,
+    hidePop,
     showGate,
     hideGate,
     adaptersFor,
