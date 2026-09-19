@@ -36,7 +36,7 @@ The toolbar has a Light / Dark switch. It restyles the popup, hover cards, Block
 ## Load it in Chrome
 
 1. Open `chrome://extensions`
-2. Turn on **Developer mode`
+2. Turn on **Developer mode**
 3. Click **Load unpacked** and select this folder (the one with `manifest.json`)
 4. Open Discord, Instagram (including DMs), Reddit, Google Docs, or Google Slides
 
