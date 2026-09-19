@@ -137,7 +137,7 @@ def parse_phrases(body: dict) -> str:
     for hit in body.get("keyword_hits") or []:
         if not isinstance(hit, dict):
             continue
-        label = _plain(hit.get("label"))
+        label = _plain(hit.get("label")).replace("_", " ")
         if not label:
             continue
         score = hit.get("score")
