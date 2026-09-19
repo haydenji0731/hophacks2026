@@ -559,15 +559,11 @@
     if (typeof document !== "undefined") {
       if (document.documentElement) {
         document.documentElement.dataset.sherpaDesc = settings.descriptions ? "1" : "0";
-        document.documentElement.dataset.sherpaHl = settings.descriptions ? "on" : "off";
+        document.documentElement.dataset.sherpaHl = "on";
         if (prefsApi && prefsApi.applyTheme) prefsApi.applyTheme(document, settings.theme);
       }
       if (!settings.descriptions) {
         hidePop(document);
-        document.querySelectorAll &&
-          document.querySelectorAll("." + SELECT_BAR + ", .sherpa-docs-ink").forEach((el) => {
-            el.hidden = true;
-          });
       }
       document.querySelectorAll &&
         document.querySelectorAll("." + WHY_CLASS).forEach((panel) => {
@@ -721,7 +717,7 @@
       `<strong>${title} · ${category}</strong>` +
       (reasons.length
         ? `<ul>${reasons.map((reason) => `<li>${escapeHtml(reason)}</li>`).join("")}</ul>`
-        : `<p>This wording matches common scam pressure tactics. It is a warning, not a verdict.</p>`) +
+        : `<p>This wording matches common scam pressure tactics. It is a warning, not a verdict.</p>`)+
       `<button type="button" class="sherpa-report" data-band="${escapeHtml(band)}" data-text="${escapeHtml(snippet)}">Report a scam</button>`;
     pop.hidden = false;
     if (typeof pop.showPopover === "function") {
@@ -1107,11 +1103,6 @@
     const bar = ensureSelectBar(painted);
     const ink = ensureDocsInk(painted);
     const cleaned = String(text || "").replace(/\s+/g, " ").trim();
-    if (!settings.descriptions) {
-      bar.hidden = true;
-      ink.hidden = true;
-      return analyze(cleaned);
-    }
     if (cleaned.length < 8) {
       bar.hidden = true;
       ink.hidden = true;
