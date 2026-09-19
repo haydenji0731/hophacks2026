@@ -3,3 +3,4 @@ __pycache__/
 .pytest_cache/
 .env
 news_wire.json
+clap_phrases.json

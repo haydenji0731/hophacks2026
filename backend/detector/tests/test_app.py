@@ -95,3 +95,24 @@ def test_analyze_both_detectors_down(client: TestClient, monkeypatch: pytest.Mon
     )
     assert response.status_code == 502
     assert response.json()["detail"]["error"] == "no_signals"
+
+
+def test_intel_search(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    from intel import PatternIndex
+    from tests.test_intel import SAMPLE_ROWS
+
+    monkeypatch.setattr("intel.get_index", lambda: PatternIndex(SAMPLE_ROWS))
+    response = client.get("/v1/intel", params={"q": "marketplace zelle overpay"})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["count"] >= 1
+    assert body["patterns"][0]["name"] == "facebook_marketplace_payment_scam"
+
+
+def test_intel_get_missing(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    from intel import PatternIndex
+    from tests.test_intel import SAMPLE_ROWS
+
+    monkeypatch.setattr("intel.get_index", lambda: PatternIndex(SAMPLE_ROWS))
+    response = client.get("/v1/intel/not_a_real_pattern")
+    assert response.status_code == 404

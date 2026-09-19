@@ -29,7 +29,7 @@ export default function Layout() {
             <span className="sys-clock" aria-hidden="true">
               SYS {clock}
             </span>
-            <NavLink to="/our-goal">Our Goal</NavLink>
+            <NavLink to="/sherpa" className="nav-sherpa">Sherpa</NavLink>
             <NavLink to="/scams">Intel</NavLink>
             <ThemeToggle />
             <Link to="/questionnaire" className="nav-cta">

@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     min_keyword_hits_to_escalate: int = 1
     clap_threshold: float = 0.30
     clap_model: str = "laion/clap-htsat-unfused"
+    clap_phrases_path: str | None = None
 
 
 

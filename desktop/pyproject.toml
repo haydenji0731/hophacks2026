@@ -1,0 +1,17 @@
+[project]
+name = "whs-listen"
+version = "0.1.0"
+description = "Mac capture sidecar for We Hate Scammers"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+  "sounddevice>=0.5.0",
+  "soundfile>=0.12.0",
+  "httpx>=0.27.0",
+  "numpy>=1.26.0",
+  "pillow>=10.0.0",
+]
+
+[dependency-groups]
+pack = [
+  "pyinstaller>=6.11.0",
+]

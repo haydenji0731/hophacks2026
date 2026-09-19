@@ -130,6 +130,10 @@ export default function NewsWidget() {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
+      <h2 className="news-heading">
+        Recent News
+        <span className="news-heading-rule" aria-hidden="true" />
+      </h2>
       <div className={`product-window news-window${open ? " is-open" : ""}`}>
         <span className="hud-corner tl" aria-hidden="true" />
         <span className="hud-corner tr" aria-hidden="true" />

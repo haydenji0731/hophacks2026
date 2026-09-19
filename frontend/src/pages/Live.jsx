@@ -193,7 +193,7 @@ export default function Live() {
 
   const hint = {
     standby: "Click Start listening. Allow the mic, play the call or demo.mp3. 30s clip → /v1/process.",
-    record: `Recording ${elapsed.toFixed(1)}s / ${CLIP_SECONDS}s · same path as mac_capture`,
+    record: `Recording ${elapsed.toFixed(1)}s / ${CLIP_SECONDS}s · same path as desktop/listen.py`,
     upload: "Posted clip · screen → STT → Grok…",
     done: result?.escalated ? "Escalated · Grok returned" : "Screen only · not escalated",
   }[phase];

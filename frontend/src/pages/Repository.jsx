@@ -1,26 +1,68 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { SCAM_TYPES } from "../data/questions.js";
 
+function fallbackPatterns(query) {
+  const q = query.trim().toLowerCase();
+  const rows = SCAM_TYPES.map((scam) => ({
+    id: scam.id,
+    name: scam.id,
+    title: scam.name,
+    description: scam.summary,
+    platforms: [],
+    demands: [],
+    frequency: 0,
+    score: null,
+  }));
+  if (!q) return rows;
+  return rows.filter(
+    (row) =>
+      row.title.toLowerCase().includes(q) ||
+      row.description.toLowerCase().includes(q),
+  );
+}
+
 export default function Repository() {
   const [query, setQuery] = useState("");
+  const [debounced, setDebounced] = useState("");
+  const [patterns, setPatterns] = useState([]);
+  const [status, setStatus] = useState("loading");
 
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    if (!q) return SCAM_TYPES;
-    return SCAM_TYPES.filter(
-      (scam) =>
-        scam.name.toLowerCase().includes(q) ||
-        scam.summary.toLowerCase().includes(q),
-    );
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebounced(query), 220);
+    return () => window.clearTimeout(timer);
   }, [query]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const params = new URLSearchParams();
+    if (debounced.trim()) params.set("q", debounced.trim());
+    params.set("limit", "60");
+    setStatus("loading");
+    fetch(`/api/v1/intel?${params}`, { signal: controller.signal })
+      .then((res) => {
+        if (!res.ok) throw new Error("intel");
+        return res.json();
+      })
+      .then((data) => {
+        setPatterns(data.patterns || []);
+        setStatus("ready");
+      })
+      .catch((err) => {
+        if (err.name === "AbortError") return;
+        setPatterns(fallbackPatterns(debounced));
+        setStatus("offline");
+      });
+    return () => controller.abort();
+  }, [debounced]);
 
   return (
     <section className="repo-head">
       <p className="eyebrow">Threat intel</p>
       <h1>Pattern repository</h1>
       <p className="lede">
-        Known patterns we score against. Search by name or how it shows up.
+        Seeded catalog of live scam patterns. Search by keyword — semantic match
+        ranks related reports, not just exact titles.
       </p>
 
       <input
@@ -28,19 +70,33 @@ export default function Repository() {
         type="search"
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Search patterns…"
-        aria-label="Search scam patterns"
+        placeholder="Try marketplace refund, WhatsApp romance, job training fee…"
+        aria-label="Semantic search scam patterns"
       />
+      <p className="muted intel-status">
+        {status === "loading"
+          ? "Searching catalog…"
+          : status === "offline"
+            ? "Detector offline — showing built-in types."
+            : `${patterns.length} pattern${patterns.length === 1 ? "" : "s"}`}
+      </p>
 
       <ul className="scam-list">
-        {filtered.length === 0 ? (
+        {patterns.length === 0 && status !== "loading" ? (
           <li className="placeholder-card">No patterns match that search.</li>
         ) : (
-          filtered.map((scam) => (
-            <li key={scam.id}>
-              <Link className="scam-card" to={`/scams/${scam.id}`}>
-                <strong>{scam.name}</strong>
-                <p>{scam.summary}</p>
+          patterns.map((scam) => (
+            <li key={scam.id || scam.name}>
+              <Link className="scam-card" to={`/scams/${scam.id || scam.name}`}>
+                <strong>{scam.title || scam.name}</strong>
+                <p>{scam.description}</p>
+                {(scam.platforms?.length > 0 || scam.frequency > 0) && (
+                  <span className="scam-card-meta">
+                    {scam.frequency > 0 ? `${scam.frequency} reports` : null}
+                    {scam.frequency > 0 && scam.platforms?.length ? " · " : null}
+                    {scam.platforms?.slice(0, 4).join(" · ")}
+                  </span>
+                )}
               </Link>
             </li>
           ))

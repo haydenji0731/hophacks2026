@@ -2,19 +2,24 @@ from __future__ import annotations
 
 from fastapi import FastAPI, File, Form, Header, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 
 from ingest import IngestInputs, ingest_incident, upsert_report
 from news_wire import live_cards, refresh_wire
-from process import ProcessInputs, process_audio
+from process import ProcessInputs, dump_process_event, process_audio, process_audio_events
 from pipeline import analyze_incident
 from screen import run_screen
+from keywords import live_phrases, refresh_phrases
 from schemas import (
     AnalyzeResponse,
     ErrorDetail,
     HealthResponse,
     IngestResponse,
     KeywordHitOut,
+    IntelPattern,
+    IntelSearchResponse,
     NewsFeedResponse,
+    PhraseBookResponse,
     ProcessResponse,
     ReportRequest,
     ReportResponse,
@@ -252,10 +257,12 @@ async def process(
     file: UploadFile = File(...),
     to: str | None = Form(default=None),
     force_escalate: bool = Form(default=False),
-) -> ProcessResponse:
+    stream: bool = Form(default=False),
+) -> ProcessResponse | StreamingResponse:
     """
     Full demo path: screen → if sensitive, STT + Grok → if scam, log + notify.
     Mac capture clients should POST audio chunks here (Linux backend).
+    Pass stream=true for NDJSON (screen, then transcript, then done).
     """
     audio = await _read_audio(file)
     if audio is None:
@@ -263,13 +270,18 @@ async def process(
             status_code=400,
             detail=ErrorDetail(error="missing_input", detail="Audio file required.").model_dump(),
         )
-    return process_audio(
-        ProcessInputs(
-            audio=audio,
-            to=(to or "").strip() or None,
-            force_escalate=force_escalate,
-        )
+    inputs = ProcessInputs(
+        audio=audio,
+        to=(to or "").strip() or None,
+        force_escalate=force_escalate,
     )
+    if stream:
+        def events():
+            for event in process_audio_events(inputs):
+                yield dump_process_event(event)
+
+        return StreamingResponse(events(), media_type="application/x-ndjson")
+    return process_audio(inputs)
 
 
 def _news_authorized(secret_header: str | None, authorization: str | None) -> bool:
@@ -313,3 +325,63 @@ def post_news_refresh(
             ).model_dump(),
         )
     return NewsFeedResponse.model_validate(refresh_wire(days=days))
+
+
+@app.get("/v1/phrases", response_model=PhraseBookResponse)
+def get_phrases() -> PhraseBookResponse:
+    """CLAP wake phrases frozen in clap_phrases.json (seed fallback)."""
+    return PhraseBookResponse.model_validate(live_phrases())
+
+
+@app.post(
+    "/v1/phrases/refresh",
+    response_model=PhraseBookResponse,
+    responses={
+        401: {"model": ErrorDetail},
+    },
+)
+def post_phrases_refresh(
+    x_news_refresh_secret: str | None = Header(default=None),
+    authorization: str | None = Header(default=None),
+) -> PhraseBookResponse:
+    """DB scams → deduped spoken phrases → clap_phrases.json. Same secret as news refresh."""
+    if not _news_authorized(x_news_refresh_secret, authorization):
+        raise HTTPException(
+            status_code=401,
+            detail=ErrorDetail(
+                error="unauthorized",
+                detail="Invalid news refresh secret.",
+            ).model_dump(),
+        )
+    return PhraseBookResponse.model_validate(refresh_phrases())
+
+
+@app.get("/v1/intel", response_model=IntelSearchResponse)
+def search_intel(
+    q: str = Query(default="", max_length=4000),
+    limit: int = Query(default=40, ge=1, le=200),
+) -> IntelSearchResponse:
+    from intel import get_index
+
+    hits = get_index().search(q, limit=limit)
+    return IntelSearchResponse(query=q, count=len(hits), patterns=hits)
+
+
+@app.get(
+    "/v1/intel/{name}",
+    response_model=IntelPattern,
+    responses={404: {"model": ErrorDetail}},
+)
+def get_intel_pattern(name: str) -> IntelPattern:
+    from intel import get_index
+
+    row = get_index().get(name)
+    if row is None:
+        raise HTTPException(
+            status_code=404,
+            detail=ErrorDetail(
+                error="not_found",
+                detail="No pattern with that name.",
+            ).model_dump(),
+        )
+    return IntelPattern.model_validate(row)
