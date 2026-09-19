@@ -77,13 +77,16 @@ assert.match(blockGate.textContent, /Go back/);
 blockGate.querySelector('[data-act="back"]').click();
 
 api.applySettings({ aggression: "warn", descriptions: true });
-const pop = api.showPop(document, irs.querySelector("." + api.HIGHLIGHT_CLASS));
-assert.ok(pop);
+const mark = irs.querySelector("." + api.HIGHLIGHT_CLASS);
+mark.dispatchEvent(new document.defaultView.MouseEvent("pointerenter", { bubbles: true }));
+const pop = document.getElementById("sherpa-hl-pop");
+assert.ok(pop, "hover should open a floating description");
 assert.equal(pop.hidden, false);
 assert.match(pop.textContent, /SCAM LIKELY: AVOID LINKS/);
 api.applySettings({ aggression: "warn", descriptions: false });
-assert.equal(api.showPop(document, irs.querySelector("." + api.HIGHLIGHT_CLASS)), null);
-assert.equal(document.getElementById("sherpa-hl-pop").hidden, true);
+mark.dispatchEvent(new document.defaultView.MouseEvent("pointerenter", { bubbles: true }));
+assert.equal(api.showPop(document, mark), null);
+assert.equal(document.getElementById("sherpa-hl-pop").hidden, true, "descriptions off must hide the hover box");
 
 console.log("ok");
 process.exit(0);

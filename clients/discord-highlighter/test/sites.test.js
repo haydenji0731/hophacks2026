@@ -225,5 +225,23 @@ const SLIDES_HTML = `<!doctype html><html><body>
   assert.equal(pizza.querySelector("." + api.HIGHLIGHT_CLASS), null);
 }
 
+{
+  const { document, api } = load(
+    "https://docs.google.com/document/d/abc/edit",
+    `<!doctype html><html><body>
+      <div contenteditable="true" role="textbox" id="live">IRS: pay overdue tax with Apple gift cards today, don't tell anyone</div>
+    </body></html>`,
+  );
+  const live = document.getElementById("live");
+  live.dispatchEvent(new document.defaultView.Event("input", { bubbles: true }));
+  const bar = document.getElementById("sherpa-select-bar");
+  assert.ok(bar, "Docs should score text as it is typed");
+  assert.equal(bar.hidden, false);
+  assert.match(bar.textContent, /SCAM LIKELY: AVOID LINKS/);
+  const scored = api.scoreLiveText(document, "hey are we still on for pizza later?", "typed text");
+  assert.equal(scored.band, "ok");
+  assert.equal(document.getElementById("sherpa-select-bar").hidden, true);
+}
+
 console.log("ok");
 process.exit(0);
