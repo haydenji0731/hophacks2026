@@ -187,14 +187,14 @@
     <div class="page">
       <h1>Sherpa</h1>
       <p class="lede">
-        Offline warnings for Discord, Instagram, Reddit, Docs, and Slides. Yellow is caution, red is high risk.
-        Click a highlight to read why. Point never interrupts a click. Warn and Block ask before a
-        risky or mismatched link opens. This is a signal, not a verdict.
+        Offline warnings for Discord, Instagram, Reddit, Docs, and Slides. Yellow is SUSPICIOUS,
+        red is SCAM LIKELY: AVOID LINKS. Hover a highlight for the reason when descriptions are on.
+        Warn never interrupts a click. Block double-checks highlighted links only. This is a signal, not a verdict.
       </p>
       <section class="prefs">
         <label for="aggression">Aggressiveness</label>
-        <input id="aggression" type="range" min="0" max="2" step="1" value="0" />
-        <div class="ticks"><span>Point</span><span>Warn</span><span>Block</span></div>
+        <input id="aggression" type="range" min="0" max="1" step="1" value="0" />
+        <div class="ticks"><span>Warn</span><span>Block</span></div>
         <p id="agg-copy"></p>
         <label class="check">
           <input id="descriptions" type="checkbox" checked />
@@ -369,15 +369,14 @@
     <script src="content.js"></script>
     <script>
       const COPY = {
-        point: "Point (Guide). Mark the text and stop there. Open a highlight for the reason. No click interrupts.",
-        warn: "Warn (Guard). High-risk or mismatched links ask Continue / Go back before they open.",
-        block: "Block. Links inside highlighted text always stop first and show the real destination.",
+        warn: "Warn. Highlight suspicious text. Hover for the reason when descriptions are on. Links open normally.",
+        block: "Block. A click on a highlighted link always asks Continue / Go back and shows the real destination.",
       };
       const slider = document.getElementById("aggression");
       const desc = document.getElementById("descriptions");
       const copyEl = document.getElementById("agg-copy");
       function persist() {
-        const aggression = globalThis.SherpaPrefs.LEVELS[Number(slider.value)] || "point";
+        const aggression = globalThis.SherpaPrefs.LEVELS[Number(slider.value)] || "warn";
         const next = { aggression, descriptions: desc.checked };
         globalThis.SherpaPrefs.save(next);
         if (globalThis.Sherpa) globalThis.Sherpa.applySettings(next);
@@ -398,7 +397,7 @@
           return;
         }
         const warn =
-          result.band === "high" ? "DO NOT CLICK ANY LINKS." : "BE MINDFUL OF LINKS";
+          result.band === "high" ? "SCAM LIKELY: AVOID LINKS" : "SUSPICIOUS";
         const label = result.band === "high" ? "High risk signals" : "Caution";
         out.textContent = `${warn} · ${label} · ${result.score}/100. ${result.reasons.join(" ")}`;
       });
