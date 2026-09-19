@@ -3,13 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "predev": "node scripts/assemble-scams.mjs",
     "dev": "next dev --port 43127 --hostname 0.0.0.0",
+    "prebuild": "node scripts/assemble-scams.mjs",
     "build": "next build",
     "start": "next start --port 43127",
     "lint": "eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "data:scams": "node scripts/convert-scams.mjs"
+    "data:scams": "node scripts/convert-scams.mjs",
+    "data:assemble": "node scripts/assemble-scams.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
