@@ -70,7 +70,7 @@ const REDDIT_HTML = `<!doctype html><html><body>
   const verifyMark = verify.querySelector("." + api.HIGHLIGHT_CLASS);
   const irsMark = irs.querySelector("." + api.HIGHLIGHT_CLASS);
   assert.ok(verifyMark);
-  assert.equal(verifyMark.classList.contains("discord-hl-mark--caution"), true);
+  assert.equal(verifyMark.classList.contains("discord-hl-mark--high"), true);
   assert.ok(irsMark);
   assert.equal(irsMark.classList.contains("discord-hl-mark--high"), true);
   assert.equal(home.querySelector("." + api.HIGHLIGHT_CLASS), null);
@@ -130,7 +130,7 @@ function markFor(document, api, needle) {
   const irsMark = markFor(document, api, "IRS");
   assert.equal(pizzaMark, null, "benign word-split pizza DM should stay clean");
   assert.ok(verifyMark, "word-split verify line inside a form should highlight");
-  assert.equal(verifyMark.classList.contains("discord-hl-mark--caution"), true);
+  assert.equal(verifyMark.classList.contains("discord-hl-mark--high"), true);
   assert.ok(irsMark, "word-split IRS line inside a form should highlight");
   assert.equal(irsMark.classList.contains("discord-hl-mark--high"), true);
   assert.equal(verifyMark.tagName, "SPAN");
@@ -160,7 +160,7 @@ function markFor(document, api, needle) {
     true,
   );
   assert.equal(
-    verify.querySelector("." + api.HIGHLIGHT_CLASS).classList.contains("discord-hl-mark--caution"),
+    verify.querySelector("." + api.HIGHLIGHT_CLASS).classList.contains("discord-hl-mark--high"),
     true,
   );
   assert.equal(sidebar.querySelector("." + api.HIGHLIGHT_CLASS), null);
@@ -201,7 +201,7 @@ const SLIDES_HTML = `<!doctype html><html><body>
   const compose = document.querySelector(".docos-input-textarea");
   assert.equal(pizza.querySelector("." + api.HIGHLIGHT_CLASS), null);
   assert.ok(verify.querySelector("." + api.HIGHLIGHT_CLASS));
-  assert.equal(verify.querySelector("." + api.HIGHLIGHT_CLASS).classList.contains("discord-hl-mark--caution"), true);
+  assert.equal(verify.querySelector("." + api.HIGHLIGHT_CLASS).classList.contains("discord-hl-mark--high"), true);
   assert.ok(irs.querySelector("." + api.HIGHLIGHT_CLASS));
   assert.equal(irs.querySelector("." + api.HIGHLIGHT_CLASS).classList.contains("discord-hl-mark--high"), true);
   assert.ok(chat.querySelector("." + api.HIGHLIGHT_CLASS));
@@ -241,6 +241,63 @@ const SLIDES_HTML = `<!doctype html><html><body>
   const scored = api.scoreLiveText(document, "hey are we still on for pizza later?", "typed text");
   assert.equal(scored.band, "ok");
   assert.equal(document.getElementById("sherpa-select-bar").hidden, true);
+}
+
+{
+  const { document, api } = load(
+    "https://docs.google.com/document/d/abc/edit",
+    `<!doctype html><html><body>
+      <div class="kix-appview-editor"></div>
+      <iframe class="docs-texteventtarget-iframe"></iframe>
+    </body></html>`,
+  );
+  const sample = "IRS: pay overdue tax with Apple gift cards today, don't tell anyone";
+  for (const key of sample) {
+    document.dispatchEvent(
+      new document.defaultView.KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }),
+    );
+  }
+  const bar = document.getElementById("sherpa-select-bar");
+  assert.ok(bar, "canvas Docs typing should fill a live bar from keystrokes");
+  assert.equal(bar.hidden, false);
+  assert.match(bar.textContent, /SCAM LIKELY: AVOID LINKS/);
+  const pizza = "hey are we still on for pizza later?";
+  api.scoreLiveText(document, pizza, "typed text");
+  assert.equal(document.getElementById("sherpa-select-bar").hidden, true);
+
+  const again = "IRS: pay overdue tax with Apple gift cards today, don't tell anyone";
+  api.scoreLiveText(document, again, "typed text");
+  assert.equal(document.getElementById("sherpa-select-bar").hidden, false);
+  document.dispatchEvent(new document.defaultView.KeyboardEvent("keyup", { key: "a", bubbles: true }));
+  assert.equal(
+    document.getElementById("sherpa-select-bar").hidden,
+    false,
+    "a stray keyup must not hide the live typing bar",
+  );
+  const ink = document.getElementById("sherpa-docs-ink");
+  assert.ok(ink, "Docs should paint a live ink chip");
+  assert.equal(ink.hidden, false);
+}
+
+{
+  const { document, api } = load(
+    "https://drive.google.com/drive/u/0/home",
+    `<!doctype html><html><body>
+      <div id="drive_main_page">
+        <div class="docos-replyview-body">I need 3 ebay gift cards of $200 each. What's the closest store ?</div>
+        <div class="docos-replyview-body">hey are we still on for pizza later?</div>
+      </div>
+    </body></html>`,
+  );
+  api.scan(document);
+  const gift = Array.from(document.querySelectorAll(".docos-replyview-body")).find((el) =>
+    el.textContent.includes("ebay"),
+  );
+  const pizza = Array.from(document.querySelectorAll(".docos-replyview-body")).find((el) =>
+    el.textContent.includes("pizza"),
+  );
+  assert.ok(gift.querySelector("." + api.HIGHLIGHT_CLASS), "Drive comments should highlight");
+  assert.equal(pizza.querySelector("." + api.HIGHLIGHT_CLASS), null);
 }
 
 console.log("ok");
