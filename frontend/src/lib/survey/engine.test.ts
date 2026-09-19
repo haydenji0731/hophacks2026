@@ -20,7 +20,7 @@ function topSlugs(answers: { questionId: string; value: string }[], n = 5) {
 }
 
 describe("scam corpus", () => {
-  it("loads the Reddit seed plus e-dating and cashier-check patterns", () => {
+  it("loads the seed corpus plus e-dating and cashier-check patterns", () => {
     expect(SCAMS.length).toBeGreaterThanOrEqual(98);
     expect(SCAMS.some((scam) => scam.slug === "e_dating_money_request")).toBe(true);
     expect(SCAMS.some((scam) => scam.slug === "cashier_check_overpayment")).toBe(true);
@@ -32,7 +32,7 @@ describe("scam corpus", () => {
     expect(marketplace?.examples?.length).toBeGreaterThan(0);
   });
 
-  it("merges Grok Bot catalog methods without duplicating existing slugs", () => {
+  it("merges catalog methods without duplicating existing slugs", () => {
     const catalogIds = SCAMS.flatMap((scam) => scam.catalogIds ?? []);
     expect(new Set(catalogIds).size).toBe(60);
     expect(catalogIds).toHaveLength(60);
@@ -210,6 +210,25 @@ describe("adaptive ranking", () => {
     expect(profileFromAnswers([{ questionId: "age", value: "older" }]).simplified).toBe(true);
     expect(profileFromAnswers([{ questionId: "age", value: "adult" }]).simplified).toBe(false);
     expect(profileFromAnswers([{ questionId: "age", value: SKIP }]).simplified).toBe(false);
+  });
+
+  it("ranks a code / remote-access ask from the merged access option", () => {
+    const answers = [
+      { questionId: "channel", value: "sms" },
+      { questionId: "ask_kind", value: "access" },
+      { questionId: "sms_detail", value: "otp" },
+    ];
+    expect(topSlug(answers)).toBe("whatsapp_otp_code_share");
+  });
+
+  it("ranks tech support from the company hook", () => {
+    const answers = [
+      { questionId: "channel", value: "web" },
+      { questionId: "ask_kind", value: "access" },
+      { questionId: "hook_who", value: "company" },
+      { questionId: "tech_detail", value: "popup" },
+    ];
+    expect(topSlugs(answers)).toContain("tech_support_remote_access");
   });
 
   it("maps a confirmation onto the existing detector report payload", () => {
