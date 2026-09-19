@@ -329,7 +329,7 @@ def post_news_refresh(
 
 @app.get("/v1/phrases", response_model=PhraseBookResponse)
 def get_phrases() -> PhraseBookResponse:
-    """CLAP wake phrases frozen in clap_phrases.json (seed fallback)."""
+    """Seed phrases CLAP scores against (not the DB catalog dump)."""
     return PhraseBookResponse.model_validate(live_phrases())
 
 
@@ -344,7 +344,7 @@ def post_phrases_refresh(
     x_news_refresh_secret: str | None = Header(default=None),
     authorization: str | None = Header(default=None),
 ) -> PhraseBookResponse:
-    """DB scams → deduped spoken phrases → clap_phrases.json. Same secret as news refresh."""
+    """DB scams → clap_phrases.json catalog. Does not change CLAP comparison. Same secret as news."""
     if not _news_authorized(x_news_refresh_secret, authorization):
         raise HTTPException(
             status_code=401,

@@ -6,7 +6,6 @@ import io
 import json
 import logging
 import re
-import time
 import wave
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -50,13 +49,10 @@ TARGET_LABELS = {label for label, _ in SCAM_WAKE_PHRASES}
 _CLAP_SR = 48000
 _WIN_S = 5.0
 _HOP_S = 2.5
-_PHRASE_TTL_S = 60.0
 _MAX_DB_ROWS = 48
 _MAX_VARIANTS = 64
 _VARIANT_RE = re.compile(r"[a-z0-9]+")
 PHRASE_PATH = Path(__file__).resolve().parent / "clap_phrases.json"
-
-_phrase_cache: tuple[float, tuple[tuple[str, tuple[str, ...]], ...]] | None = None
 
 
 @dataclass
@@ -216,17 +212,13 @@ def load_phrase_file() -> dict[str, Any]:
 def save_phrase_file(payload: dict[str, Any]) -> None:
     path = _phrase_path()
     path.write_text(json.dumps(payload, indent=2) + "\n")
-    global _phrase_cache
-    _phrase_cache = None
 
 
 def live_phrases() -> dict[str, Any]:
-    stored = load_phrase_file()
-    if stored.get("phrases"):
-        return stored
-    seed = book_to_payload(SCAM_WAKE_PHRASES, source_count=0, warnings=["Using built-in seed; run phrases refresh."])
-    seed["updated_at"] = None
-    return seed
+    """What CLAP actually compares against (built-in seed, not the DB freeze)."""
+    payload = book_to_payload(load_wake_phrases(), source_count=0, warnings=[])
+    payload["updated_at"] = None
+    return payload
 
 
 def refresh_phrases(*, dry_run: bool = False) -> dict[str, Any]:
@@ -245,18 +237,9 @@ def refresh_phrases(*, dry_run: bool = False) -> dict[str, Any]:
 
 
 def load_wake_phrases(*, force: bool = False) -> tuple[tuple[str, tuple[str, ...]], ...]:
-    """Frozen clap_phrases.json if present, else hardcoded seed. No DB on the hot path."""
-    global _phrase_cache
-    now = time.monotonic()
-    if not force and _phrase_cache is not None:
-        cached_at, cached = _phrase_cache
-        if now - cached_at < _PHRASE_TTL_S:
-            return cached
-    book = payload_to_book(load_phrase_file())
-    if not book:
-        book = SCAM_WAKE_PHRASES
-    _phrase_cache = (now, book)
-    return book
+    """Built-in seed only. clap_phrases.json is a DB catalog dump, not the matcher."""
+    del force
+    return SCAM_WAKE_PHRASES
 
 
 def current_labels(phrases: tuple[tuple[str, tuple[str, ...]], ...] | None = None) -> set[str]:
