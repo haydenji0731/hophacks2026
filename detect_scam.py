@@ -20,7 +20,9 @@ The JSON must have exactly these fields:
   "is_scam": true or false,
   "scam_type": "string describing the type, or 'none' if not a scam",
   "confidence": a number from 0.0 to 1.0,
-  "reasoning": "one to two sentence explanation"
+  "reasoning": "one to two sentence explanation",
+  "method": "how the scammer is executing the scam (e.g. 'phone impersonation', 'gift card payment request', 'phishing link', 'wire transfer request'), or 'none' if not a scam",
+  "target": "who the scam appears to be targeting based on context clues in the language used (e.g. 'elderly individual', 'general consumer', 'small business owner', 'employee'), or 'unclear' if not determinable"
 }
 """
 
@@ -64,6 +66,13 @@ if __name__ == "__main__":
         """Hi grandma, it's me, I'm in trouble. I got in a car accident and I'm
         at the police station. Please don't tell mom and dad. I need you to buy
         $500 in Google Play gift cards and read me the codes so I can pay bail.""",
+
+        """Hello, this is calling regarding your car's extended warranty. It's
+        about to expire and we wanted to give you a final chance to renew before
+        your coverage lapses.""",
+
+        """Hey, it's Sarah from the dentist's office confirming your appointment
+        tomorrow at 2pm. Let us know if you need to reschedule.""",
     ]
 
     for i, t in enumerate(test_transcripts, 1):
