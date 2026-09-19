@@ -36,19 +36,6 @@
     { "a": "pig_butcher", "b": "crypto_invest", "strength": 0.85 },
     { "a": "customs", "b": "processing_fee", "strength": 0.8 },
     { "a": "you_have_won", "b": "click_here", "strength": 0.8 },
-    { "a": "you_have_won", "b": "processing_fee", "strength": 0.75 },
-    { "a": "instagram_support", "b": "verification_fee", "strength": 0.95 },
-    { "a": "instagram_support", "b": "confirm_this_is_you", "strength": 0.9 },
-    { "a": "instagram_support", "b": "account_suspended", "strength": 0.85 },
-    { "a": "instagram_support", "b": "instagram_password", "strength": 0.9 },
-    { "a": "meta_verified", "b": "verification_fee", "strength": 0.9 },
-    { "a": "copyright_strike", "b": "processing_fee", "strength": 0.9 },
-    { "a": "copyright_strike", "b": "verification_fee", "strength": 0.8 },
-    { "a": "confirm_this_is_you", "b": "account_suspended", "strength": 0.85 },
-    { "a": "confirm_this_is_you", "b": "instagram_password", "strength": 0.85 },
-    { "a": "sextortion", "b": "bitcoin", "strength": 0.9 },
-    { "a": "sextortion", "b": "crypto_wallet", "strength": 0.9 },
-    { "a": "instagram_giveaway", "b": "processing_fee", "strength": 0.8 },
-    { "a": "seed_phrase", "b": "instagram_support", "strength": 0.75 }
+    { "a": "you_have_won", "b": "processing_fee", "strength": 0.75 }
   ]
 }
