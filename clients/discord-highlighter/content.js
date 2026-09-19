@@ -2,6 +2,7 @@
   const HIGHLIGHT_CLASS = "discord-hl-mark";
   const WHY_CLASS = "sherpa-why-panel";
   const GATE_CLASS = "sherpa-gate";
+  const SELECT_BAR = "sherpa-select-bar";
   const prefsApi = globalThis.SherpaPrefs;
   let settings = prefsApi ? prefsApi.normalize(prefsApi.DEFAULTS) : { aggression: "point", descriptions: true };
   const BLOCK_TAGS = /^(PRE|UL|OL|BLOCKQUOTE|DIV|TABLE|H[1-6]|HR)$/;
@@ -309,7 +310,64 @@
     },
   };
 
-  const ALL_ADAPTERS = [DISCORD, INSTAGRAM, REDDIT];
+  const GOOGLE_UI =
+    "nav, header, [role='navigation'], [role='banner'], [role='menubar'], [role='menu'], button, [role='button'], textarea, svg, img, video, .docs-title-input, .docs-title-widget, #docs-chrome, .goog-menuitem, .menu-button";
+  const GOOGLE_COMPOSE =
+    ".docos-input, .docos-input-textarea, .docos-replyview-replybox, [aria-label='Join the discussion'], [aria-label^='New comment' i]";
+  const GOOGLE_HOST_SEL = [
+    ".docos-replyview-body",
+    ".docos-replyview-comment",
+    ".docs-chat-message",
+    "[data-comment-id]",
+    "[data-purpose='speaker-notes']",
+    ".punch-viewer-speakernotes-text",
+    ".sketchy-speakernotes",
+    "[aria-label='Speaker notes']",
+    ".sketchy-text-content",
+  ].join(",");
+
+  const GOOGLE = {
+    name: "google",
+    matchHost: (host) => /(?:^|\.)docs\.google\.com$|(?:^|\.)slides\.google\.com$/.test(host),
+    skip(el) {
+      if (!el || el.nodeType !== 1 || !el.closest) return true;
+      if (el.closest(GOOGLE_UI)) return true;
+      if (el.closest(GOOGLE_COMPOSE)) return true;
+      return false;
+    },
+    isHost(el) {
+      if (!el || el.nodeType !== 1 || this.skip(el)) return false;
+      if (!(el.matches && el.matches(GOOGLE_HOST_SEL))) return false;
+      if (el.matches("[data-comment-id]") && el.querySelector && el.querySelector(".docos-replyview-body")) {
+        return false;
+      }
+      const text = String(el.innerText || el.textContent || "").replace(/\s+/g, " ").trim();
+      return text.length >= 8 && text.length <= 4000;
+    },
+    closestHost(el) {
+      if (!el || !el.closest) return null;
+      const found = el.closest(GOOGLE_HOST_SEL);
+      return found && this.isHost(found) ? found : null;
+    },
+    hostsIn(root) {
+      if (!root || !root.querySelectorAll) return [];
+      const found = [];
+      if (this.isHost(root)) found.push(root);
+      root.querySelectorAll(GOOGLE_HOST_SEL).forEach((el) => {
+        if (this.isHost(el)) found.push(el);
+      });
+      return unique(found);
+    },
+    contentOf(host) {
+      if (!host) return host;
+      if (host.matches && host.matches("[data-comment-id]")) {
+        return host.querySelector(".docos-replyview-body") || host;
+      }
+      return host;
+    },
+  };
+
+  const ALL_ADAPTERS = [DISCORD, INSTAGRAM, REDDIT, GOOGLE];
 
   function adaptersFor(doc) {
     const host = hostnameOf(doc);
@@ -779,7 +837,8 @@
       node.classList &&
       (node.classList.contains(HIGHLIGHT_CLASS) ||
         node.classList.contains(WHY_CLASS) ||
-        node.classList.contains(GATE_CLASS))
+        node.classList.contains(GATE_CLASS) ||
+        node.classList.contains(SELECT_BAR))
     ) {
       return true;
     }
@@ -787,8 +846,75 @@
       node.closest &&
         (node.closest("." + HIGHLIGHT_CLASS) ||
           node.closest("." + WHY_CLASS) ||
-          node.closest("." + GATE_CLASS)),
+          node.closest("." + GATE_CLASS) ||
+          node.closest("." + SELECT_BAR)),
     );
+  }
+
+  function isGoogleSurface(doc) {
+    const host = hostnameOf(doc);
+    if (GOOGLE.matchHost(host)) return true;
+    return Boolean(doc.querySelector && doc.querySelector("[data-sherpa-google]"));
+  }
+
+  function ensureSelectBar(doc) {
+    let bar = doc.getElementById(SELECT_BAR);
+    if (bar) return bar;
+    bar = doc.createElement("div");
+    bar.id = SELECT_BAR;
+    bar.className = SELECT_BAR;
+    bar.hidden = true;
+    bar.setAttribute("role", "status");
+    (doc.body || doc.documentElement).appendChild(bar);
+    return bar;
+  }
+
+  function fillSelectBar(bar, result) {
+    const band = result.band || "caution";
+    const title = band === "high" ? "High risk signals" : "Caution";
+    const reasons = (result.reasons || []).slice(0, 3);
+    bar.dataset.band = band;
+    bar.innerHTML =
+      `<p class="discord-hl-warn">${clickWarning(band)}</p>` +
+      `<strong>${title} · selected text</strong>` +
+      (settings.descriptions && reasons.length
+        ? `<ul>${reasons.map((reason) => `<li>${escapeHtml(reason)}</li>`).join("")}</ul>`
+        : `<p>This selection matches common scam pressure tactics.</p>`);
+  }
+
+  function bindGoogleSelection(doc) {
+    if (!doc || !doc.documentElement || doc.documentElement.dataset.sherpaSelect === "1") return;
+    if (!isGoogleSurface(doc)) return;
+    doc.documentElement.dataset.sherpaSelect = "1";
+    const view = doc.defaultView;
+    let timer = 0;
+    const update = () => {
+      timer = 0;
+      const bar = ensureSelectBar(doc);
+      const sel = doc.getSelection ? doc.getSelection() : null;
+      const text = sel ? String(sel).replace(/\s+/g, " ").trim() : "";
+      if (!text || text.length < 12) {
+        bar.hidden = true;
+        return;
+      }
+      const anchor = sel.anchorNode && (sel.anchorNode.nodeType === 1 ? sel.anchorNode : sel.anchorNode.parentElement);
+      if (anchor && anchor.closest && (anchor.closest("." + SELECT_BAR) || anchor.closest("." + GATE_CLASS))) {
+        return;
+      }
+      const result = analyze(text);
+      if (result.band === "ok") {
+        bar.hidden = true;
+        return;
+      }
+      fillSelectBar(bar, result);
+      bar.hidden = false;
+    };
+    const schedule = () => {
+      if (timer) return;
+      timer = (view && view.setTimeout ? view.setTimeout : setTimeout)(update, 40);
+    };
+    doc.addEventListener("mouseup", schedule, true);
+    doc.addEventListener("keyup", schedule, true);
   }
 
   function processAddedNode(node) {
@@ -831,6 +957,7 @@
     }
     bindGuides(doc);
     bindIntercepts(doc);
+    bindGoogleSelection(doc);
     scan(doc);
     const view = doc.defaultView;
     const Observer =
