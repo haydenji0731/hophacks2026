@@ -1,0 +1,93 @@
+ askRules = [
+    ["gift card", ["gift_card"]],
+    ["gift_card", ["gift_card"]],
+    ["wire", ["wire_transfer"]],
+    ["crypto", ["cryptocurrency"]],
+    ["otp", ["otp_code"]],
+    ["remote", ["remote_access"]],
+    ["anydesk", ["remote_access"]],
+    ["teamviewer", ["remote_access"]],
+    ["seed phrase", ["seed_phrase"]],
+    ["password", ["password"]],
+    ["ssn", ["ssn"]],
+    ["deposit", ["deposit_before_viewing", "upfront_fee"]],
+    ["training", ["upfront_fee"]],
+    ["mule", ["receive_and_forward_money"]],
+    ["zelle", ["zelle"]],
+    ["venmo", ["venmo"]],
+  ];
+  for (const [needle, asks] of askRules) {
+    if (text.includes(needle)) tags.asks.push(...asks);
+  }
+
+  if ((scam.demands ?? []).includes("gift_card")) tags.asks.push("gift_card");
+  if ((scam.demands ?? []).includes("wire")) tags.asks.push("wire_transfer");
+  if ((scam.demands ?? []).includes("crypto")) tags.asks.push("cryptocurrency");
+  if ((scam.demands ?? []).includes("check")) tags.asks.push("fake_check");
+  if ((scam.demands ?? []).includes("cash")) tags.asks.push("payment_app");
+
+  const signalRules = [
+    ["secret", ["keep_it_secret"]],
+    ["urgency", ["urgency"]],
+    ["arrest", ["threatens_arrest"]],
+    ["spoof", ["spoofed_caller_id"]],
+    ["otp", ["asks_for_otp"]],
+    ["safe account", ["safe_account_story"]],
+  ];
+  for (const [needle, signals] of signalRules) {
+    if (text.includes(needle)) tags.signals.push(...signals);
+  }
+
+  return {
+    channels: unique(tags.channels),
+    hooks: unique(tags.hooks),
+    asks: unique(tags.asks),
+    signals: unique(tags.signals),
+  };
+}
+
+function adviceFor(scam) {
+  const blob = `${scam.slug} ${scam.description} ${scam.demands.join(" ")} ${(scam.catalogAdvice ?? []).join(" ")}`.toLowerCase();
+  const steps = [...(scam.catalogAdvice ?? [])];
+  const push = (line) => {
+    if (!steps.some((step) => step.toLowerCase() === line.toLowerCase())) steps.push(line);
+  };
+
+  push("Stop the conversation. Do not send more money, codes, or remote-access access.");
+  push("Verify through a number or website you look up yourself — never one they provided.");
+  push("Report it at reportfraud.ftc.gov. If money moved, call your bank or card issuer now.");
+
+  if (scam.demands.includes("gift_card")) {
+    push("Gift-card loads are treated like cash. Tell the store and the card issuer immediately; reversal is rare.");
+  }
+  if (scam.demands.includes("crypto")) {
+    push("Crypto transfers are usually irreversible. Save wallet addresses, TXIDs, and chat logs for a report.");
+  }
+  if (scam.demands.includes("wire")) {
+    push("Call the sending bank’s fraud line and ask them to recall the wire. Speed matters more than courtesy.");
+  }
+  if (scam.demands.includes("check")) {
+    push("A deposited check can bounce days later. Do not spend or “refund” any of it. Ask the bank to put a hold and file fraud.");
+  }
+  if (blob.includes("remote") || blob.includes("anydesk") || blob.includes("teamviewer")) {
+    push("Disconnect from the internet, uninstall the remote tool, and change passwords from a different device.");
+  }
+  if (blob.includes("otp") || blob.includes("seed phrase") || blob.includes("password")) {
+    push("Treat shared codes or seed phrases as a full account compromise. Reset credentials and enable a new 2FA method.");
+  }
+  if (blob.includes("romance") || blob.includes("dating") || blob.includes("sugar") || blob.includes("e_dating")) {
+    push("Tell someone you trust. E-dating and “investment mentor” cons rely on isolation and urgency.");
+  }
+  if (blob.includes("job") || blob.includes("training") || blob.includes("mule")) {
+    push("Real employers do not charge you to get hired, and they do not pay you to cash checks or reship parcels.");
+  }
+  if ((scam.reportTo ?? []).length) {
+    push(`Agencies that take this: ${scam.reportTo.join(", ")}.`);
+  }
+
+  return steps.slice(0, 8);
+}
+
+function simpleAdvice(scam) {
+  const blob = `${scam.slug} ${scam.description}`.toLowerCase();
+  const fromCatalog = (scam.catalogAdvic
