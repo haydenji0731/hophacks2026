@@ -1,9 +1,27 @@
 import os
 import json
+from pathlib import Path
+
 import requests
 
-API_KEY = os.environ.get("XAI_API_KEY")
+try:
+    from dotenv import load_dotenv
+
+    # Repo root is backend/detector/ -> parents[2]
+    load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+except ImportError:
+    pass
+
 API_URL = "https://api.x.ai/v1/chat/completions"
+
+
+def _api_key() -> str:
+    """Read the key at call time so importing this module never fails."""
+    key = os.environ.get("XAI_API_KEY")
+    if not key:
+        raise RuntimeError("XAI_API_KEY is not set. Add it to the repo-root .env file.")
+    return key
+
 
 # ---------------------------------------------------------------------------
 # STEP 1: Fixed, hardcoded early questions.
@@ -67,6 +85,10 @@ EXTRACTION_PROMPT = """You are helping build a public scam database. A user has 
 some structured questions and then described, in their own words, a scenario they think
 might be a scam. Your job is to extract a clean, structured report from all of this.
 
+PRIVACY: the output is published publicly. Never include names, phone numbers, email
+addresses, street addresses, account or card numbers, or any other personal information
+in ANY field. Describe people by role only (e.g. "the caller", "a family member").
+
 Respond with ONLY a valid JSON object, no markdown formatting, no extra text.
 The JSON must have exactly these fields:
 {
@@ -75,11 +97,23 @@ The JSON must have exactly these fields:
   "confidence": a number from 0.0 to 1.0,
   "method": "how the scammer approached and what they asked for, in a short phrase",
   "target": "who this appears to target, based on context (e.g. 'elderly individual', 'general consumer', 'unclear')",
-  "novel_pattern": true or false,  // true if this describes a tactic/approach that seems distinct from common well-known scam types
+  "novel_pattern": true or false,
   "summary": "a 2-3 sentence neutral summary of what happened, written for other users to learn from",
   "reasoning": "one to two sentences on why you classified it this way"
 }
+(novel_pattern is true if this describes a tactic/approach that seems distinct from common well-known scam types.)
 """
+
+
+def parse_json_response(raw_text: str) -> dict:
+    """Parse Grok's reply, tolerating a ```json ... ``` fence around the object."""
+    try:
+        return json.loads(raw_text)
+    except json.JSONDecodeError:
+        cleaned = raw_text.strip()
+        cleaned = cleaned.removeprefix("```json").removeprefix("```")
+        cleaned = cleaned.removesuffix("```").strip()
+        return json.loads(cleaned)
 
 
 def extract_scam_report(fixed_answers: dict, free_text: str) -> dict:
@@ -101,7 +135,7 @@ User's own description of what happened:
     }
 
     headers = {
-        "Authorization": f"Bearer {API_KEY}",
+        "Authorization": f"Bearer {_api_key()}",
         "Content-Type": "application/json",
     }
 
@@ -113,16 +147,11 @@ User's own description of what happened:
         response.raise_for_status()
 
     data = response.json()
-    raw_text = data["choices"][0]["message"]["content"]
-
-    try:
-        result = json.loads(raw_text)
-    except json.JSONDecodeError:
-        cleaned = raw_text.strip().strip("```json").strip("```").strip()
-        result = json.loads(cleaned)
+    result = parse_json_response(data["choices"][0]["message"]["content"])
 
     result["fixed_answers"] = fixed_answers
-    result["raw_description"] = free_text
+    # NOTE: the user's raw free text is deliberately NOT copied into the result,
+    # so it can't be written to the public database by accident.
     return result
 
 
@@ -131,7 +160,6 @@ User's own description of what happened:
 # user input. Swap `simulated_answer_fn` for a real frontend/CLI input
 # function when wiring this into the actual product.
 # ---------------------------------------------------------------------------
-
 if __name__ == "__main__":
     # Simulated answers for testing -- replace with real input collection later
     simulated_answers_queue = iter([

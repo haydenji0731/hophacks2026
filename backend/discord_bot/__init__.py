@@ -1,0 +1,1 @@
+"""Discord scam-check bot."""
