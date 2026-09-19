@@ -4,43 +4,46 @@
     <meta charset="utf-8" />
     <title>Sherpa</title>
     <style>
+      @font-face {
+        font-family: "JetBrains Mono";
+        src: url("fonts/JetBrainsMono-Regular.woff2") format("woff2");
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+      @font-face {
+        font-family: "JetBrains Mono";
+        src: url("fonts/JetBrainsMono-Bold.woff2") format("woff2");
+        font-weight: 700;
+        font-style: normal;
+        font-display: swap;
+      }
       :root {
         color-scheme: dark;
       }
       body {
         margin: 0;
         width: 280px;
-        padding: 12px;
+        padding: 14px;
         background: #1e1f22;
         color: #dbdee1;
-        font: 13px/1.4 "gg sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+        font: 12.5px/1.45 "JetBrains Mono", ui-monospace, monospace;
       }
       header {
-        display: flex;
-        gap: 10px;
-        align-items: center;
-        margin-bottom: 10px;
-      }
-      header svg {
-        width: 28px;
-        height: 28px;
-        border-radius: 7px;
-        flex: none;
+        margin-bottom: 12px;
       }
       h1 {
         margin: 0;
-        font-size: 15px;
-      }
-      .sub {
-        margin: 2px 0 0;
-        color: #b5bac1;
-        font-size: 12px;
+        font-size: 28px;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        line-height: 1.1;
       }
       .status {
         padding: 8px 10px;
         border-radius: 8px;
         background: #2b2d31;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
       }
       .status strong {
         display: block;
@@ -56,26 +59,53 @@
         color: #e05a5a;
       }
       .pref {
-        margin-bottom: 10px;
+        margin-bottom: 12px;
       }
       .pref-title {
-        margin: 0 0 6px;
+        margin: 0 0 8px;
+        font-weight: 700;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: #b5bac1;
+      }
+      .switch-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .switch-row span {
         font-weight: 700;
       }
-      input[type="range"] {
-        width: 100%;
-        accent-color: #5865f2;
+      .switch {
+        position: relative;
+        width: 44px;
+        height: 24px;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        background: #3f4147;
+        cursor: pointer;
+        flex: none;
       }
-      .ticks {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 2px;
-        color: #b5bac1;
-        font-size: 12px;
-        font-weight: 600;
+      .switch[aria-checked="true"] {
+        background: #5865f2;
+      }
+      .switch .knob {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #fff;
+        transition: transform 0.16s ease;
+      }
+      .switch[aria-checked="true"] .knob {
+        transform: translateX(20px);
       }
       #agg-copy {
-        margin: 6px 0 0;
+        margin: 8px 0 0;
         color: #b5bac1;
       }
       .check {
@@ -86,36 +116,34 @@
         cursor: pointer;
       }
       .check input {
-        margin-top: 2px;
+        margin-top: 3px;
         flex: none;
+        accent-color: #5865f2;
       }
     </style>
   </head>
   <body>
     <header>
-      <svg viewBox="0 0 32 32" aria-hidden="true">
-        <rect width="32" height="32" rx="8" fill="#1e1f22" />
-        <rect x="5" y="9" width="22" height="6" rx="2" fill="#e2b422" />
-        <rect x="5" y="17" width="22" height="6" rx="2" fill="#e05a5a" />
-      </svg>
-      <div>
-        <h1>Sherpa</h1>
-        <p class="sub">Offline check · nothing is sent away</p>
-      </div>
+      <h1>Sherpa</h1>
     </header>
     <div class="status" id="status" data-ok="maybe">
       <strong id="status-title">Checking this tab…</strong>
       <span id="status-detail">See if Sherpa is injected here.</span>
     </div>
     <section class="pref">
-      <p class="pref-title">Aggressiveness</p>
-      <input id="aggression" type="range" min="0" max="1" step="1" value="0" />
-      <div class="ticks"><span>Warn</span><span>Block</span></div>
+      <p class="pref-title">Mode</p>
+      <div class="switch-row">
+        <span>Warn</span>
+        <button type="button" class="switch" id="aggression" role="switch" aria-checked="false" aria-label="Block mode">
+          <span class="knob"></span>
+        </button>
+        <span>Block</span>
+      </div>
       <p id="agg-copy"></p>
     </section>
     <label class="check">
       <input id="descriptions" type="checkbox" checked />
-      <span>Show descriptions — hover a highlight for the reason</span>
+      <span>Show descriptions on hover</span>
     </label>
     <script src="settings.js"></script>
     <script src="popup.js"></script>

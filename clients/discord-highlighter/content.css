@@ -1,3 +1,19 @@
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("fonts/JetBrainsMono-Regular.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("fonts/JetBrainsMono-Bold.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* Ink sits only on flagged text, not the avatar or message row. */
 .discord-hl-mark {
   --hl-h: 1.3em;
@@ -47,7 +63,7 @@
   border-radius: 10px;
   background: #1e1f22;
   color: #dbdee1;
-  font: 12px/1.35 "gg sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font: 12px/1.45 "JetBrains Mono", ui-monospace, monospace;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
   pointer-events: none;
 }
@@ -114,7 +130,7 @@
   border-radius: 12px;
   background: #1e1f22;
   color: #dbdee1;
-  font: 14px/1.4 "gg sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font: 13px/1.45 "JetBrains Mono", ui-monospace, monospace;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
 }
 
@@ -167,7 +183,7 @@
   border-radius: 10px;
   background: #1e1f22;
   color: #dbdee1;
-  font: 12px/1.35 "gg sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font: 12px/1.45 "JetBrains Mono", ui-monospace, monospace;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
 }
 

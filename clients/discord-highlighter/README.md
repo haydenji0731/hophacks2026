@@ -8,9 +8,9 @@ Nothing is sent off your machine. This is a warning, not a verdict.
 
 ## Aggressiveness
 
-Open the toolbar popup and use the slider.
+Open the toolbar popup and use the Warn / Block switch.
 
-| Level | What it does |
+| Mode | What it does |
 | --- | --- |
 | **Warn** (default) | Highlight the text. Hover a highlight for the reason when descriptions are on. Links open normally. |
 | **Block** | Same highlights, and a click on a **highlighted** link always asks **Continue / Go back** and shows the real destination. Ordinary links are left alone. |
@@ -31,7 +31,7 @@ If it is already loaded, click **Reload** after pulling changes.
 1. Pin **Sherpa** from the Chrome puzzle-piece menu so the toolbar button stays visible.
 2. Open Discord, Instagram, Reddit, Docs, or Slides.
 3. Click the icon. It should say **Working on this tab**.
-4. Set Warn / Block and the descriptions checkbox. Those apply to the current tab immediately.
+4. Set Warn / Block with the switch, and the descriptions checkbox. Those apply to the current tab immediately.
 
 If it says it is not injected, reload the tab or reload the unpacked extension.
 
@@ -52,7 +52,7 @@ Avatars, nav chrome, and composers are never painted.
 | Discord | User messages (stable, PTB, Canary), including ones you just sent. Survives DM / channel switches. |
 | Instagram | Direct messages, captions, and comments. Rebuilds word-split bubbles inside the DM form and paints only the text. |
 | Reddit | Post bodies/titles and comments (new and old Reddit). |
-| Google Docs | Comments and in-doc chat. The page body is a canvas, so select a passage to score it. |
+| Google Docs | Comments, chat, and text as you type (including the canvas editor). Select a passage to rescore it. |
 | Google Slides | Comments, speaker notes, and on-slide text boxes. Select canvas text to score it. |
 
 ## Develop
@@ -73,6 +73,6 @@ npm run build
 | `scorer.js` | Bundled offline analyzer |
 | `settings.js` | Warn / Block + descriptions prefs |
 | `content.js` | Site adapters, highlights, hover popup, link gate |
-| `popup.html` / `popup.js` | Toolbar: slider, descriptions, ping |
+| `popup.html` / `popup.js` | Toolbar: mode switch, descriptions, ping |
 | `content.css` | Highlighter, floating reason box, confirm gate |
 | `scam-smell/` | Source, data, and fixtures |

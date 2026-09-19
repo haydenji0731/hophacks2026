@@ -2,14 +2,14 @@
   const titleEl = document.getElementById("status-title");
   const detailEl = document.getElementById("status-detail");
   const box = document.getElementById("status");
-  const slider = document.getElementById("aggression");
+  const modeSwitch = document.getElementById("aggression");
   const copyEl = document.getElementById("agg-copy");
   const descBox = document.getElementById("descriptions");
   const prefs = globalThis.SherpaPrefs;
 
   const COPY = {
-    warn: "Warn. Highlight suspicious text. Hover for the reason when descriptions are on. Links open normally.",
-    block: "Block. Same highlights, and a click on a highlighted link always asks Continue / Go back with the real destination.",
+    warn: "Highlight flagged text. Links open normally.",
+    block: "Highlighted links ask Continue / Go back first.",
   };
 
   function setStatus(ok, title, detail) {
@@ -18,24 +18,29 @@
     detailEl.textContent = detail;
   }
 
+  function currentMode() {
+    return modeSwitch.getAttribute("aria-checked") === "true" ? "block" : "warn";
+  }
+
   function renderPrefs(value) {
-    slider.value = String(prefs.indexOf(value.aggression));
+    modeSwitch.setAttribute("aria-checked", value.aggression === "block" ? "true" : "false");
     descBox.checked = value.descriptions;
     copyEl.textContent = COPY[value.aggression] || COPY.warn;
   }
 
   function persist() {
-    const aggression = prefs.LEVELS[Number(slider.value)] || "warn";
-    prefs.save({ aggression, descriptions: descBox.checked }, renderPrefs);
-    if (typeof chrome !== "undefined" && chrome.tabs && chrome.tabs.query) {
+    const next = { aggression: currentMode(), descriptions: descBox.checked };
+    prefs.save(next, (value) => {
+      renderPrefs(value);
+      if (typeof chrome === "undefined" || !chrome.tabs || !chrome.tabs.query) return;
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         const tab = tabs && tabs[0];
         if (!tab || !tab.id) return;
-        chrome.tabs.sendMessage(tab.id, { type: "sherpa-prefs" }, () => {
+        chrome.tabs.sendMessage(tab.id, { type: "sherpa-prefs", settings: value }, () => {
           void chrome.runtime.lastError;
         });
       });
-    }
+    });
   }
 
   async function checkTab() {
@@ -80,7 +85,11 @@
     );
   }
 
-  slider.addEventListener("input", persist);
+  modeSwitch.addEventListener("click", () => {
+    const next = modeSwitch.getAttribute("aria-checked") !== "true";
+    modeSwitch.setAttribute("aria-checked", next ? "true" : "false");
+    persist();
+  });
   descBox.addEventListener("change", persist);
   prefs.load(renderPrefs);
   checkTab();

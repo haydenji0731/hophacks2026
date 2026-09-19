@@ -1,8 +1,8 @@
 {
   "name": "sherpa",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "private": true,
-  "description": "Sherpa: Chrome extension that flags suspicious Discord, Instagram, Reddit, Docs, and Slides text offline.",
+  "description": "Sherpa: Chrome extension that flags suspicious Discord, Instagram, Reddit, Docs, and Slides text.",
   "scripts": {
     "build": "esbuild scam-smell/src/index.ts --bundle --minify --format=iife --global-name=ScamSmell --outfile=scorer.js --footer:js=\"globalThis.ScamSmell=ScamSmell;if(typeof module!=='undefined'&&module.exports)module.exports=ScamSmell;\"",
     "test": "npm run build && node test/highlight.test.js && node test/sites.test.js && node test/sherpa.test.js && tsx --test scam-smell/tests/score.test.ts"
