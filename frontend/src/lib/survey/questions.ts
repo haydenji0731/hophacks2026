@@ -189,12 +189,9 @@ function themeOf(answers: Record<string, string>): string {
 const CHANNEL_TAGS: Record<string, Parameters<typeof tagMatch>[1]> = {
   phone: { channels: ["phone", "robocall"] },
   sms: { channels: ["sms"] },
-  chat: { channels: ["messaging_app"] },
-  social: { channels: ["social_dm", "comments"] },
-  dating: { channels: ["dating_app"] },
+  chat: { channels: ["messaging_app", "social_dm", "comments", "dating_app"] },
   marketplace: { channels: ["marketplace"] },
   web: { channels: ["email", "search", "popup", "ads", "search_ad"] },
-  qr: { channels: ["qr_code"] },
   in_person: { channels: ["in_person", "mail", "door_to_door", "qr_code"] },
 };
 
@@ -205,20 +202,16 @@ function channelFallback(scam: Scam, value: string): boolean | null {
       return scam.platforms.includes("phone");
     case "sms":
       return scam.platforms.includes("sms");
-    case "discord":
-      return scam.platforms.includes("discord") || text.includes("discord");
     case "web":
       return scam.platforms.includes("web");
     case "chat":
-    case "social":
-    case "dating":
       return (
-        hasAny(text, ["whatsapp", "telegram", "tiktok", "wrong number", "dating", "instagram"]) ||
+        scam.platforms.includes("discord") ||
+        hasAny(text, ["whatsapp", "telegram", "tiktok", "wrong number", "dating", "instagram", "discord"]) ||
         (scam.platforms.includes("other") && !scam.platforms.includes("phone") && !scam.platforms.includes("web"))
       );
     case "marketplace":
       return hasAny(text, ["marketplace", "rental", "ebay", "craigslist"]);
-    case "qr":
     case "in_person":
       return hasAny(text, ["atm", "bus stop", "meetup", "courier", "parking", "skimmer", "in store", "retail", "windshield", "qr"]);
     default:
@@ -231,14 +224,24 @@ const ASK_TAGS: Record<string, Parameters<typeof tagMatch>[1]> = {
     asks: ["gift_card", "wire_transfer", "cryptocurrency", "cryptocurrency_deposit", "payment_app", "wire"],
   },
   safe_account: { asks: ["transfer_funds"], signals: ["safe_account_story"] },
-  otp: { asks: ["otp_code", "otp", "verification_code"] },
-  remote: { asks: ["remote_access"] },
-  password: { asks: ["password", "seed_phrase", "private_key", "fsa_id"] },
+  access: {
+    asks: [
+      "otp_code",
+      "otp",
+      "verification_code",
+      "remote_access",
+      "password",
+      "seed_phrase",
+      "private_key",
+      "fsa_id",
+      "wallet_connect",
+      "transaction_signature",
+    ],
+  },
   fee: {
     asks: ["upfront_fee", "deposit_before_viewing", "advance_fee", "deposit", "shipping_fee", "click_link", "payment_card", "card_details"],
   },
   ids: { asks: ["ssn", "medicare_number", "personal_info", "personal_id"] },
-  wallet: { asks: ["wallet_connect", "transaction_signature"] },
   mule: { asks: ["receive_and_forward_money", "open_accounts"] },
 };
 
@@ -255,164 +258,25 @@ const HOOK_TAGS: Record<string, Parameters<typeof tagMatch>[1]> = {
     ],
   },
   bank: { hooks: ["fraud_alert", "account_compromise", "lower_interest"] },
-  brand: {
-    hooks: ["brand_impersonation", "virus_warning", "unauthorized_charge", "warranty_expiring", "service_shutoff"],
+  company: {
+    hooks: [
+      "brand_impersonation",
+      "virus_warning",
+      "unauthorized_charge",
+      "warranty_expiring",
+      "service_shutoff",
+      "wallet_error",
+      "support_help",
+      "need_support",
+    ],
   },
   romance: { hooks: ["romance", "love_bombing", "wrong_number", "friendship"] },
   job: { hooks: ["easy_money", "remote_work", "brand_employer", "work_from_home"] },
   marketplace: { hooks: ["below_market_rent", "local_deal", "cute_pet", "overpayment"] },
   prize: { hooks: ["prize", "unexpected_wealth", "free_tokens", "celebrity", "free_vacation"] },
-  tech: { hooks: ["virus_warning", "wallet_error", "support_help", "need_support"] },
   family: { hooks: ["family_crisis", "ai_voice", "friend_impersonation"] },
-  charity: { hooks: ["disaster", "sympathy", "veterans", "free_money", "government_benefit"] },
 };
 
 function reasonIf(scam: Scam, value: string, matcher: Question["matches"], label: string): string | null {
   return matcher(scam, value) ? label : null;
 }
-
-export const QUESTIONS: Question[] = [
-  {
-    id: "source",
-    prompt: "How did you get here?",
-    helper: "This only changes which follow-up we ask. You can skip it.",
-    kind: "choice",
-    priority: 1,
-    options: [
-      { id: "phone", label: "I got a text warning about a phone call" },
-      { id: "extension", label: "A prompt while I was chatting or browsing" },
-      { id: "own", label: "I came here on my own" },
-    ],
-    matches(scam, value) {
-      if (value === "phone") {
-        return scam.platforms.includes("phone") || scam.platforms.includes("sms") || hasTag(scam, "channels", ["phone", "robocall", "sms"]);
-      }
-      if (value === "extension") {
-        return (
-          scam.platforms.includes("web") ||
-          scam.platforms.includes("discord") ||
-          hasTag(scam, "channels", ["social_dm", "messaging_app", "dating_app", "email"]) ||
-          hasAny(blob(scam), ["whatsapp", "telegram", "dating", "instagram", "tiktok"])
-        );
-      }
-      return null;
-    },
-    reason(scam, value) {
-      if (value === "phone" && this.matches(scam, value)) {
-        return "Often starts on a call or a warning text";
-      }
-      if (value === "extension" && this.matches(scam, value)) {
-        return "Often starts in chat, mail, or a website";
-      }
-      return null;
-    },
-  },
-  {
-    id: "age",
-    prompt: "Which age group should we write for?",
-    helper: "Under 18 and 55+ get a shorter, plainer result. We do not store a name or exact age.",
-    kind: "choice",
-    priority: 2,
-    options: [
-      { id: "child", label: "Under 18" },
-      { id: "adult", label: "18–54" },
-      { id: "older", label: "55 or older" },
-    ],
-    matches: () => null,
-  },
-  {
-    id: "notify_about",
-    prompt: "What did the warning — or the caller — say this was about?",
-    helper: "If you are not sure, skip. We will ask a couple more questions.",
-    kind: "choice",
-    priority: 3,
-    skipIf: (answers) => answers.source !== "phone",
-    options: [
-      { id: "government", label: "A bank, the IRS, police, or a government office" },
-      { id: "family", label: "A family emergency, arrest, or relative in trouble" },
-      { id: "account", label: "A computer virus, hacked account, or tech support" },
-      { id: "package", label: "A package, delivery, or customs fee" },
-      { id: "investment", label: "An investment, refund, or prize" },
-      { id: "other", label: "Something else" },
-    ],
-    matches: themeMatch,
-    reason(scam, value) {
-      if (value === "other" || !this.matches(scam, value)) return null;
-      return "Matches what the warning was about";
-    },
-  },
-  {
-    id: "evidence",
-    prompt: "Want to add a copy of the conversation?",
-    helper:
-      "Optional. Paste or attach a text export. Files stay on this device — nothing is uploaded. Screenshots cannot be read here; paste a few lines instead.",
-    kind: "upload",
-    priority: 4,
-    skipIf: (answers) =>
-      answers.source !== "extension" &&
-      answers.channel !== "web" &&
-      answers.channel !== "chat" &&
-      answers.channel !== "social" &&
-      answers.channel !== "discord",
-    matches: () => null,
-  },
-  {
-    id: "channel",
-    prompt: "How did this start?",
-    helper: "Pick the first channel they used.",
-    kind: "choice",
-    priority: 5,
-    skipIf: (answers) => answers.source === "phone",
-    options: [
-      { id: "phone", label: "A phone call, robocall, or voicemail" },
-      { id: "sms", label: "A text message" },
-      { id: "chat", label: "WhatsApp, Telegram, or another chat app" },
-      { id: "social", label: "A social-media DM or comment" },
-      { id: "dating", label: "A dating app" },
-      { id: "marketplace", label: "A marketplace or classified listing" },
-      { id: "web", label: "Email, a website, ad, or search result" },
-      { id: "discord", label: "Discord" },
-      { id: "qr", label: "A QR code in public" },
-      { id: "in_person", label: "In person, mail, or a meetup" },
-    ],
-    matches: (scam, value) => exclusiveTagMatch(scam, value, CHANNEL_TAGS, channelFallback),
-    reason(scam, value) {
-      const labels: Record<string, string> = {
-        phone: "Usually starts on a phone call",
-        sms: "Often arrives as a text",
-        chat: "Moves onto WhatsApp, Telegram, or a similar chat",
-        social: "Starts as a DM or comment",
-        dating: "Starts on a dating app",
-        marketplace: "Starts on a listing",
-        web: "Lives on the web, email, or an ad",
-        discord: "Hits Discord users",
-        qr: "Uses a public QR code",
-        in_person: "Has an in-person, mail, or meetup step",
-      };
-      return this.matches(scam, value) ? labels[value] ?? null : null;
-    },
-  },
-  {
-    id: "theme",
-    prompt: "What was it about?",
-    helper: "Choose the closest story. Skip if you are not sure.",
-    kind: "choice",
-    skipIf: (answers) => Boolean(answers.notify_about) && answers.notify_about !== "skip",
-    options: [
-      { id: "job", label: "A job, side hustle, or “easy money” task" },
-      { id: "marketplace", label: "Buying or selling something (including rentals or tickets)" },
-      { id: "romance", label: "Dating, romance, or a new online friend" },
-      { id: "package", label: "A package, delivery, or customs fee" },
-      { id: "account", label: "An account lock, hack, or “verify now” warning" },
-      { id: "family", label: "A family emergency, arrest, or someone claiming to be a relative" },
-      { id: "investment", label: "An investment, crypto trade, or guaranteed return" },
-      { id: "government", label: "Taxes, benefits, police, a bank, or a utility" },
-      { id: "other", label: "Something else" },
-    ],
-    matches: themeMatch,
-    reason(scam, value) {
-      if (value === "other" || !this.matches(scam, value)) return null;
-      return `Fits the “${value}” pattern in the encyclopedia`;
-    },
-  },
-];
