@@ -1,0 +1,110 @@
+:root {
+  --bg: #0c0708;
+  --card: #1a0f12;
+  --text: #f6ecec;
+  --muted: #b39a9a;
+  --accent: #ff5c5c;
+  --border: rgb(255 92 92 / 0.22);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  width: 320px;
+  padding: 16px;
+  background: var(--bg);
+  color: var(--text);
+  font: 13px/1.45 ui-sans-serif, system-ui, sans-serif;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--accent);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-size: 10px;
+}
+
+h1 {
+  margin: 4px 0 14px;
+  font-size: 20px;
+  letter-spacing: -0.03em;
+}
+
+h2 {
+  margin: 0 0 8px;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.card {
+  border: 1px solid var(--border);
+  background: var(--card);
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 32px;
+}
+
+.hint {
+  margin: 8px 0 0;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.meta .k {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+button,
+a {
+  color: var(--text);
+}
+
+button {
+  min-height: 36px;
+  border: 0;
+  border-radius: 4px;
+  background: var(--accent);
+  color: #14080a;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 0 10px;
+}
+
+a {
+  color: var(--accent);
+}
+
+.status {
+  margin-top: 10px;
+  color: var(--muted);
+}
