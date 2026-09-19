@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     )
     request_timeout_seconds: float = 30.0
     max_upload_bytes: int = 10 * 1024 * 1024
-    yes_threshold: float = 0.70
+    yes_threshold: float = 0.50
     no_threshold: float = 0.30
     clip_seconds: float = 30.0
 

@@ -13,9 +13,10 @@ from models import CLASSIFIER_LIMITATIONS
 def test_map_ai_voice_used_thresholds() -> None:
     assert map_ai_voice_used(0.91) == "yes"
     assert map_ai_voice_used(0.70) == "yes"
+    assert map_ai_voice_used(0.50) == "yes"
     assert map_ai_voice_used(0.30) == "no"
     assert map_ai_voice_used(0.05) == "no"
-    assert map_ai_voice_used(0.5) == "unknown"
+    assert map_ai_voice_used(0.40) == "unknown"
 
 
 def test_build_detect_response() -> None:

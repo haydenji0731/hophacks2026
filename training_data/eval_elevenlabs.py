@@ -6,7 +6,7 @@ Labels from filename (same convention as Human/AI transcript pairs):
   *AI*    → expected AI = True
 
 Positive class = AI voice.
-  - Pred yes  (score >= YES_THRESHOLD, default 0.70) → AI
+  - Pred yes  (score >= YES_THRESHOLD, default 0.50) → AI
   - Pred no   (score <= NO_THRESHOLD, default 0.30) → human
   - Pred unknown → counted separately (not in P/R)
 
@@ -35,7 +35,7 @@ RETRIES = 3
 RETRY_SLEEP_S = 2.0
 
 # Match ai_audio defaults; override via env YES_THRESHOLD / NO_THRESHOLD if settings load them.
-YES_THRESHOLD = 0.70
+YES_THRESHOLD = 0.50
 NO_THRESHOLD = 0.30
 
 

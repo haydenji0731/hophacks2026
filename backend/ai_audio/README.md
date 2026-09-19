@@ -18,7 +18,7 @@ Optional `.env`:
 
 ```
 ELEVENLABS_API_KEY=  # sent as xi-api-key if set; classifier historically works without it
-YES_THRESHOLD=0.70
+YES_THRESHOLD=0.50
 NO_THRESHOLD=0.30
 REQUEST_TIMEOUT_SECONDS=30
 MAX_UPLOAD_BYTES=10485760
@@ -51,7 +51,7 @@ Example success body:
 }
 ```
 
-`ai_voice_used`: `yes` if score ≥ 0.70, `no` if ≤ 0.30, otherwise `unknown`.
+`ai_voice_used`: `yes` if score ≥ 0.50, `no` if ≤ 0.30, otherwise `unknown`.
 
 If ElevenLabs is down or returns garbage, the endpoint responds **502/504** with `error: classifier_unavailable` so the scam detector can keep going on language/vector signals only.
 
