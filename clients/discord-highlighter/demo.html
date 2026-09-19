@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Scam Smell preview</title>
+    <title>Sherpa preview</title>
     <link rel="stylesheet" href="content.css" />
     <style>
       html,
@@ -26,6 +26,41 @@
       .lede {
         margin: 0 0 20px;
         color: #b5bac1;
+      }
+      .prefs {
+        display: grid;
+        gap: 10px;
+        margin: 0 0 20px;
+        padding: 14px;
+        border-radius: 12px;
+        background: #2b2d31;
+      }
+      .prefs label {
+        margin: 0;
+        font-weight: 600;
+      }
+      .prefs input[type="range"] {
+        width: 100%;
+        accent-color: #5865f2;
+      }
+      .ticks {
+        display: flex;
+        justify-content: space-between;
+        color: #b5bac1;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      #agg-copy {
+        margin: 0;
+        color: #b5bac1;
+        font-size: 13px;
+      }
+      .check {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        font-weight: 500;
+        cursor: pointer;
       }
       .paste {
         margin-bottom: 28px;
@@ -134,11 +169,22 @@
   </head>
   <body>
     <div class="page">
-      <h1>Scam Smell</h1>
+      <h1>Sherpa</h1>
       <p class="lede">
         Offline warnings for Discord, Instagram, and Reddit. Yellow is caution, red is high risk.
-        Hover a highlight for why. Normal chat is left alone — this is a signal, not a verdict.
+        Click a highlight to read why. Point never interrupts a click. Warn and Block ask before a
+        risky or mismatched link opens. This is a signal, not a verdict.
       </p>
+      <section class="prefs">
+        <label for="aggression">Aggressiveness</label>
+        <input id="aggression" type="range" min="0" max="2" step="1" value="0" />
+        <div class="ticks"><span>Point</span><span>Warn</span><span>Block</span></div>
+        <p id="agg-copy"></p>
+        <label class="check">
+          <input id="descriptions" type="checkbox" checked />
+          <span>Show descriptions</span>
+        </label>
+      </section>
       <form class="paste" id="paste-form">
         <label for="paste-text">Paste a DM, email snippet, or ad</label>
         <textarea id="paste-text" placeholder="IRS: pay overdue tax with Apple gift cards today…"></textarea>
@@ -192,6 +238,25 @@
             <div id="message-content-500">FREE Discord Nitro giveaway! First 10 people click here: https://discord.gift/abc123</div>
           </div>
         </li>
+        <li id="chat-messages-1-600">
+          <div class="avatar" aria-hidden="true"></div>
+          <div>
+            <h3 class="name">PayNotice</h3>
+            <div id="message-content-600">
+              Click to verify your account at <a href="https://evil.example/paypal">paypal.com/login</a>
+            </div>
+          </div>
+        </li>
+        <li id="chat-messages-1-700">
+          <div class="avatar" aria-hidden="true"></div>
+          <div>
+            <h3 class="name">IRS-Link</h3>
+            <div id="message-content-700">
+              IRS: pay overdue tax with Apple gift cards today, don't tell anyone.
+              <a href="https://not-irs.example/pay">Open payment portal</a>
+            </div>
+          </div>
+        </li>
       </ol>
       <h2 class="section-title">Instagram DM</h2>
       <form>
@@ -243,8 +308,28 @@
       </shreddit-comment>
     </div>
     <script src="scorer.js"></script>
+    <script src="settings.js"></script>
     <script src="content.js"></script>
     <script>
+      const COPY = {
+        point: "Point (Guide). Mark the text and stop there. Open a highlight for the reason. No click interrupts.",
+        warn: "Warn (Guard). High-risk or mismatched links ask Continue / Go back before they open.",
+        block: "Block. Links inside highlighted text always stop first and show the real destination.",
+      };
+      const slider = document.getElementById("aggression");
+      const desc = document.getElementById("descriptions");
+      const copyEl = document.getElementById("agg-copy");
+      function persist() {
+        const aggression = globalThis.SherpaPrefs.LEVELS[Number(slider.value)] || "point";
+        const next = { aggression, descriptions: desc.checked };
+        globalThis.SherpaPrefs.save(next);
+        if (globalThis.Sherpa) globalThis.Sherpa.applySettings(next);
+        copyEl.textContent = COPY[aggression];
+      }
+      slider.addEventListener("input", persist);
+      desc.addEventListener("change", persist);
+      persist();
+
       document.getElementById("paste-form").addEventListener("submit", (event) => {
         event.preventDefault();
         const text = document.getElementById("paste-text").value;
@@ -256,7 +341,7 @@
           return;
         }
         const warn =
-          result.band === "high" ? "DO NOT CLICK" : "BE CAREFUL BEFORE CLICKING THIS";
+          result.band === "high" ? "DO NOT CLICK ANY LINKS." : "BE MINDFUL OF LINKS";
         const label = result.band === "high" ? "High risk signals" : "Caution";
         out.textContent = `${warn} · ${label} · ${result.score}/100. ${result.reasons.join(" ")}`;
       });
