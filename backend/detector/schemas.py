@@ -129,6 +129,7 @@ class NewsArticle(BaseModel):
     dek: str
     href: str
     featured: bool = False
+    tag: Literal["new", "hot"] | None = None
 
 
 class NewsFeedResponse(BaseModel):

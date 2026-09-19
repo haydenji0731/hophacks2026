@@ -3,7 +3,15 @@ from types import SimpleNamespace
 import pytest
 
 from grok import GrokError
-from news_wire import align_cards, fallback_cards, parse_articles, refresh_wire, serialize_scam
+from news_wire import (
+    align_cards,
+    fallback_cards,
+    live_cards,
+    mix_feed_rows,
+    parse_articles,
+    refresh_wire,
+    serialize_scam,
+)
 from settings import settings
 
 
@@ -101,8 +109,58 @@ def test_align_cards_keeps_newest_row_if_grok_skips_it() -> None:
         "job-offer-training-equipment-fee",
     ]
     assert cards[0]["featured"] is True
+    assert cards[0]["tag"] == "new"
+    assert cards[1]["tag"] == "hot"
     assert "microsoft_teams_vishing_meeting" in cards[0]["dek"]
     assert cards[1]["title"] == "Facebook Marketplace trap"
+
+
+def test_mix_feed_rows_one_new_two_hot() -> None:
+    rows = [
+        {"name": "newest", "frequency": 1, "date": "2026-09-19"},
+        {"name": "quiet", "frequency": 2, "date": "2026-09-18"},
+        {"name": "hot-a", "frequency": 9, "date": "2026-09-17"},
+        {"name": "hot-b", "frequency": 8, "date": "2026-09-16"},
+        {"name": "also", "frequency": 3, "date": "2026-09-15"},
+    ]
+    tagged = mix_feed_rows(rows)
+    assert [tag for tag, _ in tagged[:3]] == ["new", "hot", "hot"]
+    assert [row["name"] for _, row in tagged[:3]] == ["newest", "hot-a", "hot-b"]
+    assert tagged[3][0] is None
+    assert tagged[3][1]["name"] == "quiet"
+
+
+def test_live_cards_orders_newest_first(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "news_wire.fetch_recent_rows",
+        lambda **_k: [
+            {"name": "microsoft_teams_vishing_meeting", "demands": ["wire"], "date": "2026-09-19"},
+            {"name": "facebook_marketplace_payment_scam", "demands": ["cash"], "date": "2026-09-18"},
+        ],
+    )
+    monkeypatch.setattr(
+        "news_wire.load_wire",
+        lambda: {
+            "articles": [
+                {
+                    "id": "facebook-marketplace-payment-scam",
+                    "title": "Facebook Marketplace trap",
+                    "dek": "Off-platform pay.",
+                    "href": "/scams",
+                    "source": "WeHateScammers",
+                    "date": "2026-09-18",
+                    "featured": True,
+                }
+            ]
+        },
+    )
+    payload = live_cards(days=14)
+    assert payload["articles"][0]["id"] == "microsoft-teams-vishing-meeting"
+    assert payload["articles"][0]["tag"] == "new"
+    assert payload["articles"][0]["featured"] is True
+    assert payload["articles"][1]["title"] == "Facebook Marketplace trap"
+    assert payload["articles"][1]["tag"] == "hot"
+    assert payload["source_count"] == 2
 
 
 def test_parse_articles_empty_uses_fallback() -> None:

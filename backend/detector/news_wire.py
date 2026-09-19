@@ -37,7 +37,7 @@ Respond with ONLY a valid JSON object, no markdown:
 Rules:
 - Write exactly one article per input pattern, same order. Do not omit, merge, or replace with a better-known scam.
 - id must be the kebab-slug of that pattern's name.
-- Mark the first 3 featured=true (they are already newest-first).
+- The first pattern is the newest detection (tag NEW). The next two are high-frequency patterns (tag HOT).
 - href is always "/scams" unless you have a real public URL for that pattern.
 - Today's date unless the row is older; then use that row's date.
 - No PII. No markdown.
@@ -153,6 +153,7 @@ def parse_articles(payload: Any, *, fallback: list[dict[str, Any]]) -> list[dict
                 "dek": dek[:400],
                 "href": href[:300],
                 "featured": featured,
+                "tag": item.get("tag") if item.get("tag") in {"new", "hot"} else None,
             }
         )
     if not any(a["featured"] for a in articles):
@@ -161,24 +162,53 @@ def parse_articles(payload: Any, *, fallback: list[dict[str, Any]]) -> list[dict
     return articles or fallback
 
 
+def _row_slug(row: dict[str, Any]) -> str:
+    return _slug(str(row.get("name") or ""))
+
+
+def mix_feed_rows(rows: list[dict[str, Any]]) -> list[tuple[str | None, dict[str, Any]]]:
+    """One newest + two popular, then the rest of the recency list."""
+    if not rows:
+        return []
+    newest = rows[0]
+    popular = sorted(
+        rows[1:],
+        key=lambda r: (-int(r.get("frequency") or 0), str(r.get("date") or "")),
+    )[:2]
+    used = {_row_slug(newest), *(_row_slug(r) for r in popular)}
+    tail = [r for r in rows if _row_slug(r) not in used]
+    tagged: list[tuple[str | None, dict[str, Any]]] = [("new", newest)]
+    tagged.extend(("hot", row) for row in popular)
+    tagged.extend((None, row) for row in tail[:5])
+    return tagged
+
+
 def align_cards(rows: list[dict[str, Any]], grok_articles: list[dict[str, Any]]) -> list[dict[str, Any]]:
-    """Keep newest-first row order. If Grok skipped a pattern, use the template dek."""
-    fallback = fallback_cards(rows)
+    """Mix newest + popular, keep Grok deks by slug, else template dek."""
+    tagged = mix_feed_rows(rows)
+    fallback = {_row_slug(row): fallback_cards([row])[0] for _, row in tagged}
     indexed: dict[str, dict[str, Any]] = {}
     for article in grok_articles:
         indexed[str(article.get("id") or "")] = article
         indexed[_slug(str(article.get("title") or ""))] = article
     cards: list[dict[str, Any]] = []
-    for i, row in enumerate(rows[:8]):
-        slug = _slug(str(row.get("name") or ""))
-        article = indexed.get(slug)
+    for tag, row in tagged:
+        slug = _row_slug(row)
+        article = indexed.get(slug) or fallback.get(slug)
         if article is None:
-            article = fallback[i] if i < len(fallback) else fallback_cards([row])[0]
-        cards.append({**article, "id": article.get("id") or slug, "featured": i < 3})
-    return cards or fallback
+            continue
+        cards.append(
+            {
+                **article,
+                "id": str(article.get("id") or slug)[:80],
+                "tag": tag,
+                "featured": tag in {"new", "hot"},
+            }
+        )
+    return cards
 
 
-def fetch_recent_rows(*, days: int, limit: int = 8) -> list[dict[str, Any]]:
+def fetch_recent_rows(*, days: int, limit: int = 20) -> list[dict[str, Any]]:
     from paths import DB, prefer_package
 
     prefer_package(DB, drop_modules=("models", "session", "repository", "db_config"))
@@ -230,6 +260,27 @@ def grok_news_cards(rows: list[dict[str, Any]], *, api_key: str | None = None) -
     return align_cards(rows, parse_articles(parsed, fallback=fallback))
 
 
+def live_cards(*, days: int | None = None) -> dict[str, Any]:
+    """Newest DB rows first. Reuse saved Grok deks when the slug matches."""
+    lookback = days if days is not None else settings.news_lookback_days
+    stored = load_wire()
+    try:
+        rows = fetch_recent_rows(days=lookback)
+    except Exception as exc:
+        stored["warnings"] = [f"Database unavailable: {exc}"]
+        return stored
+    if not rows:
+        return stored
+    articles = align_cards(rows, stored.get("articles") or [])
+    return {
+        "updated_at": stored.get("updated_at") or datetime.now(timezone.utc).isoformat(),
+        "lookback_days": lookback,
+        "articles": articles,
+        "warnings": stored.get("warnings") or [],
+        "source_count": len(rows),
+    }
+
+
 def refresh_wire(*, days: int | None = None, dry_run: bool = False) -> dict[str, Any]:
     lookback = days if days is not None else settings.news_lookback_days
     warnings: list[str] = []
@@ -258,7 +309,7 @@ def refresh_wire(*, days: int | None = None, dry_run: bool = False) -> dict[str,
         articles = grok_news_cards(rows)
     except GrokError as exc:
         warnings.append(f"Grok unavailable, used template deks: {exc.message}")
-        articles = fallback_cards(rows)
+        articles = align_cards(rows, [])
 
     payload = {
         "updated_at": datetime.now(timezone.utc).isoformat(),
