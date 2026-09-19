@@ -22,11 +22,8 @@ export default function Layout() {
       </a>
       <header className="site-header">
         <div className="header-inner">
-          <Link to="/" className="brand">
-            <span className="brand-mark" aria-hidden="true">
-              ⌁
-            </span>
-            We<span>Hate</span>Scammers
+          <Link to="/" className="brand" aria-label="We Hate Scammers home">
+            W<span>H</span>S
           </Link>
           <nav className="site-nav">
             <span className="sys-clock" aria-hidden="true">
