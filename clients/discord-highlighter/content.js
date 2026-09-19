@@ -1,16 +1,53 @@
 (() => {
   const HIGHLIGHT_CLASS = "discord-hl-mark";
+  const POP_ID = "discord-hl-pop";
   const BLOCK_TAGS = /^(PRE|UL|OL|BLOCKQUOTE|DIV|TABLE|H[1-6]|HR)$/;
+  const CATEGORY_LABEL = {
+    phishing: "Phishing",
+    romance: "Romance scam",
+    advance_fee: "Advance-fee scam",
+    job: "Job / mule scam",
+    giveaway: "Giveaway scam",
+    tech_support: "Tech-support scam",
+    investment: "Investment scam",
+    other: "Suspicious message",
+  };
+
+  function analyze(text) {
+    const api = globalThis.ScamSmell;
+    if (!api || typeof api.analyze !== "function") {
+      return { score: 0, band: "ok", reasons: [], highlights: [], category: "other" };
+    }
+    return api.analyze(text);
+  }
 
   function isUserMessage(el) {
     if (!el || el.nodeType !== 1) return false;
     const id = el.id || "";
     if (!id.startsWith("chat-messages-")) return false;
-    // Real chat text. Date separators and most system events do not have this.
     return Boolean(el.querySelector('[id^="message-content-"]'));
   }
 
-  function wrapInlineRuns(contentEl) {
+  function messageText(contentEl) {
+    const text = (contentEl.innerText || contentEl.textContent || "").trim();
+    const hrefs = Array.from(contentEl.querySelectorAll("a[href]"))
+      .map((a) => a.getAttribute("href") || "")
+      .filter(Boolean);
+    return hrefs.length ? `${text}\n${hrefs.join(" ")}` : text;
+  }
+
+  function unwrap(contentEl) {
+    contentEl.querySelectorAll("." + HIGHLIGHT_CLASS).forEach((mark) => {
+      const parent = mark.parentNode;
+      if (!parent) return;
+      while (mark.firstChild) parent.insertBefore(mark.firstChild, mark);
+      parent.removeChild(mark);
+    });
+    contentEl.normalize();
+    delete contentEl.dataset.scamKey;
+  }
+
+  function wrapInlineRuns(contentEl, result) {
     const doc = contentEl.ownerDocument;
     const kids = Array.from(contentEl.childNodes);
     let run = [];
@@ -23,11 +60,13 @@
         run[0].classList &&
         run[0].classList.contains(HIGHLIGHT_CLASS)
       ) {
+        applyResult(run[0], result);
         run = [];
         return;
       }
       const mark = doc.createElement("span");
       mark.className = HIGHLIGHT_CLASS;
+      applyResult(mark, result);
       run[0].parentNode.insertBefore(mark, run[0]);
       for (const node of run) mark.appendChild(node);
       run = [];
@@ -36,18 +75,101 @@
     for (const node of kids) {
       if (node.nodeType === 1 && node.classList.contains(HIGHLIGHT_CLASS)) {
         flush();
+        applyResult(node, result);
         continue;
       }
       if (node.nodeType === 1 && BLOCK_TAGS.test(node.tagName)) {
         flush();
         continue;
       }
-      if (node.nodeType === 3 && !node.nodeValue.trim() && !run.length) {
-        continue;
-      }
+      if (node.nodeType === 3 && !node.nodeValue.trim() && !run.length) continue;
       run.push(node);
     }
     flush();
+  }
+
+  function applyResult(mark, result) {
+    mark.classList.remove("discord-hl-mark--caution", "discord-hl-mark--high");
+    mark.classList.add(
+      result.band === "high" ? "discord-hl-mark--high" : "discord-hl-mark--caution",
+    );
+    mark.dataset.band = result.band;
+    mark.dataset.score = String(result.score);
+    mark.dataset.category = result.category || "other";
+    mark.dataset.reasons = JSON.stringify(result.reasons || []);
+  }
+
+  function ensurePop(doc) {
+    let pop = doc.getElementById(POP_ID);
+    if (pop) return pop;
+    pop = doc.createElement("div");
+    pop.id = POP_ID;
+    pop.className = "discord-hl-pop";
+    pop.hidden = true;
+    doc.body.appendChild(pop);
+    return pop;
+  }
+
+  function showPop(doc, mark) {
+    const pop = ensurePop(doc);
+    const band = mark.dataset.band || "caution";
+    const category = CATEGORY_LABEL[mark.dataset.category] || "Suspicious message";
+    let reasons = [];
+    try {
+      reasons = JSON.parse(mark.dataset.reasons || "[]");
+    } catch {
+      reasons = [];
+    }
+    const title = band === "high" ? "High risk signals" : "Caution";
+    pop.dataset.band = band;
+    pop.innerHTML =
+      `<strong>${title} · ${category}</strong>` +
+      (reasons.length
+        ? `<ul>${reasons.map((r) => `<li>${escapeHtml(r)}</li>`).join("")}</ul>`
+        : `<p>This wording matches common scam pressure tactics. It is a warning, not a verdict.</p>`);
+    pop.hidden = false;
+    const rect = mark.getBoundingClientRect();
+    const top = Math.min(rect.bottom + 8, doc.defaultView.innerHeight - 8);
+    const left = Math.min(Math.max(8, rect.left), doc.defaultView.innerWidth - 288);
+    pop.style.top = `${top}px`;
+    pop.style.left = `${left}px`;
+  }
+
+  function hidePop(doc) {
+    const pop = doc.getElementById(POP_ID);
+    if (pop) pop.hidden = true;
+  }
+
+  function escapeHtml(value) {
+    return String(value)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  }
+
+  function bindPop(doc) {
+    if (doc.documentElement.dataset.discordHlPop === "1") return;
+    doc.documentElement.dataset.discordHlPop = "1";
+    let hideTimer = 0;
+    doc.addEventListener(
+      "mouseover",
+      (event) => {
+        const mark = event.target.closest ? event.target.closest("." + HIGHLIGHT_CLASS) : null;
+        if (!mark) return;
+        doc.defaultView.clearTimeout(hideTimer);
+        showPop(doc, mark);
+      },
+      true,
+    );
+    doc.addEventListener(
+      "mouseout",
+      (event) => {
+        const mark = event.target.closest ? event.target.closest("." + HIGHLIGHT_CLASS) : null;
+        if (!mark) return;
+        hideTimer = doc.defaultView.setTimeout(() => hidePop(doc), 120);
+      },
+      true,
+    );
   }
 
   function mark(el) {
@@ -62,7 +184,14 @@
     if (!isUserMessage(host)) return;
     const content = host.querySelector('[id^="message-content-"]');
     if (!content) return;
-    wrapInlineRuns(content);
+    const text = messageText(content);
+    const key = text;
+    if (content.dataset.scamKey === key) return;
+    const result = analyze(text);
+    unwrap(content);
+    content.dataset.scamKey = key;
+    if (result.band === "ok") return;
+    wrapInlineRuns(content, result);
   }
 
   function scan(root = document) {
@@ -80,6 +209,7 @@
   }
 
   function start(doc = document) {
+    bindPop(doc);
     scan(doc);
     const Observer =
       (doc.defaultView && doc.defaultView.MutationObserver) ||
@@ -112,6 +242,7 @@
     scan,
     processAddedNode,
     start,
+    analyze,
   };
 
   if (typeof document !== "undefined" && document.documentElement) {
