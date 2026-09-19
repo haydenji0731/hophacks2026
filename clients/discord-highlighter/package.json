@@ -1,0 +1,12 @@
+{
+  "name": "discord-user-message-highlighter",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Chrome extension that highlights Discord user messages in red.",
+  "scripts": {
+    "test": "node test/highlight.test.js"
+  },
+  "devDependencies": {
+    "jsdom": "^26.1.0"
+  }
+}

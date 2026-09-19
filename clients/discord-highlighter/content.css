@@ -1,0 +1,17 @@
+/* Red highlighter wash, similar to Discord's own mention highlight. */
+[id^="chat-messages-"].discord-user-msg-highlight {
+  background: rgba(239, 68, 68, 0.16) !important;
+  box-shadow: inset 4px 0 0 #ef4444 !important;
+}
+
+[id^="chat-messages-"].discord-user-msg-highlight [id^="message-content-"] {
+  background-image: linear-gradient(
+    transparent 8%,
+    rgba(239, 68, 68, 0.38) 8%,
+    rgba(239, 68, 68, 0.38) 92%,
+    transparent 92%
+  );
+  border-radius: 2px;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
