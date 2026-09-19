@@ -50,6 +50,9 @@ export function createScanner(options) {
     disabledRuleIds = [],
     onResult,
     debounceMs = DEBOUNCE_MS,
+    normalizeNode = (node) => node,
+    expandNode = (node) => [node],
+    scanRootOnAttach = true,
   } = options;
 
   let observer = null;
@@ -101,8 +104,12 @@ export function createScanner(options) {
 
   function queue(nodes) {
     for (const node of nodes) {
-      if (skipNode(node)) continue;
-      pending.add(node);
+      const expanded = expandNode(node) || [node];
+      for (const raw of expanded) {
+        const target = normalizeNode(raw) || raw;
+        if (skipNode(target)) continue;
+        pending.add(target);
+      }
     }
     if (timer) clearTimeout(timer);
     timer = setTimeout(flush, debounceMs);
@@ -112,7 +119,7 @@ export function createScanner(options) {
     disconnect();
     if (!root) return false;
     attached = true;
-    queue([root]);
+    if (scanRootOnAttach) queue([root]);
     observer = new MutationObserver((mutations) => {
       const added = [];
       for (const mutation of mutations) {
@@ -121,6 +128,7 @@ export function createScanner(options) {
         }
         for (const node of mutation.addedNodes) {
           if (node.nodeType === 1) added.push(node);
+          else if (node.nodeType === 3 && node.parentElement) added.push(node.parentElement);
         }
       }
       if (added.length) queue(added);

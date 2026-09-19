@@ -9,7 +9,12 @@ import { createScanner } from "./scan.js";
 import { collectLinkHits, compileHosts } from "./links.js";
 import { applyBadge, escalate, resetBurst, showBanner } from "./ui.js";
 import { getRoot as genericRoot, siteIdFromHost } from "./sites/generic.js";
-import { getRoot as discordRoot } from "./sites/discord.js";
+import {
+  existingMessages,
+  getObserveRoot as discordObserveRoot,
+  getRoot as discordRoot,
+  messageTarget,
+} from "./sites/discord.js";
 import { getRoot as facebookRoot } from "./sites/facebook.js";
 import { getRoot as instagramRoot } from "./sites/instagram.js";
 
@@ -29,6 +34,7 @@ let hostSet = new Set();
 let thresholds = { soft: 4, hard: 8 };
 let softCount = 0;
 let hardCount = 0;
+let lastError = "";
 
 function send(type, extra = {}) {
   return new Promise((resolve) => {
@@ -75,6 +81,7 @@ async function start() {
   const stored = await send(MSG.GET_STORAGE);
   const storage = stored.value || {};
   if (!siteEnabled(storage)) {
+    lastError = "site or master disabled";
     stop();
     return;
   }
@@ -84,7 +91,10 @@ async function start() {
       send(MSG.GET_RULES),
       send(MSG.GET_HOSTS),
     ]);
-    if (!rulesRes.ok) return;
+    if (!rulesRes.ok) {
+      lastError = "rules failed to load";
+      return;
+    }
     compiled = compileRules(rulesRes.rules, {
       disabledRuleIds: storage[STORAGE_KEYS.userDisabledRuleIds] || [],
     });
@@ -100,17 +110,48 @@ async function start() {
   hardCount = 0;
   applyBadge(0, 0);
 
+  const isDiscord = siteId === "discord";
   scanner = createScanner({
     compiled,
     disabledRuleIds: storage[STORAGE_KEYS.userDisabledRuleIds] || [],
     onResult,
+    scanRootOnAttach: !isDiscord,
+    normalizeNode: isDiscord ? messageTarget : (node) => node,
+    expandNode: isDiscord
+      ? (node) => {
+          const messages = existingMessages(node);
+          if (messages.length) return messages;
+          const target = messageTarget(node);
+          return target ? [target] : [];
+        }
+      : (node) => [node],
   });
-  const root = pickRoot();
+  const root = isDiscord ? discordObserveRoot(document) : pickRoot();
   scanner.attach(root);
+  lastError = scanner.isAttached() ? "" : "no root";
+  if (isDiscord) {
+    const chat = discordRoot(document);
+    const existing = existingMessages(chat);
+    if (existing.length) scanner.queue(existing);
+  }
 
   const linkHits = collectLinkHits(root, hostSet, seenLinkHosts);
   for (const hit of linkHits) onResult(hit);
 }
+
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  if (message?.type !== MSG.GET_TAB_STATUS) return false;
+  sendResponse({
+    ok: true,
+    siteId,
+    hostname: location.hostname,
+    attached: Boolean(scanner?.isAttached()),
+    softCount,
+    hardCount,
+    error: lastError,
+  });
+  return false;
+});
 
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== "local") return;
@@ -125,3 +166,15 @@ chrome.storage.onChanged.addListener((changes, area) => {
 });
 
 start();
+if (siteId === "discord") {
+  for (const ms of [800, 2500, 6000]) {
+    setTimeout(() => {
+      if (!scanner?.isAttached()) {
+        start();
+        return;
+      }
+      const existing = existingMessages(discordRoot(document));
+      if (existing.length) scanner.queue(existing);
+    }, ms);
+  }
+}

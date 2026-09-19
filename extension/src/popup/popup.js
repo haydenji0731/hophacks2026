@@ -26,9 +26,37 @@ function render(storage) {
   warningsEl.textContent = String(storage[STORAGE_KEYS.warningsShown] || 0);
 }
 
+async function loadTabStatus() {
+  const tabLine = document.getElementById("tab-status");
+  if (!tabLine) return;
+  if (!chrome.tabs?.query) {
+    tabLine.textContent = "Open discord.com in Chromium — not the Discord desktop app.";
+    return;
+  }
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  const url = tab?.url || "";
+  if (!/^https:\/\/(ptb\.|canary\.)?discord(app)?\.com\//.test(url)) {
+    tabLine.textContent =
+      "This tab is not discord.com. The desktop Discord app cannot run extensions. Open a channel on https://discord.com then reload that tab.";
+    return;
+  }
+  try {
+    const status = await chrome.tabs.sendMessage(tab.id, { type: MSG.GET_TAB_STATUS });
+    if (status?.attached) {
+      tabLine.textContent = `Scanner attached on Discord. Soft ${status.softCount || 0} · hard ${status.hardCount || 0}. Paste a hard-hit line from testdata/HOW_TO_TEST.md.`;
+    } else {
+      tabLine.textContent = `On Discord but scanner is off (${status?.error || "reload this tab"}).`;
+    }
+  } catch {
+    tabLine.textContent =
+      "On discord.com but the content script is not injected. Reload the extension, then reload this Discord tab.";
+  }
+}
+
 async function load() {
   const res = await send(MSG.GET_STORAGE);
   render(res.value || {});
+  await loadTabStatus();
 }
 
 master.addEventListener("change", async () => {
@@ -50,6 +78,10 @@ for (const box of siteBoxes) {
 
 document.getElementById("open-fixture").addEventListener("click", () => {
   send(MSG.OPEN_FIXTURE);
+});
+
+document.getElementById("open-guide")?.addEventListener("click", () => {
+  chrome.tabs.create({ url: chrome.runtime.getURL("testdata/HOW_TO_TEST.md") });
 });
 
 document.getElementById("privacy").addEventListener("click", (event) => {

@@ -47,8 +47,12 @@ page text ──scan.js (debounce/hash)──► score.js (pure)
 
 ## Test
 
+Run Node commands from the **repository root**, not `frontend/`.
+
+Full Chromium / Discord walkthrough: [testdata/HOW_TO_TEST.md](testdata/HOW_TO_TEST.md).
+
 ```bash
-# Pure engine (no browser)
+# Pure engine (no browser) — from hophacks2026/, not frontend/
 node extension/scripts/test-score.mjs
 
 # Validate the seeded list
