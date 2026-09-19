@@ -24,7 +24,7 @@
     {
       "id": "account_suspended",
       "family": "urgency",
-      "patterns": ["account suspended", "account has been suspended", "account will be closed", "account will be locked", "account locked", "will be terminated", "will be deactivated", "account will be disabled", "account disabled", "permanently disabled"],
+      "patterns": ["account suspended", "account has been suspended", "account will be closed", "account will be locked", "account locked", "will be terminated", "will be deactivated"],
       "weight": 8,
       "negation_safe": true
     },
@@ -174,7 +174,7 @@
     {
       "id": "processing_fee",
       "family": "payment",
-      "patterns": ["processing fee", "release fee", "clearance fee", "transfer fee", "anti-terrorism fee", "tax clearance fee", "verification fee", "appeal fee"],
+      "patterns": ["processing fee", "release fee", "clearance fee", "transfer fee", "anti-terrorism fee", "tax clearance fee"],
       "weight": 9,
       "negation_safe": true
     },
@@ -188,7 +188,7 @@
     {
       "id": "verify_account",
       "family": "credential",
-      "patterns": ["verify your account", "verify account", "verify your identity", "confirm your account", "confirm this is you", "confirm it's you", "confirm it is you", "unusual activity"],
+      "patterns": ["verify your account", "verify account", "verify your identity", "confirm your account"],
       "weight": 8,
       "negation_safe": true
     },
@@ -497,68 +497,6 @@
       "patterns": ["trust me", "i wouldn't scam", "government approved"],
       "weight": 4,
       "negation_safe": true
-    },
-    {
-      "id": "instagram_support",
-      "family": "authority",
-      "patterns": ["instagram support", "instagram team", "meta support", "meta team", "instagram security"],
-      "weight": 8,
-      "negation_safe": true
-    },
-    {
-      "id": "meta_verified",
-      "family": "authority",
-      "patterns": ["meta verified", "blue check", "blue badge", "verified badge"],
-      "weight": 7,
-      "negation_safe": true
-    },
-    {
-      "id": "verification_fee",
-      "family": "payment",
-      "patterns": ["verification fee", "pay to verify", "pay for verification", "fee to verify", "verify for a fee"],
-      "weight": 9,
-      "negation_safe": true
-    },
-    {
-      "id": "copyright_strike",
-      "family": "authority",
-      "patterns": ["copyright strike", "copyright claim", "copyright infringement", "remove the strike", "remove this strike"],
-      "weight": 8,
-      "negation_safe": true
-    },
-    {
-      "id": "confirm_this_is_you",
-      "family": "credential",
-      "patterns": ["confirm this is you", "confirm it's you", "is this you", "we detected unusual", "keep your account"],
-      "weight": 8,
-      "negation_safe": true
-    },
-    {
-      "id": "seed_phrase",
-      "family": "credential",
-      "patterns": ["seed phrase", "recovery phrase", "12 word phrase", "24 word phrase", "secret recovery"],
-      "weight": 9,
-      "negation_safe": true
-    },
-    {
-      "id": "instagram_password",
-      "family": "credential",
-      "patterns": ["instagram password", "send your password", "send me your password", "your login so we"],
-      "weight": 9,
-      "negation_safe": true
-    },
-    {
-      "id": "sextortion",
-      "family": "secrecy",
-      "patterns": ["intimate photos", "intimate images", "your nudes", "leak your photos", "send them to your followers", "send to your followers"],
-      "weight": 9,
-      "negation_safe": true
-    },
-    {
-      "id": "instagram_giveaway",
-      "family": "reward",
-      "patterns": ["instagram giveaway", "ig giveaway", "you won our giveaway", "selected for our giveaway"],
-      "weight": 7
     }
   ]
 }
