@@ -16,7 +16,7 @@
 }
 
 .discord-hl-mark--caution {
-  background-image: linear-gradient(rgba(176, 132, 24, 0.34), rgba(176, 132, 24, 0.34));
+  background-image: linear-gradient(rgba(196, 146, 28, 0.40), rgba(196, 146, 28, 0.40));
 }
 
 .discord-hl-mark--high {
@@ -47,7 +47,7 @@
 }
 
 .discord-hl-pop[data-band="caution"] {
-  border: 1px solid rgba(176, 132, 24, 0.7);
+  border: 1px solid rgba(196, 146, 28, 0.8);
 }
 
 .discord-hl-pop[data-band="high"] {
@@ -63,7 +63,7 @@
 }
 
 .discord-hl-pop[data-band="caution"] .discord-hl-warn {
-  color: #d4a017;
+  color: #e2b422;
 }
 
 .discord-hl-pop[data-band="high"] .discord-hl-warn {

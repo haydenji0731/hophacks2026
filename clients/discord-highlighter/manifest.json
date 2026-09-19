@@ -1,14 +1,26 @@
 {
   "manifest_version": 3,
-  "name": "Discord Scam Smell",
-  "version": "1.1.0",
-  "description": "Offline highlighter for suspicious Discord messages. Caution is yellow, high risk is red.",
+  "name": "Scam Smell",
+  "version": "1.2.0",
+  "description": "Offline highlighter for suspicious Discord, Instagram, and Reddit messages. Caution is yellow, high risk is red.",
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
   "content_scripts": [
     {
       "matches": [
         "https://discord.com/*",
         "https://ptb.discord.com/*",
-        "https://canary.discord.com/*"
+        "https://canary.discord.com/*",
+        "https://www.instagram.com/*",
+        "https://instagram.com/*",
+        "https://www.reddit.com/*",
+        "https://old.reddit.com/*",
+        "https://new.reddit.com/*",
+        "https://sh.reddit.com/*",
+        "https://reddit.com/*"
       ],
       "css": ["content.css"],
       "js": ["scorer.js", "content.js"],
