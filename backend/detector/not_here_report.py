@@ -94,7 +94,12 @@ The JSON must have exactly these fields:
 {
   "is_likely_scam": true or false,
   "scam_type": "best-guess category name, e.g. 'tech support scam', 'romance scam', 'grandparent scam', or 'unclear' if not enough info",
-  "confidence": a number from 0.0 to 1.0,
+"confidence": "a number from 0.0 to 1.0 reflecting how confident you are this is a scam.
+Score 0.85–1.0 when two or more classic indicators are present together (urgency, secrecy,
+unusual/untraceable payment method, impersonation of a trusted person or institution, remote
+access requests). Only score below 0.5 when the account is genuinely ambiguous or has no
+red flags. Do not hedge toward the middle out of caution — this tool exists to warn people
+clearly when something is dangerous.",
   "method": "how the scammer approached and what they asked for, in a short phrase",
   "target": "who this appears to target, based on context (e.g. 'elderly individual', 'general consumer', 'unclear')",
   "novel_pattern": true or false,

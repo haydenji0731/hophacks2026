@@ -115,6 +115,10 @@ export const SCAM_TYPES = [
 // Each rule adds `weight` points when it matches. Score >= LIKELY_AT => likely a scam.
 const LIKELY_AT = 3;
 
+// Highest possible raw score from FLAG_RULES below (money 3 + urgency 2 +
+// impersonation 1 + ai_voice 1). Used to rescale riskScore onto a /10 display.
+const MAX_RISK_SCORE = 7;
+
 const FLAG_RULES = [
   {
     weight: 3,
@@ -164,6 +168,9 @@ export function diagnose(answers) {
   const riskScore = matched.reduce((sum, rule) => sum + rule.weight, 0);
   const flags = matched.map((rule) => rule.text);
 
+  // Rescale the raw 0-7 score onto a friendlier /10 display.
+  const riskScore10 = Math.round((riskScore / MAX_RISK_SCORE) * 10);
+
   let verdict;
   if (filled < 3) verdict = "unsure";
   else if (riskScore >= LIKELY_AT) verdict = "likely";
@@ -188,7 +195,7 @@ export function diagnose(answers) {
     likely: verdict === "likely",
     unlikely: verdict === "unlikely",
     insufficient: verdict === "unsure",
-    riskScore,
+    riskScore: riskScore10,
     flags,
     answeredCount,
     primary: hasMatch ? top : null,
