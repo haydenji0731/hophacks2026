@@ -1,6 +1,6 @@
 # Sherpa
 
-Chrome extension that watches **Discord**, **Instagram**, and **Reddit** locally and highlights **suspicious** user text. Normal chat stays untouched. Caution is a muted yellow, high risk is a muted red, both translucent so the message stays readable.
+Chrome extension that watches **Discord**, **Instagram**, **Reddit**, **Google Docs**, and **Google Slides** locally and highlights **suspicious** user text. Normal chat stays untouched. Caution is a muted yellow, high risk is a muted red, both translucent so the message stays readable.
 
 Yellow highlights say **BE MINDFUL OF LINKS**. Red highlights say **DO NOT CLICK ANY LINKS.**
 
@@ -25,14 +25,14 @@ A mismatched link is one whose visible words do not match the site it actually o
 1. Open `chrome://extensions`
 2. Turn on **Developer mode**
 3. Click **Load unpacked** and select this folder (the one with `manifest.json`)
-4. Open Discord, Instagram (including DMs), or Reddit
+4. Open Discord, Instagram (including DMs), Reddit, Google Docs, or Google Slides
 
 If it is already loaded, click **Reload** after pulling changes.
 
 ## Check that it works
 
 1. Pin **Sherpa** from the Chrome puzzle-piece menu so the toolbar button stays visible.
-2. Open Discord, Instagram, or Reddit.
+2. Open Discord, Instagram, Reddit, Docs, or Slides.
 3. Click the icon. It should say **Working on this tab**.
 4. Set Point / Warn / Block and the descriptions checkbox. Those apply to the current tab immediately.
 5. Click **Run a local self-test** — that scores a safe shipping note and a gift-card IRS line offline.
@@ -41,7 +41,7 @@ If it says it is not injected, reload the tab or reload the unpacked extension.
 
 ## What it flags
 
-Offline cue matching + a small association graph + cross-family combos (urgency + payment, authority + credentials, and similar). See [`scam-smell/README.md`](scam-smell/README.md) to add cues in JSON only.
+Offline cue matching + a small association graph + cross-family combos (urgency + payment, authority + credentials, and similar). See [`scam-smell/README.md`](scam-smell/README.md) for how the score is built and how to add cues or association edges in JSON only.
 
 | Band | Score | Highlight |
 | --- | --- | --- |
@@ -56,6 +56,8 @@ Avatars, nav chrome, and composers are never painted.
 | Discord | User messages (stable, PTB, Canary), including ones you just sent. Survives DM / channel switches. |
 | Instagram | Direct messages, captions, and comments. Rebuilds word-split bubbles inside the DM form and paints only the text. |
 | Reddit | Post bodies/titles and comments (new and old Reddit). |
+| Google Docs | Comments and in-doc chat. The page body is a canvas, so select a passage to score it. |
+| Google Slides | Comments, speaker notes, and on-slide text boxes. Select canvas text to score it. |
 
 ## Develop
 
