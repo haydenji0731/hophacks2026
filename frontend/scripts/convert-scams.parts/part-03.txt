@@ -1,0 +1,114 @@
+  "social_dm",
+        "dating_app",
+        "marketplace",
+        "job_board",
+        "web",
+      ].includes(channel)
+    ) {
+      set.add("web");
+    } else {
+      set.add("other");
+    }
+  }
+  return set.size ? [...set] : ["other"];
+}
+
+function demandsFromAsks(asks) {
+  const set = new Set();
+  const blob = (asks ?? []).join(" ").toLowerCase();
+  if (blob.includes("gift")) set.add("gift_card");
+  if (/wire|bank_transfer/.test(blob)) set.add("wire");
+  if (blob.includes("crypto")) set.add("crypto");
+  if (blob.includes("check")) set.add("check");
+  if (/zelle|venmo|cash|payment_app/.test(blob)) set.add("cash");
+  if (set.size === 0) set.add("other");
+  return [...set];
+}
+
+function victimRolesFromCatalog(entry) {
+  const roles = [];
+  const blob = `${entry.id} ${entry.name} ${(entry.tags?.hooks ?? []).join(" ")}`.toLowerCase();
+  if (blob.includes("romance") || blob.includes("dating")) roles.push("dating app user");
+  if (blob.includes("job") || blob.includes("recruiter") || blob.includes("mule")) roles.push("job seeker");
+  if (blob.includes("marketplace") || blob.includes("rental") || blob.includes("pet")) {
+    roles.push("marketplace buyer", "marketplace seller");
+  }
+  if (blob.includes("medicare") || blob.includes("ssa") || blob.includes("burial")) {
+    roles.push("older adult");
+  }
+  if (blob.includes("irs") || blob.includes("tax") || blob.includes("government")) roles.push("taxpayer");
+  if (blob.includes("bank")) roles.push("bank customer");
+  if (roles.length === 0) roles.push("consumer");
+  return unique(roles);
+}
+
+function howItWorksSteps(how) {
+  return String(how ?? "")
+    .split(/\s*\d+\)\s*/)
+    .map((part) => part.trim().replace(/\.\s*$/, "."))
+    .filter(Boolean);
+}
+
+function inferTags(scam) {
+  const tags = emptyTags();
+  const text = `${scam.slug} ${scam.description}`.toLowerCase();
+
+  for (const platform of scam.platforms ?? []) {
+    if (platform === "phone") tags.channels.push("phone");
+    if (platform === "sms") tags.channels.push("sms");
+    if (platform === "web") tags.channels.push("email");
+    if (platform === "discord") tags.channels.push("social_dm");
+    if (platform === "other") tags.channels.push("messaging_app");
+  }
+
+  const channelRules = [
+    ["robocall", ["phone", "robocall"]],
+    ["whatsapp", ["messaging_app"]],
+    ["telegram", ["messaging_app"]],
+    ["dating", ["dating_app"]],
+    ["tinder", ["dating_app"]],
+    ["marketplace", ["marketplace"]],
+    ["instagram", ["social_dm"]],
+    ["tiktok", ["social_dm"]],
+    ["linkedin", ["social_dm"]],
+    ["popup", ["popup"]],
+    ["qr", ["qr_code"]],
+    ["parking", ["qr_code", "in_person"]],
+  ];
+  for (const [needle, channels] of channelRules) {
+    if (text.includes(needle)) tags.channels.push(...channels);
+  }
+
+  const hookRules = [
+    ["irs", ["government_impersonation", "arrest_threat"]],
+    ["ssa", ["government_impersonation"]],
+    ["tax", ["government_impersonation"]],
+    ["warrant", ["arrest_threat"]],
+    ["immigration", ["government_impersonation"]],
+    ["utility", ["service_shutoff"]],
+    ["romance", ["romance"]],
+    ["dating", ["romance", "love_bombing"]],
+    ["sugar", ["romance"]],
+    ["pig butcher", ["romance", "investment_opportunity"]],
+    ["job", ["remote_work", "easy_money"]],
+    ["recruiter", ["remote_work"]],
+    ["mule", ["easy_money", "work_from_home"]],
+    ["virus", ["virus_warning"]],
+    ["tech support", ["virus_warning", "brand_impersonation"]],
+    ["family", ["family_crisis", "secrecy"]],
+    ["grandma", ["family_crisis"]],
+    ["jail", ["family_crisis"]],
+    ["investment", ["investment_opportunity", "high_returns"]],
+    ["crypto", ["investment_opportunity"]],
+    ["lottery", ["prize"]],
+    ["giveaway", ["prize"]],
+    ["warranty", ["warranty_expiring"]],
+    ["charity", ["disaster", "sympathy"]],
+    ["sextortion", ["romance"]],
+    ["rental", ["below_market_rent"]],
+  ];
+  for (const [needle, hooks] of hookRules) {
+    if (text.includes(needle)) tags.hooks.push(...hooks);
+  }
+
+  const
