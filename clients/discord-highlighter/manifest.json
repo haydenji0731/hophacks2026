@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Sherpa",
-  "version": "1.9.1",
+  "version": "1.9.2",
   "description": "Highlighter for suspicious Discord, Instagram, Reddit, Google Docs, Drive, and Google Slides text. Warn or Block before a bad link opens.",
   "action": {
     "default_title": "Sherpa",

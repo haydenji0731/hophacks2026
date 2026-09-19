@@ -60,13 +60,19 @@
     if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.onChanged) {
       chrome.storage.onChanged.addListener((changes, area) => {
         if (area !== "local") return;
-        load((current) => {
-          const next = { ...current };
-          if (changes.aggression) next.aggression = changes.aggression.newValue;
-          if (changes.descriptions) next.descriptions = changes.descriptions.newValue;
-          if (changes.theme) next.theme = changes.theme.newValue;
-          listener(normalize(next));
-        });
+        const patch = {};
+        if (Object.prototype.hasOwnProperty.call(changes, "aggression")) {
+          patch.aggression = changes.aggression.newValue;
+        }
+        if (Object.prototype.hasOwnProperty.call(changes, "descriptions")) {
+          patch.descriptions = changes.descriptions.newValue;
+        }
+        if (Object.prototype.hasOwnProperty.call(changes, "theme")) {
+          patch.theme = changes.theme.newValue;
+        }
+        // Apply the changed keys immediately so descriptions:false is not lost
+        // while chrome.storage.local.get is still in flight.
+        load((current) => listener(normalize({ ...current, ...patch })));
       });
     }
   }

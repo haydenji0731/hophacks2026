@@ -40,22 +40,36 @@
     paintTheme(value.theme);
   }
 
+  function notifyTab(value) {
+    if (typeof chrome === "undefined" || !chrome.tabs || !chrome.tabs.query) return;
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      const tab = tabs && tabs[0];
+      if (!tab || !tab.id) return;
+      const payload = { type: "sherpa-prefs", settings: value };
+      const send = (frameId) => {
+        const opts = Number.isInteger(frameId) ? { frameId } : undefined;
+        chrome.tabs.sendMessage(tab.id, payload, opts, () => {
+          void chrome.runtime.lastError;
+        });
+      };
+      send();
+      if (chrome.webNavigation && chrome.webNavigation.getAllFrames) {
+        chrome.webNavigation.getAllFrames({ tabId: tab.id }, (frames) => {
+          (frames || []).forEach((frame) => send(frame.frameId));
+        });
+      }
+    });
+  }
+
   function persist() {
     const next = {
       aggression: currentMode(),
-      descriptions: descBox.checked,
+      descriptions: Boolean(descBox.checked),
       theme: currentTheme(),
     };
     prefs.save(next, (value) => {
       renderPrefs(value);
-      if (typeof chrome === "undefined" || !chrome.tabs || !chrome.tabs.query) return;
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        const tab = tabs && tabs[0];
-        if (!tab || !tab.id) return;
-        chrome.tabs.sendMessage(tab.id, { type: "sherpa-prefs", settings: value }, () => {
-          void chrome.runtime.lastError;
-        });
-      });
+      notifyTab(value);
     });
   }
 
@@ -120,9 +134,10 @@
     themeSwitch.setAttribute("aria-checked", next ? "true" : "false");
     persist();
   });
+  // Only persist after the checkbox has toggled. A click listener fires
+  // before activation and would write the old value, so the page kept the
+  // previous hover-comment setting until reload.
   descBox.addEventListener("change", persist);
-  descBox.addEventListener("click", persist);
-  descBox.addEventListener("input", persist);
   reportBtn.addEventListener("click", openReport);
   prefs.load(renderPrefs);
   checkTab();
