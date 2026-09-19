@@ -14,6 +14,8 @@ from schemas import (
     HealthResponse,
     IngestResponse,
     KeywordHitOut,
+    IntelPattern,
+    IntelSearchResponse,
     NewsFeedResponse,
     ProcessResponse,
     ReportRequest,
@@ -313,3 +315,34 @@ def post_news_refresh(
             ).model_dump(),
         )
     return NewsFeedResponse.model_validate(refresh_wire(days=days))
+
+
+@app.get("/v1/intel", response_model=IntelSearchResponse)
+def search_intel(
+    q: str = Query(default="", max_length=4000),
+    limit: int = Query(default=40, ge=1, le=200),
+) -> IntelSearchResponse:
+    from intel import get_index
+
+    hits = get_index().search(q, limit=limit)
+    return IntelSearchResponse(query=q, count=len(hits), patterns=hits)
+
+
+@app.get(
+    "/v1/intel/{name}",
+    response_model=IntelPattern,
+    responses={404: {"model": ErrorDetail}},
+)
+def get_intel_pattern(name: str) -> IntelPattern:
+    from intel import get_index
+
+    row = get_index().get(name)
+    if row is None:
+        raise HTTPException(
+            status_code=404,
+            detail=ErrorDetail(
+                error="not_found",
+                detail="No pattern with that name.",
+            ).model_dump(),
+        )
+    return IntelPattern.model_validate(row)

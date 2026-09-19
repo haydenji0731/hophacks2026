@@ -1479,6 +1479,16 @@ textarea:focus,
   font-size: 0.92rem;
 }
 
+.scam-card-meta,
+.intel-status {
+  display: block;
+  margin-top: 0.45rem;
+  color: var(--muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .back-link {
   color: var(--muted);
   display: inline-flex;

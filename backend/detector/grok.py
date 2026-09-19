@@ -36,12 +36,18 @@ def parse_grok_payload(payload: Any) -> GrokFlags:
 def run_grok_flags(transcript: str) -> GrokFlags:
     from paths import ensure_import_paths
     from settings import settings
+    from intel import retrieve
 
     ensure_import_paths()
     from detect_scam import detect_scam
 
+    matches = retrieve(transcript, k=5)
     try:
-        payload = detect_scam(transcript, api_key=settings.xai_api_key)
+        payload = detect_scam(
+            transcript,
+            api_key=settings.xai_api_key,
+            rag_patterns=matches,
+        )
     except Exception as exc:
         raise GrokError(f"Grok scam classifier failed: {exc}") from exc
     return parse_grok_payload(payload)

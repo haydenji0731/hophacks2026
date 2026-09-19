@@ -47,12 +47,25 @@ def _resolve_api_key(api_key: str | None = None) -> str:
     return key
 
 
-def detect_scam(transcript, api_key: str | None = None):
+def detect_scam(transcript, api_key: str | None = None, rag_patterns: list | None = None):
     key = _resolve_api_key(api_key)
+    system = SYSTEM_PROMPT
+    if rag_patterns:
+        lines = []
+        for pattern in rag_patterns[:8]:
+            name = pattern.get("name") or "unknown"
+            desc = (pattern.get("description") or "")[:320]
+            lines.append(f"- {name}: {desc}")
+        system += (
+            "\n\nKnown pattern catalog retrieved by semantic search. "
+            "When the conversation matches, set scam_type to that catalog name "
+            "(snake_case). If none fit, invent a short snake_case label.\n"
+            + "\n".join(lines)
+        )
     payload = {
         "model": DEFAULT_MODEL,
         "messages": [
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "system", "content": system},
             {"role": "user", "content": transcript},
         ],
         "response_format": {"type": "json_object"},
