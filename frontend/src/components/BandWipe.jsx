@@ -36,9 +36,9 @@ export default function BandWipe() {
 
       const hit = event.target.closest("button, a");
       if (!hit) return;
-      if (hit.closest(".boot, .skip-link, .news-dots, .theme-toggle, .news-expand")) {
-        return;
-      }
+      if (hit.closest(".boot, .skip-link, .news-dots, .theme-toggle, .news-expand, .check-shell .option, .check-shell .ghost-link")) {
+      return;
+}
       if (hit.matches("[disabled]") || hit.getAttribute("aria-disabled") === "true") return;
 
       const brand = hit.closest(".brand");
