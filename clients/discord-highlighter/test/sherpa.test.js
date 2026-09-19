@@ -41,17 +41,32 @@ assert.ok(verify.querySelector("." + api.HIGHLIGHT_CLASS));
 assert.ok(irs.querySelector("." + api.HIGHLIGHT_CLASS));
 assert.equal(amazon.querySelector("." + api.HIGHLIGHT_CLASS), null);
 
-assert.deepEqual(prefs.normalize({}), { aggression: "warn", descriptions: true });
+assert.deepEqual(prefs.normalize({}), { aggression: "warn", descriptions: true, theme: "dark" });
 assert.equal(prefs.normalize({ aggression: "point" }).aggression, "warn");
 assert.equal(prefs.normalize({ aggression: "block", descriptions: false }).aggression, "block");
 assert.equal(prefs.normalize({ aggression: "nope" }).aggression, "warn");
+assert.equal(prefs.normalize({ theme: "light" }).theme, "light");
+assert.equal(prefs.normalize({ theme: "neon" }).theme, "dark");
 assert.equal(prefs.indexOf("warn"), 0);
 assert.equal(prefs.indexOf("block"), 1);
+assert.equal(prefs.THEMES.light.bg, "#F2E8CF");
+assert.equal(prefs.THEMES.dark.highlight, "#EFC3F5");
+assert.match(prefs.reportHref({ text: "gift cards", site: "discord.com", band: "high" }), /report\.html\?/);
+assert.match(prefs.reportHref({ text: "gift cards", site: "discord.com", band: "high" }), /text=gift\+cards/);
+assert.match(prefs.reportHref({ text: "gift cards", site: "discord.com", band: "high" }), /site=discord\.com/);
+
+prefs.applyTheme(document, "light");
+assert.equal(document.documentElement.dataset.sherpaTheme, "light");
+assert.equal(document.documentElement.style.getPropertyValue("--sherpa-bg"), "#F2E8CF");
+assert.equal(document.documentElement.style.getPropertyValue("--sherpa-hl"), "#BC4749");
+prefs.applyTheme(document, "dark");
+assert.equal(document.documentElement.dataset.sherpaTheme, "dark");
+assert.equal(document.documentElement.style.getPropertyValue("--sherpa-bg"), "#0F1020");
 
 assert.equal(api.linkMismatch(mismatchLink, "https://discord.com/"), true);
 assert.equal(api.linkMismatch(safeLink, "https://discord.com/"), false);
 
-assert.equal(api.shouldIntercept("warn", { inHighlight: true, band: "high", mismatch: true }), false);
+assert.equal(api.shouldActivate("warn", { inHighlight: true, band: "high", mismatch: true }), false);
 assert.equal(api.shouldIntercept("warn", { inHighlight: true, band: "caution", mismatch: false }), false);
 assert.equal(api.shouldIntercept("block", { inHighlight: true, band: "caution", mismatch: false }), true);
 assert.equal(api.shouldIntercept("block", { inHighlight: false, band: "ok", mismatch: true }), false);
@@ -74,6 +89,7 @@ assert.match(blockGate.textContent, /SCAM LIKELY: AVOID LINKS|highlighted text/)
 assert.match(blockGate.textContent, /not-irs\.example/);
 assert.match(blockGate.textContent, /Continue/);
 assert.match(blockGate.textContent, /Go back/);
+assert.match(blockGate.textContent, /Report a scam/);
 blockGate.querySelector('[data-act="back"]').click();
 
 api.applySettings({ aggression: "warn", descriptions: true });
@@ -83,6 +99,16 @@ const pop = document.getElementById("sherpa-hl-pop");
 assert.ok(pop, "hover should open a floating description");
 assert.equal(pop.hidden, false);
 assert.match(pop.textContent, /SCAM LIKELY: AVOID LINKS/);
+assert.match(pop.textContent, /Report a scam/);
+const opened = [];
+document.defaultView.open = (href) => {
+  opened.push(href);
+  return { closed: false };
+};
+pop.querySelector(".sherpa-report").click();
+assert.equal(opened.length, 1);
+assert.match(opened[0], /report\.html/);
+assert.match(opened[0], /band=high/);
 
 const overlay = document.createElement("div");
 overlay.id = "hover-blocker";

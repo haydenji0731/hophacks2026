@@ -1,8 +1,8 @@
 # Sherpa
 
-Chrome extension that watches **Discord**, **Instagram**, **Reddit**, **Google Docs**, **Google Drive**, and **Google Slides** locally and highlights **suspicious** user text. Normal chat stays untouched. Caution is a muted yellow, high risk is a muted red, both translucent so the message stays readable.
+Chrome extension that watches **Discord**, **Instagram**, **Reddit**, **Google Docs**, **Google Drive**, and **Google Slides** locally and highlights **suspicious** user text. Normal chat stays untouched.
 
-Yellow highlights say **SUSPICIOUS**. Red highlights say **SCAM LIKELY: AVOID LINKS**.
+Caution highlights say **SUSPICIOUS**. High-risk highlights say **SCAM LIKELY: AVOID LINKS**. Ink color follows the Light / Dark theme: Highlights for high risk, H3 for caution.
 
 This is a warning, not a verdict. Scoring stays on the device.
 
@@ -16,6 +16,22 @@ Open the toolbar popup and use the Warn / Block switch.
 | **Block** | Same highlights, and a click on a **highlighted** link always asks **Continue / Go back** and shows the real destination. Ordinary links are left alone. |
 
 **Show highlights** is a checkbox in the same menu. Unchecking it hides the colored marks, hover reasons, and live Docs/Drive bar immediately — no reload.
+
+## Theme
+
+The toolbar has a Light / Dark switch. It restyles the popup, hover cards, Block gate, live Docs bar, and highlight ink.
+
+| Token | Light | Dark |
+| --- | --- | --- |
+| Background | `#F2E8CF` | `#0F1020` |
+| Highlights | `#BC4749` | `#EFC3F5` |
+| H1 | `#386641` | `#2F195F` |
+| H2 | `#6A994E` | `#7353BA` |
+| H3 | `#A7C957` | `#FAA6FF` |
+
+## Report a scam
+
+**Report a scam** sits in the toolbar, on hover cards, on the Block gate, and on the live Docs/Drive bar. The destination site is not wired yet — the button opens a local report page and will take the URL you provide later. Flagged text, site, and band travel as query parameters.
 
 ## Load it in Chrome
 
@@ -31,7 +47,7 @@ If it is already loaded, click **Reload** after pulling changes.
 1. Pin **Sherpa** from the Chrome puzzle-piece menu so the toolbar button stays visible.
 2. Open Discord, Instagram, Reddit, Docs, or Slides.
 3. Click the icon. It should say **Working on this tab**.
-4. Set Warn / Block with the switch, and the descriptions checkbox. Those apply to the current tab immediately.
+4. Set Warn / Block, Light / Dark, and the highlights checkbox. Those apply to the current tab immediately.
 
 If it says it is not injected, reload the tab or reload the unpacked extension.
 
@@ -42,8 +58,8 @@ Offline cue matching + a small association graph + cross-family combos (urgency 
 | Band | Score | Highlight |
 | --- | --- | --- |
 | ok | 0–24 | none |
-| caution | 25–54 | yellow · SUSPICIOUS |
-| high | 55–100 | red · SCAM LIKELY: AVOID LINKS |
+| caution | 25–54 | H3 ink · SUSPICIOUS |
+| high | 55–100 | Highlights ink · SCAM LIKELY: AVOID LINKS |
 
 Avatars, nav chrome, and composers are never painted.
 
@@ -66,14 +82,23 @@ npm run build
 
 `npm run build` writes `scorer.js` for the unpacked extension.
 
+To preview the themed demo locally:
+
+```bash
+python3 -m http.server 43147 --bind 127.0.0.1
+```
+
+Then open `http://127.0.0.1:43147/demo.html`.
+
 ## Files
 
 | File | Role |
 | --- | --- |
 | `manifest.json` | Manifest V3 |
 | `scorer.js` | Bundled offline analyzer |
-| `settings.js` | Warn / Block + descriptions prefs |
+| `settings.js` | Warn / Block, descriptions, theme, report URL |
 | `content.js` | Site adapters, highlights, hover popup, link gate |
-| `popup.html` / `popup.js` | Toolbar: mode switch, descriptions, ping |
-| `content.css` | Highlighter, floating reason box, confirm gate |
+| `popup.html` / `popup.js` | Toolbar: mode, theme, highlights, report |
+| `report.html` | Interim report page until a public form URL is set |
+| `content.css` | Themed highlighter, floating reason box, confirm gate |
 | `scam-smell/` | Source, data, and fixtures |

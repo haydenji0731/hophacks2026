@@ -104,6 +104,7 @@ assert.ok(pop);
 assert.equal(pop.hidden, false);
 assert.match(pop.textContent, /SCAM LIKELY: AVOID LINKS/);
 assert.match(pop.textContent, /High risk signals/);
+assert.match(pop.textContent, /Report a scam/);
 
 applySettings({ aggression: "warn", descriptions: false });
 assert.equal(showPop(document, scamMsg.querySelector("." + HIGHLIGHT_CLASS)), null);

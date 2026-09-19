@@ -3,8 +3,10 @@
   const detailEl = document.getElementById("status-detail");
   const box = document.getElementById("status");
   const modeSwitch = document.getElementById("aggression");
+  const themeSwitch = document.getElementById("theme");
   const copyEl = document.getElementById("agg-copy");
   const descBox = document.getElementById("descriptions");
+  const reportBtn = document.getElementById("report");
   const prefs = globalThis.SherpaPrefs;
 
   const COPY = {
@@ -22,14 +24,28 @@
     return modeSwitch.getAttribute("aria-checked") === "true" ? "block" : "warn";
   }
 
+  function currentTheme() {
+    return themeSwitch.getAttribute("aria-checked") === "true" ? "dark" : "light";
+  }
+
+  function paintTheme(theme) {
+    prefs.applyTheme(document, theme);
+  }
+
   function renderPrefs(value) {
     modeSwitch.setAttribute("aria-checked", value.aggression === "block" ? "true" : "false");
+    themeSwitch.setAttribute("aria-checked", value.theme === "dark" ? "true" : "false");
     descBox.checked = value.descriptions;
     copyEl.textContent = COPY[value.aggression] || COPY.warn;
+    paintTheme(value.theme);
   }
 
   function persist() {
-    const next = { aggression: currentMode(), descriptions: descBox.checked };
+    const next = {
+      aggression: currentMode(),
+      descriptions: descBox.checked,
+      theme: currentTheme(),
+    };
     prefs.save(next, (value) => {
       renderPrefs(value);
       if (typeof chrome === "undefined" || !chrome.tabs || !chrome.tabs.query) return;
@@ -85,14 +101,29 @@
     );
   }
 
+  function openReport() {
+    const href = prefs.reportHref({ site: "popup", text: "" });
+    if (typeof chrome !== "undefined" && chrome.tabs && chrome.tabs.create) {
+      chrome.tabs.create({ url: href });
+      return;
+    }
+    window.open(href, "_blank", "noopener");
+  }
+
   modeSwitch.addEventListener("click", () => {
     const next = modeSwitch.getAttribute("aria-checked") !== "true";
     modeSwitch.setAttribute("aria-checked", next ? "true" : "false");
     persist();
   });
+  themeSwitch.addEventListener("click", () => {
+    const next = themeSwitch.getAttribute("aria-checked") !== "true";
+    themeSwitch.setAttribute("aria-checked", next ? "true" : "false");
+    persist();
+  });
   descBox.addEventListener("change", persist);
   descBox.addEventListener("click", persist);
   descBox.addEventListener("input", persist);
+  reportBtn.addEventListener("click", openReport);
   prefs.load(renderPrefs);
   checkTab();
 })();

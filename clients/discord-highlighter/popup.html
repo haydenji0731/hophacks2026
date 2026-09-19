@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-sherpa-theme="dark">
   <head>
     <meta charset="utf-8" />
     <title>Sherpa</title>
@@ -18,16 +18,33 @@
         font-style: normal;
         font-display: swap;
       }
-      :root {
+      :root,
+      html[data-sherpa-theme="dark"] {
         color-scheme: dark;
+        --sherpa-bg: #0f1020;
+        --sherpa-hl: #efc3f5;
+        --sherpa-h1: #2f195f;
+        --sherpa-h2: #7353ba;
+        --sherpa-h3: #faa6ff;
+      }
+      html[data-sherpa-theme="light"] {
+        color-scheme: light;
+        --sherpa-bg: #f2e8cf;
+        --sherpa-hl: #bc4749;
+        --sherpa-h1: #386641;
+        --sherpa-h2: #6a994e;
+        --sherpa-h3: #a7c957;
       }
       body {
         margin: 0;
         width: 300px;
         padding: 16px 16px 18px;
-        background: #1e1f22;
-        color: #dbdee1;
+        background: var(--sherpa-bg);
+        color: var(--sherpa-hl);
         font: 12.5px/1.45 "JetBrains Mono", ui-monospace, monospace;
+      }
+      html[data-sherpa-theme="light"] body {
+        color: var(--sherpa-h1);
       }
       header {
         margin-bottom: 16px;
@@ -38,36 +55,54 @@
         font-weight: 700;
         letter-spacing: -0.06em;
         line-height: 0.95;
+        color: var(--sherpa-h1);
+      }
+      html[data-sherpa-theme="dark"] h1 {
+        color: var(--sherpa-h3);
+      }
+      h2 {
+        margin: 0 0 8px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--sherpa-h2);
+      }
+      h3 {
+        margin: 0;
+        font-size: 12px;
+        color: var(--sherpa-h3);
       }
       .status {
         padding: 8px 10px;
         border-radius: 8px;
-        background: #2b2d31;
+        background: var(--sherpa-h1);
         margin-bottom: 12px;
+        color: var(--sherpa-hl);
+      }
+      html[data-sherpa-theme="light"] .status {
+        background: #e4d6b0;
+        color: var(--sherpa-h1);
       }
       .status strong {
         display: block;
         margin-bottom: 2px;
+        color: var(--sherpa-h3);
+      }
+      html[data-sherpa-theme="light"] .status strong {
+        color: var(--sherpa-h1);
       }
       .status[data-ok="yes"] strong {
-        color: #86efac;
+        color: var(--sherpa-h3);
       }
-      .status[data-ok="maybe"] strong {
-        color: #e2b422;
+      html[data-sherpa-theme="light"] .status[data-ok="yes"] strong {
+        color: var(--sherpa-h2);
       }
       .status[data-ok="no"] strong {
-        color: #e05a5a;
+        color: var(--sherpa-hl);
       }
       .pref {
         margin-bottom: 12px;
-      }
-      .pref-title {
-        margin: 0 0 8px;
-        font-weight: 700;
-        font-size: 11px;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        color: #b5bac1;
       }
       .switch-row {
         display: flex;
@@ -84,12 +119,15 @@
         padding: 0;
         border: 0;
         border-radius: 999px;
-        background: #3f4147;
+        background: var(--sherpa-h1);
         cursor: pointer;
         flex: none;
       }
+      html[data-sherpa-theme="light"] .switch {
+        background: var(--sherpa-h3);
+      }
       .switch[aria-checked="true"] {
-        background: #5865f2;
+        background: var(--sherpa-hl);
       }
       .switch .knob {
         position: absolute;
@@ -98,7 +136,7 @@
         width: 18px;
         height: 18px;
         border-radius: 50%;
-        background: #fff;
+        background: var(--sherpa-bg);
         transition: transform 0.16s ease;
       }
       .switch[aria-checked="true"] .knob {
@@ -106,19 +144,34 @@
       }
       #agg-copy {
         margin: 8px 0 0;
-        color: #b5bac1;
+        color: var(--sherpa-h2);
       }
       .check {
         display: flex;
         gap: 8px;
         align-items: flex-start;
-        margin: 0;
+        margin: 0 0 14px;
         cursor: pointer;
       }
       .check input {
         margin-top: 3px;
         flex: none;
-        accent-color: #5865f2;
+        accent-color: var(--sherpa-hl);
+      }
+      .report {
+        display: block;
+        width: 100%;
+        padding: 9px 12px;
+        border: 0;
+        border-radius: 8px;
+        background: var(--sherpa-hl);
+        color: var(--sherpa-bg);
+        font: inherit;
+        font-weight: 700;
+        cursor: pointer;
+      }
+      html[data-sherpa-theme="dark"] .report {
+        color: var(--sherpa-h1);
       }
     </style>
   </head>
@@ -131,7 +184,7 @@
       <span id="status-detail">See if Sherpa is injected here.</span>
     </div>
     <section class="pref">
-      <p class="pref-title">Mode</p>
+      <h2>Mode</h2>
       <div class="switch-row">
         <span>Warn</span>
         <button type="button" class="switch" id="aggression" role="switch" aria-checked="false" aria-label="Block mode">
@@ -141,10 +194,21 @@
       </div>
       <p id="agg-copy"></p>
     </section>
+    <section class="pref">
+      <h2>Theme</h2>
+      <div class="switch-row">
+        <span>Light</span>
+        <button type="button" class="switch" id="theme" role="switch" aria-checked="true" aria-label="Dark theme">
+          <span class="knob"></span>
+        </button>
+        <span>Dark</span>
+      </div>
+    </section>
     <label class="check">
       <input id="descriptions" type="checkbox" checked />
       <span>Show highlights</span>
     </label>
+    <button type="button" class="report" id="report">Report a scam</button>
     <script src="settings.js"></script>
     <script src="popup.js"></script>
   </body>
