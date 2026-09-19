@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import ReportScamForm from "../components/ReportScamForm.jsx";
 
 function useReveal() {
   const ref = useRef(null);
@@ -111,6 +112,7 @@ export default function OurGoal() {
             The goal isn't a bigger encyclopedia of scams — it's fewer people
             ever needing to look one up.
           </p>
+          <ReportScamForm />
         </div>
       </GoalBlock>
     </section>

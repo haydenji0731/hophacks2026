@@ -1,6 +1,5 @@
 import { Link, NavLink, Outlet } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { HexPattern } from "./HexMesh.jsx";
 import ThemeToggle from "./ThemeToggle.jsx";
 
 export default function Layout() {
@@ -13,7 +12,6 @@ export default function Layout() {
 
   return (
     <div className="app">
-      <HexPattern className="fx-hex" />
       <div className="fx-scan" aria-hidden="true" />
       <div className="fx-vignette" aria-hidden="true" />
 
@@ -22,8 +20,8 @@ export default function Layout() {
       </a>
       <header className="site-header">
         <div className="header-inner">
-          <Link to="/" className="brand" aria-label="We Hate Scammers home">
-            W<span>H</span>S
+          <Link to="/" className="brand" aria-label="YPINR home">
+            YP<span>INR</span>
           </Link>
           <nav className="site-nav">
             <span className="sys-clock" aria-hidden="true">

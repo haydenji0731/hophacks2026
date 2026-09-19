@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { SCAM_TYPES } from "../data/questions.js";
 
+const PAGE_SIZE = 3;
+
 function fallbackPatterns(query) {
   const q = query.trim().toLowerCase();
   const rows = SCAM_TYPES.map((scam) => ({
@@ -27,10 +29,15 @@ export default function Repository() {
   const [debounced, setDebounced] = useState("");
   const [patterns, setPatterns] = useState([]);
   const [status, setStatus] = useState("loading");
+  const [shown, setShown] = useState(PAGE_SIZE);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebounced(query), 220);
     return () => window.clearTimeout(timer);
+  }, [query]);
+
+  useEffect(() => {
+    setShown(PAGE_SIZE);
   }, [query]);
 
   useEffect(() => {
@@ -85,7 +92,7 @@ export default function Repository() {
         {patterns.length === 0 && status !== "loading" ? (
           <li className="placeholder-card">No patterns match that search.</li>
         ) : (
-          patterns.map((scam) => (
+          patterns.slice(0, shown).map((scam) => (
             <li key={scam.id || scam.name}>
               <Link className="scam-card" to={`/scams/${scam.id || scam.name}`}>
                 <strong>{scam.title || scam.name}</strong>
@@ -102,6 +109,15 @@ export default function Repository() {
           ))
         )}
       </ul>
+      {shown < patterns.length ? (
+        <button
+          type="button"
+          className="btn btn-secondary intel-more"
+          onClick={() => setShown((n) => n + PAGE_SIZE)}
+        >
+          Load more
+        </button>
+      ) : null}
     </section>
   );
 }

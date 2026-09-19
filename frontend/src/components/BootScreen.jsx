@@ -24,10 +24,12 @@ export default function BootScreen({ onDone }) {
       <div className="boot-grid" aria-hidden="true" />
       <div className="boot-lid top" aria-hidden="true" />
       <div className="boot-lid bottom" aria-hidden="true" />
-      <p className="boot-mark" aria-label="WHS, We Hate Scammers">
-        <span>W</span>
-        <span>H</span>
-        <span>S</span>
+      <p className="boot-mark" aria-label="YPINR">
+        <span>Y</span>
+        <span>P</span>
+        <span>I</span>
+        <span>N</span>
+        <span>R</span>
       </p>
       <button className="boot-skip" type="button" onClick={onDone}>
         Skip intro

@@ -1,17 +1,18 @@
 const LIVE = new Set([
   "Discord",
   "Chrome",
-  "Apple iOS",
+  "iOS",
   "Instagram",
   "Web",
-  "Windows OS",
+  "Windows",
   "Facebook",
   "Android",
   "Reddit",
+  "Phone",
 ]);
 
 const ROWS = [
-  ["Discord", "Windows OS", "macOS", "Chrome", "Apple iOS"],
+  ["Discord", "Windows", "macOS", "Chrome", "iOS"],
   ["Android", "Instagram", "WhatsApp", "Telegram", "SMS"],
   ["Facebook", "Phone", "TikTok", "Web", "Reddit"],
 ];

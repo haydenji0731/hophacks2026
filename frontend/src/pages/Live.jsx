@@ -54,14 +54,16 @@ export default function Live() {
       ctx.clearRect(0, 0, width, height);
       const gap = 3;
       const bw = (width - gap * (bars - 1)) / bars;
-      const accent = alertRef.current ? "#ff5c5c" : "#ff7a7a";
+      const accent =
+        getComputedStyle(document.documentElement).getPropertyValue("--highlight").trim() ||
+        "#EFC3F5";
       for (let i = 0; i < bars; i += 1) {
         const n =
           0.15 +
           0.55 * Math.abs(Math.sin(now / 180 + i * 0.37)) +
           0.3 * Math.abs(Math.sin(now / 90 + i * 0.11));
         const h = Math.max(3, n * intensity * (height - 8));
-        ctx.fillStyle = i % 7 === 0 ? accent : "rgba(255,92,92,0.45)";
+        ctx.fillStyle = i % 7 === 0 ? accent : "rgba(239,195,245,0.45)";
         ctx.globalAlpha = 0.3 + intensity * 0.7;
         ctx.fillRect(i * (bw + gap), (height - h) / 2, bw, h);
       }

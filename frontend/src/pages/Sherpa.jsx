@@ -209,12 +209,12 @@ export default function Sherpa() {
   return (
     <section className="goal-page sherpa-page">
       <div className="goal-hero sherpa-hero">
-        <p className="sherpa-parent reveal delay-1">YPNIR</p>
+        <p className="sherpa-parent reveal delay-1">YPINR</p>
         <h1 className="reveal delay-2">
           Introducing <span className="sherpa-mark">Sherpa</span>
         </h1>
         <p className="lede reveal delay-3">
-          A browser extension, bundled with YPNIR, that highlights risky text the moment
+          A browser extension, bundled with YPINR, that highlights risky text the moment
           it reaches you — money requests, malicious links and misinformation — before
           it costs you anything.
         </p>
