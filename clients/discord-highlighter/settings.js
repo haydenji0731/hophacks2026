@@ -37,7 +37,12 @@
     if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.onChanged) {
       chrome.storage.onChanged.addListener((changes, area) => {
         if (area !== "local") return;
-        load(listener);
+        load((current) => {
+          const next = { ...current };
+          if (changes.aggression) next.aggression = changes.aggression.newValue;
+          if (changes.descriptions) next.descriptions = changes.descriptions.newValue;
+          listener(normalize(next));
+        });
       });
     }
   }
