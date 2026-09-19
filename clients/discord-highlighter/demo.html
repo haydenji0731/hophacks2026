@@ -247,7 +247,8 @@
       <h1>Sherpa</h1>
       <p class="lede">
         Yellow is SUSPICIOUS. Red is SCAM LIKELY: AVOID LINKS. Hover a highlight for the reason
-        when descriptions are on. Warn never interrupts a click. Block double-checks highlighted links only.
+        when hover comments are on. Warn never interrupts a click. Block: highlighted links prompt
+        to continue/go back when clicked.
       </p>
       <section class="prefs">
         <label>Mode</label>
@@ -269,7 +270,7 @@
         </div>
         <label class="check">
           <input id="descriptions" type="checkbox" checked />
-          <span>Show highlights</span>
+          <span>Show hover comments</span>
         </label>
         <button type="button" class="sherpa-report" id="report" data-band="" data-text="">Report a scam</button>
       </section>
@@ -456,8 +457,8 @@
     <script src="content.js"></script>
     <script>
       const COPY = {
-        warn: "Warn. Highlight suspicious text. Hover for the reason when descriptions are on. Links open normally.",
-        block: "Block. A click on a highlighted link always asks Continue / Go back and shows the real destination.",
+        warn: "Warn. Highlight suspicious text. Hover for the reason when hover comments are on. Links open normally.",
+        block: "Highlighted links prompt to continue/go back when clicked.",
       };
       const modeSwitch = document.getElementById("aggression");
       const themeSwitch = document.getElementById("theme");
