@@ -1194,6 +1194,7 @@ textarea {
   border: 1px solid var(--border);
   color: var(--text);
   font-weight: 500;
+  cursor: pointer;
 }
 
 .option {
@@ -1209,6 +1210,18 @@ textarea {
 .option-picked {
   border-color: var(--accent);
   background: rgba(255, 92, 92, 0.08);
+  animation: option-pop 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* `scale` (not `transform`) so it stacks with .option:hover's translateX instead of fighting it */
+@keyframes option-pop {
+  0%   { scale: 1;     box-shadow: 0 0 0 0 rgba(255, 92, 92, 0.4); }
+  35%  { scale: 1.04; }
+  100% { scale: 1;     box-shadow: 0 0 0 10px rgba(255, 92, 92, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .option-picked { animation: none; }
 }
 
 .ghost-link {
@@ -1607,6 +1620,7 @@ textarea:focus,
 
 .step-swap {
   position: relative;
+  isolation: isolate; /* keeps .step-scan's z-index: -1 inside this block, before/after the step-in animation */
 }
 
 .step-swap.is-out {
@@ -1619,13 +1633,28 @@ textarea:focus,
 
 .step-scan {
   position: absolute;
+  top: 0;
   left: 0;
   right: 0;
   height: 40%;
   pointer-events: none;
   background: linear-gradient(to bottom, transparent, rgba(255, 92, 92, 0.1), transparent);
-  animation: scan-sweep 0.55s ease-out;
-  z-index: 1;
+  z-index: -1; /* always behind the question text */
+  will-change: transform, opacity;
+  animation: step-scan-sweep 0.7s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* Same travel as scan-sweep (-30% -> 110% of the container), but via transform
+   so it's compositor-driven instead of re-laying-out `top` every frame. */
+@keyframes step-scan-sweep {
+  0%   { transform: translateY(-75%);  opacity: 0; }
+  15%  { opacity: 1; }
+  85%  { opacity: 1; }
+  100% { transform: translateY(275%);  opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step-scan { display: none; }
 }
 
 @keyframes step-out {
