@@ -1,4 +1,4 @@
-from seed_reddit_patterns import (
+from seed_scam_patterns import (
     parse_ai_generated,
     parse_demands,
     parse_pg_text_array,
@@ -8,7 +8,7 @@ from models import Demand, Platform
 
 
 def test_parse_pg_text_array_quoted_and_bare() -> None:
-    assert parse_pg_text_array('{web,other}') == ["web", "other"]
+    assert parse_pg_text_array("{web,other}") == ["web", "other"]
     assert parse_pg_text_array('{"marketplace buyer","marketplace seller"}') == [
         "marketplace buyer",
         "marketplace seller",

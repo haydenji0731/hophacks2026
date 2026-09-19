@@ -1,10 +1,10 @@
 from __future__ import annotations
 
-from fastapi import FastAPI, File, Form, HTTPException, UploadFile
-
+from fastapi import FastAPI, File, Form, Header, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from ingest import IngestInputs, ingest_incident, upsert_report
+from news_wire import load_wire, refresh_wire
 from process import ProcessInputs, process_audio
 from pipeline import analyze_incident
 from screen import run_screen
@@ -14,6 +14,7 @@ from schemas import (
     HealthResponse,
     IngestResponse,
     KeywordHitOut,
+    NewsFeedResponse,
     ProcessResponse,
     ReportRequest,
     ReportResponse,
@@ -50,7 +51,14 @@ app = FastAPI(
 )
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://127.0.0.1:5173", "http://localhost:5173"],
+    allow_origins=[
+        "http://127.0.0.1:5173",
+        "http://localhost:5173",
+        "http://127.0.0.1:5174",
+        "http://localhost:5174",
+        "http://127.0.0.1:5175",
+        "http://localhost:5175",
+    ],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -262,3 +270,46 @@ async def process(
             force_escalate=force_escalate,
         )
     )
+
+
+def _news_authorized(secret_header: str | None, authorization: str | None) -> bool:
+    expected = (settings.news_refresh_secret or "").strip()
+    if not expected:
+        return True
+    if (secret_header or "").strip() == expected:
+        return True
+    auth = (authorization or "").strip()
+    if auth.lower().startswith("bearer ") and auth[7:].strip() == expected:
+        return True
+    return False
+
+
+@app.get("/v1/news", response_model=NewsFeedResponse)
+def get_news() -> NewsFeedResponse:
+    """Home-page wire cards. Widget-only; does not call Grok."""
+    return NewsFeedResponse.model_validate(load_wire())
+
+
+@app.post(
+    "/v1/news/refresh",
+    response_model=NewsFeedResponse,
+    responses={
+        400: {"model": ErrorDetail},
+        401: {"model": ErrorDetail},
+    },
+)
+def post_news_refresh(
+    days: int | None = Query(default=None, ge=1, le=90),
+    x_news_refresh_secret: str | None = Header(default=None),
+    authorization: str | None = Header(default=None),
+) -> NewsFeedResponse:
+    """Grok Bot / CLI: recent scams → Grok deks → news_wire.json."""
+    if not _news_authorized(x_news_refresh_secret, authorization):
+        raise HTTPException(
+            status_code=401,
+            detail=ErrorDetail(
+                error="unauthorized",
+                detail="Invalid news refresh secret.",
+            ).model_dump(),
+        )
+    return NewsFeedResponse.model_validate(refresh_wire(days=days))

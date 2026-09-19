@@ -1,10 +1,20 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ARTICLES, FEATURED } from "../data/news.js";
+import { Link } from "react-router-dom";
+import { ARTICLES } from "../data/news.js";
 
-const COUNT = FEATURED.length;
-const SLIDES = [...FEATURED, FEATURED[0]];
+const POLL_MS = 20_000;
+
+function featuredOf(articles) {
+  const marked = articles.filter((article) => article.featured);
+  return marked.length ? marked : articles.slice(0, 3);
+}
 
 export default function NewsWidget() {
+  const [articles, setArticles] = useState(ARTICLES);
+  const featured = featuredOf(articles);
+  const count = featured.length;
+  const slides = count ? [...featured, featured[0]] : [];
+
   const [offset, setOffset] = useState(0);
   const [snap, setSnap] = useState(false);
   const [open, setOpen] = useState(false);
@@ -13,10 +23,39 @@ export default function NewsWidget() {
   const offsetRef = useRef(0);
   const openRef = useRef(false);
   const pausedRef = useRef(false);
+  const countRef = useRef(count);
 
   offsetRef.current = offset;
   openRef.current = open;
   pausedRef.current = paused;
+  countRef.current = count;
+
+  useEffect(() => {
+    let cancelled = false;
+    const apply = (payload) => {
+      const next = Array.isArray(payload?.articles)
+        ? payload.articles.filter((a) => a?.title && a?.dek)
+        : [];
+      if (!cancelled && next.length) setArticles(next);
+    };
+    const load = () => {
+      fetch("/api/v1/news")
+        .then((r) => (r.ok ? r.json() : Promise.reject()))
+        .then(apply)
+        .catch(() => {});
+    };
+    load();
+    const id = window.setInterval(load, POLL_MS);
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, []);
+
+  useEffect(() => {
+    setOffset((o) => (count ? o % count : 0));
+    busy.current = false;
+  }, [count]);
 
   const settle = useCallback(() => {
     busy.current = false;
@@ -24,8 +63,9 @@ export default function NewsWidget() {
 
   const goTo = useCallback(
     (next) => {
-      if (busy.current) return;
-      const current = offsetRef.current >= COUNT ? 0 : offsetRef.current;
+      const total = countRef.current;
+      if (!total || busy.current) return;
+      const current = offsetRef.current >= total ? 0 : offsetRef.current;
       if (next === current) return;
 
       if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
@@ -37,8 +77,8 @@ export default function NewsWidget() {
 
       busy.current = true;
       setSnap(false);
-      if (next === 0 && current === COUNT - 1) {
-        setOffset(COUNT);
+      if (next === 0 && current === total - 1) {
+        setOffset(total);
       } else {
         setOffset(next);
       }
@@ -48,7 +88,7 @@ export default function NewsWidget() {
 
   function onTrackEnd(event) {
     if (event.propertyName !== "transform") return;
-    if (offset === COUNT) {
+    if (offset === countRef.current) {
       setSnap(true);
       setOffset(0);
       settle();
@@ -69,14 +109,18 @@ export default function NewsWidget() {
     }
     const id = window.setInterval(() => {
       if (openRef.current || pausedRef.current) return;
-      const current = offsetRef.current >= COUNT ? 0 : offsetRef.current;
-      goTo((current + 1) % COUNT);
+      const total = countRef.current;
+      if (total < 2) return;
+      const current = offsetRef.current >= total ? 0 : offsetRef.current;
+      goTo((current + 1) % total);
     }, 6500);
     return () => window.clearInterval(id);
   }, [goTo]);
 
-  const visual = offset >= COUNT ? 0 : offset;
-  const stamp = `${String(visual + 1).padStart(2, "0")} of ${String(COUNT).padStart(2, "0")}`;
+  if (!count) return null;
+
+  const visual = offset >= count ? 0 : offset;
+  const stamp = `${String(visual + 1).padStart(2, "0")} of ${String(count).padStart(2, "0")}`;
 
   return (
     <div
@@ -100,7 +144,7 @@ export default function NewsWidget() {
               <>
                 <span>feed / {stamp}</span>
                 <span className="news-dots" role="tablist" aria-label="Top stories">
-                  {FEATURED.map((article, i) => (
+                  {featured.map((article, i) => (
                     <button
                       key={article.id}
                       type="button"
@@ -130,7 +174,7 @@ export default function NewsWidget() {
         <div className="window-body news-body" id="news-panel">
           {open ? (
             <ul className="news-catalogue">
-              {ARTICLES.map((article) => (
+              {articles.map((article) => (
                 <li key={article.id}>
                   <ArticleLink article={article} className="news-card" />
                 </li>
@@ -141,12 +185,12 @@ export default function NewsWidget() {
               <div
                 className={`news-track${snap ? " is-snap" : ""}`}
                 style={{
-                  width: `${SLIDES.length * 100}%`,
-                  transform: `translateX(-${(offset * 100) / SLIDES.length}%)`,
+                  width: `${slides.length * 100}%`,
+                  transform: `translateX(-${(offset * 100) / slides.length}%)`,
                 }}
                 onTransitionEnd={onTrackEnd}
               >
-                {SLIDES.map((article, i) => (
+                {slides.map((article, i) => (
                   <div
                     className="news-slide"
                     key={`${article.id}-${i}`}
@@ -164,14 +208,14 @@ export default function NewsWidget() {
   );
 }
 
+function isInternal(href) {
+  return typeof href === "string" && href.startsWith("/") && !href.startsWith("//");
+}
+
 function ArticleLink({ article, className }) {
-  return (
-    <a
-      className={className}
-      href={article.href}
-      target="_blank"
-      rel="noopener noreferrer"
-    >
+  const go = isInternal(article.href) ? "Open intel →" : "Open article ↗";
+  const inner = (
+    <>
       <span className="news-meta">
         {article.source}
         <span aria-hidden="true"> · </span>
@@ -179,13 +223,31 @@ function ArticleLink({ article, className }) {
       </span>
       <strong>{article.title}</strong>
       <p>{article.dek}</p>
-      <span className="news-go">Open article ↗</span>
+      <span className="news-go">{go}</span>
+    </>
+  );
+  if (isInternal(article.href)) {
+    return (
+      <Link className={className} to={article.href}>
+        {inner}
+      </Link>
+    );
+  }
+  return (
+    <a
+      className={className}
+      href={article.href}
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {inner}
     </a>
   );
 }
 
 function formatDate(iso) {
-  const [y, m, d] = iso.split("-").map(Number);
+  const [y, m, d] = String(iso || "").split("-").map(Number);
+  if (!y || !m || !d) return iso || "";
   return new Date(y, m - 1, d).toLocaleDateString("en-US", {
     month: "short",
     day: "numeric",

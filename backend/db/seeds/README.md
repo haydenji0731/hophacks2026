@@ -1,19 +1,29 @@
-# Reddit-derived scam pattern corpus for seeding Postgres `scams`
+# Reddit / multi-source scam pattern corpus
 
-* extraction every Monday at 9am EST (automated using Grok Bot)
+Seed TSVs for Postgres `scams`. This is the **public scam encyclopedia seed**, not ML training audio (that lives under [`training_data/`](../../../training_data/)).
 
-Source export: `reddit_scam_patterns.062126_091926.tsv` (~96 patterns).  
-This is the **public scam encyclopedia seed**, not ML training audio.
+### Load
 
 ```bash
 cd backend/db
 uv sync --group dev
 # DATABASE_URL in .env
 uv run alembic upgrade head
-uv run python seed_reddit_patterns.py
+uv run python seed_scam_patterns.py --path seeds/reddit_scam_patterns.062126_091926.tsv
+uv run python seed_scam_patterns.py --path seeds/scams_patterns_multisource.091926.tsv
 ```
 
-Re-runs upsert on `name` (refresh `frequency` / tags / `description`).
+Same script for any seed TSV/CSV with the `scams` columns (upsert on `name`). `seed_reddit_patterns.py` remains a thin alias.
+
+**Caveat:** loading both files sequentially **overwrites** overlapping rows with the later file’s `frequency` / tags / description. Prefer a merged export when you want Reddit post-counts kept alongside multi-source enrichment — multisource `frequency` is a source-hit count (1–6), not Reddit volume.
+
+Re-runs upsert on `name`. Monday collector refreshes the prior 7 days (09:00 America/New_York).
+
+| File | Contents |
+| --- | --- |
+| `reddit_scam_patterns.062126_091926.tsv` | Reddit-only (~96 patterns) |
+| `scams_patterns_multisource.091926.tsv` | Gov/tracker taxonomy (~99) |
+| `scams_patterns_merged.tsv` | Upserted union (~132) — preferred when present |
 
 ---
 
@@ -23,10 +33,10 @@ Each row is a **scam type/pattern**, not a single incident. Rows map 1:1 onto th
 
 | Column | Type | Meaning |
 |--------|------|---------|
-| `id` | UUID PK | Stable id (`gen_random_uuid()`); seed UUIDs are fixed so re-imports stay stable |
+| `id` | UUID PK | Stable id; seed UUIDs are fixed so re-imports stay stable |
 | `name` | `VARCHAR(255)` unique | Snake-case label, e.g. `gift_card_bail` |
 | `platforms` | `platform_enum[]` | `phone`, `sms`, `web`, `discord`, `other` |
-| `ai_generated` | `BOOLEAN` nullable | Interaction used AI? `true` / `false` / `NULL` = unknown |
+| `ai_generated` | `BOOLEAN` nullable | `true` / `false` / `NULL` = unknown |
 | `victim_roles` | `TEXT[]` | Role/demographic tags only (e.g. `elderly individual`) — no PII |
 | `demands` | `demand_enum[]` | `cash`, `gift_card`, `wire`, `crypto`, `check`, `other` |
 | `description` | `TEXT` | Keywords/phrases (method + reasoning); never raw transcripts |
@@ -55,7 +65,7 @@ This is **not**:
 | Field | Value |
 |-------|--------|
 | Subreddit | `r/Scams` |
-| Window |*2026-06-21 → 2026-09-19** (~90 days) |
+| Window | **2026-06-21 → 2026-09-19** (~90 days) |
 | Posts retrieved | **13,558** submissions |
 | Patterns exported | **96** |
 | Posts matched to a named pattern | **~1,422** (~10%) |
@@ -82,7 +92,7 @@ GET https://arctic-shift.photon-reddit.com/api/posts/search
 
 Pagination:
 
- at window start (UTC).
+1. Start `after` at window start (UTC).
 2. Request pages of 100.
 3. Advance the cursor to the max `created_utc` on the page (bump by 1s if stalled on duplicates).
 4. Sleep ~1.2s between pages to respect rate limits.
@@ -102,19 +112,21 @@ Pipeline after the JSONL exists:
    - allowed `platforms` / `demands` enum values
    - `victim_roles` tags (roles only)
    - keyword/regex rules for method phrases
-   - `description` as able keywords (no transcripts, no PII)
+   - `description` as searchable keywords (no transcripts, no PII)
 3. **First-match assignment** — scan rules in specificity order; first hit wins (avoids double-counting one post into many patterns).
 4. **`frequency`** — count of posts assigned to that pattern in the window.
 5. **Drop zeros** — patterns with no hits in the window are omitted from the export.
 6. **UUID stability** — known seed names keep fixed UUIDs across regenerations so upserts don’t churn PKs.
 7. **Enum hygiene** — WhatsApp / Telegram / Instagram map to `other` (or `web` when the lure is primarily a web ad); `ai_generated` left empty (`NULL`) unless evidence is clear.
 
-Caveats worth documenting for consumers:
+Caveats:
 
 - Regex clustering **under-counts** multi-theme posts and **misses** novel slang.
 - High unmatched rate is expected: r/Scams is mostly triage threads, not clean labeled taxonomy.
 - Frequencies reflect **what people posted**, not ground-truth prevalence in the wild.
-- Many archive bodies are mod-removed; title-only matching still helps but loses n5. Export format
+- Many archive bodies are mod-removed; title-only matching still helps but loses nuance.
+
+### 5. Export format
 
 TSV/CSV columns (Postgres-friendly array literals):
 
@@ -128,7 +140,31 @@ Examples:
 - `victim_roles` → `{"elderly individual","accident victim"}`
 - `ai_generated` → empty cell means SQL `NULL`
 
-Place the TSV where `seed_reddit_patterns.py` expects it (or pass the path the script documents), then run the seed commands above.
+### 5b. Multi-source taxonomy expansion (gov / consumer trackers)
+
+After the Reddit 90-day seed, we pulled **public pattern-level text** (no audio, no login walls, no private reporter PII) from official and consumer-tracker pages and mapped them into the same `scams` schema. Multi-source `frequency` is a **source-hit count** (how many agencies/orgs documented that pattern in this pull). Rows upsert into the Reddit seed on `name` (stable UUIDs kept; tags/descriptions enriched).
+
+**Sources used (worked):**
+
+- **FTC** (`consumer.ftc.gov`) — imposter hub; government impersonation; tech support; romance; jobs; social-media and payment-method scam alerts
+- **IC3** 2025 Annual Report PDF (`ic3.gov`) — crime-type typology / Appendix B definitions (BEC, crypto investment/recovery, sextortion, etc.)
+- **BBB** tips + Scam Tracker hub (`bbb.org`) — romance, tech support, gift-card, older-adult pattern explainers only (no reporter incident PII)
+- **Scamwatch** (Australia) — types-of-scams hub + child pages; public `scamtypes-json` taxonomy
+- **SSA** (`ssa.gov/scam`) — Social Security impersonation / suspend-SSN style scripts
+- **IRS** tax scam / fake IRS email-message pages — IRS/TIGTA-style phishing and phone impersonation guidance
+- **FCC** (`fcc.gov/social-security-phone-scams`) — SSA phone scam / spoofing guidance
+- **CISA** — social-engineering / phishing advisory page
+- **AARP Fraud Watch** — light corroboration from hub/elder-facing pattern language
+
+**Attempted but incomplete / skipped:**
+
+- **Action Fraud (UK)** — Cloudflare-blocked; not bypassed
+- **SSA OIG** “identify the scam” URL — 404 from this environment (SSA main scam page still used)
+- **APWG** — skipped lightly (FTC already routes phishing reports there)
+- **PhishTank / OpenPhish** — skipped (URL incident dumps, not patterns)
+- **Krebs on Security** — skipped once official taxonomies filled the catalog
+
+**Outputs:** `scams_patterns_multisource.csv/.tsv` (~99 rows); `scams_patterns_merged.csv/.tsv` (~132 rows = Reddit ∪ multi-source). Description keywords include provenance tags such as `source:ftc`, `source:ic3`, `source:bbb`, `source:scamwatch`.
 
 ### 6. Ongoing refresh (Monday collector)
 
@@ -140,21 +176,17 @@ A scheduled job pulls the **prior 7 days** each Monday (09:00 America/New_York),
 - Insert new patterns with new UUIDs
 - Deliver a short delta summary + refreshed TSV/CSV
 
-That keeps the encyclopedia seed current without re-pulling the full 90-day window every time.
-
-### 7. Reproducis seed
-
-Rough recipe:
+### 7. Reproducing this seed
 
 ```bash
 # 1) Paginate Arctic Shift for the window → JSONL
 # 2) Cluster with the pattern rule catalog → rows
 # 3) Write reddit_scam_patterns.062126_091926.tsv
-# 4) Seed gres
+# 4) Seed Postgres
 cd backend/db
 uv sync --group dev
 uv run alembic upgrade head
-uv run python seed_reddit_patterns.py
+uv run python seed_scam_patterns.py --path seeds/reddit_scam_patterns.062126_091926.tsv
 ```
 
 Idempotent: re-running the seeder upserts on `name`.
@@ -182,6 +214,6 @@ Full list: the TSV.
 
 ## License / ethics notes
 
-- Source material is **public Reddit submissions** mirrored via a public archive API.
-- Seed stores **pattern abstractions** (labels, enums, keyword descriptions), not verbatim victim transcripts or PII.
-- Not legal advice; community reports only.
+- Source material includes **public Reddit submissions** (via Arctic Shift archive API) and **public government / consumer-tracker pages** (FTC, IC3, BBB tips, Scamwatch, SSA, IRS, FCC, CISA, light AARP).
+- Seed stores **pattern abstractions** (labels, enums, keyword descriptions), not verbatim victim transcripts or reporter PII.
+- Not legal advice; community and public-advisory reports only.
