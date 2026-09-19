@@ -1,103 +1,56 @@
 import os
 import json
+from pathlib import Path
+
 import requests
 
-API_KEY = os.environ.get("XAI_API_KEY")
+try:
+    from dotenv import load_dotenv
+
+    # Repo root is backend/detector/ -> parents[2]
+    load_dotenv(Path(__file__).resolve().parents[2] / ".env")
+except ImportError:
+    pass
+
 API_URL = "https://api.x.ai/v1/chat/completions"
 
+
+def _api_key() -> str:
+    """Read the key at call time so importing this module never fails."""
+    key = os.environ.get("XAI_API_KEY")
+    if not key:
+        raise RuntimeError("XAI_API_KEY is not set. Add it to the repo-root .env file.")
+    return key
+
+
 # ---------------------------------------------------------------------------
-# STEP 1: Branching questions.
-# Q1 picks the channel. Q2+ change based on that answer, so the questions
-# actually feel relevant instead of generic. No API calls here -- fast,
-# free, and never breaks live.
+# STEP 1: Fixed, hardcoded early questions.
+# Fast, reliable, zero API cost, never fails during a demo.
+# Adjust/extend these branches as needed.
 # ---------------------------------------------------------------------------
 
-CHANNEL_QUESTION = {
-    "id": "channel",
-    "question": "How did this happen?",
-    "options": ["Phone call", "Text message", "Email", "Link or website", "Social media", "In person", "Other"],
-}
-
-# Follow-up questions per channel. Each list runs in order after the channel
-# question. Keep these short -- 2-3 max per branch so the flow stays fast.
-CHANNEL_FOLLOWUPS = {
-    "Phone call": [
-        {
-            "id": "caller_claim",
-            "question": "Who did the caller claim to be?",
-            "options": ["A family member", "A bank or company", "Government/police/IRS", "Tech support", "Unknown/didn't say", "Other"],
-        },
-        {
-            "id": "voice_quality",
-            "question": "Did the voice sound natural, or off in any way (robotic, choppy, unnatural pauses)?",
-            "options": ["Sounded normal", "Sounded a bit off", "Sounded clearly artificial", "Not sure"],
-        },
-    ],
-    "Text message": [
-        {
-            "id": "text_sender",
-            "question": "Who did the text claim to be from?",
-            "options": ["A bank or company", "Delivery service", "Government agency", "Unknown number", "A contact you know", "Other"],
-        },
-        {
-            "id": "text_link",
-            "question": "Did it include a link?",
-            "options": ["Yes", "No"],
-        },
-    ],
-    "Email": [
-        {
-            "id": "email_sender",
-            "question": "Who did the email claim to be from?",
-            "options": ["A bank or company", "Government agency", "Employer/coworker", "Unknown sender", "Other"],
-        },
-        {
-            "id": "email_link",
-            "question": "Did it ask you to click a link or open an attachment?",
-            "options": ["Yes", "No"],
-        },
-    ],
-    "Link or website": [
-        {
-            "id": "site_purpose",
-            "question": "What did the site ask you to do?",
-            "options": ["Log in with your credentials", "Enter payment info", "Download something", "Just looked suspicious", "Other"],
-        },
-    ],
-    "Social media": [
-        {
-            "id": "social_context",
-            "question": "How did they contact you?",
-            "options": ["Direct message from a stranger", "Comment on a post", "Fake profile of someone you know", "An ad", "Other"],
-        },
-    ],
-    "In person": [
-        {
-            "id": "person_claim",
-            "question": "Who did they claim to be?",
-            "options": ["Utility/service worker", "Law enforcement", "Salesperson", "Unknown", "Other"],
-        },
-    ],
-    "Other": [],
-}
-
-# These run for every channel, after the branch-specific ones.
-COMMON_FOLLOWUPS = [
+FIXED_QUESTIONS = [
+    {
+        "id": "channel",
+        "question": "How did this happen?",
+        "options": ["Phone call", "Text message", "Email", "Social media", "In person", "Other"],
+    },
     {
         "id": "ask",
         "question": "What did they ask you to do?",
         "options": [
             "Send money or gift cards",
-            "Share a password or code",
-            "Give personal/financial info",
-            "Click a link or download something",
-            "Nothing yet, just seemed off",
+            "Share a code or password",
+            "Click a link",
+            "Stay on the phone / follow instructions",
+            "Give personal information",
+            "Nothing yet / just suspicious",
             "Other",
         ],
     },
     {
         "id": "urgency",
-        "question": "Did they pressure you to act quickly?",
+        "question": "Did they pressure you to act quickly or create a sense of urgency?",
         "options": ["Yes", "No", "Not sure"],
     },
     {
@@ -108,81 +61,73 @@ COMMON_FOLLOWUPS = [
 ]
 
 
-def build_question_flow(channel: str) -> list[dict]:
-    """Returns the ordered list of questions to ask, based on the channel chosen."""
-    return CHANNEL_FOLLOWUPS.get(channel, []) + COMMON_FOLLOWUPS
-
-
-def run_questionnaire(answer_fn) -> dict:
+def run_fixed_questions(answer_fn) -> dict:
     """
-    Runs the full branching questionnaire. `answer_fn` takes a question dict
-    and returns the user's answer as a string. Swap this for real frontend
-    input when wiring into the product.
+    Runs the fixed question set. `answer_fn` is a function that takes a
+    question dict and returns the user's chosen answer as a string.
+    Swap this out for however your frontend collects answers (CLI input,
+    API request body, etc).
     """
     answers = {}
-    channel = answer_fn(CHANNEL_QUESTION)
-    answers["channel"] = channel
-
-    for q in build_question_flow(channel):
+    for q in FIXED_QUESTIONS:
         answers[q["id"]] = answer_fn(q)
-
     return answers
 
 
 # ---------------------------------------------------------------------------
-# STEP 2: Final AI verdict.
-# Takes all structured answers + optional free text, and returns a tiered
-# likelihood judgment plus tailored protective steps -- not just true/false.
+# STEP 2: Free-text extraction via Grok.
+# Takes the fixed answers + a freeform description, and extracts a
+# structured scam report -- reuses the same JSON pipeline pattern as
+# detect_scam.py.
 # ---------------------------------------------------------------------------
 
-VERDICT_PROMPT = """You are a scam-likelihood assessor helping someone understand whether
-what they experienced was likely a scam, and what they should do about it.
+EXTRACTION_PROMPT = """You are helping build a public scam database. A user has answered
+some structured questions and then described, in their own words, a scenario they think
+might be a scam. Your job is to extract a clean, structured report from all of this.
 
-You will receive structured answers from a branching questionnaire, plus an optional
-free-text description in the user's own words.
-
-Judge the likelihood using this tier system (do not use plain true/false):
-- "highly_likely": strong, multiple red flags, matches a known scam pattern clearly
-- "possibly": some concerning signs but not conclusive, or missing key details
-- "unlikely": answers describe a normal, explainable interaction with no real red flags
-
-Even for "unlikely", include general caution tips if there's any ambiguity at all --
-never tell someone with certainty that something is 100% safe.
+PRIVACY: the output is published publicly. Never include names, phone numbers, email
+addresses, street addresses, account or card numbers, or any other personal information
+in ANY field. Describe people by role only (e.g. "the caller", "a family member").
 
 Respond with ONLY a valid JSON object, no markdown formatting, no extra text.
 The JSON must have exactly these fields:
 {
-  "likelihood": "highly_likely" or "possibly" or "unlikely",
+  "is_likely_scam": true or false,
+  "scam_type": "best-guess category name, e.g. 'tech support scam', 'romance scam', 'grandparent scam', or 'unclear' if not enough info",
   "confidence": a number from 0.0 to 1.0,
-  "scam_type": "best-guess category name, or 'none identified' if unlikely",
-  "method": "how the scammer approached and what they wanted, or 'none' if unlikely",
-  "reasoning": "two to three sentences explaining the judgment, referencing specific answers",
-  "protective_steps": [
-    "a list of 3 to 5 concrete, specific actions the person should take right now,
-     tailored to this exact scenario -- not generic advice. Examples of the KIND of
-     specificity wanted: 'Do not send any payment through [method they mentioned]',
-     'Call [the company/person] directly using a number from their official website,
-     not any number given to you in this interaction', 'Report this to [specific
-     relevant agency, e.g. FTC.gov, your bank's fraud line, IC3.gov]'"
-  ]
+  "method": "how the scammer approached and what they asked for, in a short phrase",
+  "target": "who this appears to target, based on context (e.g. 'elderly individual', 'general consumer', 'unclear')",
+  "novel_pattern": true or false,
+  "summary": "a 2-3 sentence neutral summary of what happened, written for other users to learn from",
+  "reasoning": "one to two sentences on why you classified it this way"
 }
+(novel_pattern is true if this describes a tactic/approach that seems distinct from common well-known scam types.)
 """
 
 
-def get_verdict(answers: dict, free_text: str = "") -> dict:
-    user_content = f"""Structured answers from questionnaire:
-{json.dumps(answers, indent=2)}
-"""
-    if free_text.strip():
-        user_content += f"""
-Free-text description in their own words:
+def parse_json_response(raw_text: str) -> dict:
+    """Parse Grok's reply, tolerating a ```json ... ``` fence around the object."""
+    try:
+        return json.loads(raw_text)
+    except json.JSONDecodeError:
+        cleaned = raw_text.strip()
+        cleaned = cleaned.removeprefix("```json").removeprefix("```")
+        cleaned = cleaned.removesuffix("```").strip()
+        return json.loads(cleaned)
+
+
+def extract_scam_report(fixed_answers: dict, free_text: str) -> dict:
+    user_content = f"""Structured answers:
+{json.dumps(fixed_answers, indent=2)}
+
+User's own description of what happened:
 \"\"\"{free_text}\"\"\"
 """
 
     payload = {
         "model": "grok-4",
         "messages": [
-            {"role": "system", "content": VERDICT_PROMPT},
+            {"role": "system", "content": EXTRACTION_PROMPT},
             {"role": "user", "content": user_content},
         ],
         "response_format": {"type": "json_object"},
@@ -190,7 +135,7 @@ Free-text description in their own words:
     }
 
     headers = {
-        "Authorization": f"Bearer {API_KEY}",
+        "Authorization": f"Bearer {_api_key()}",
         "Content-Type": "application/json",
     }
 
@@ -202,47 +147,42 @@ Free-text description in their own words:
         response.raise_for_status()
 
     data = response.json()
-    raw_text = data["choices"][0]["message"]["content"]
+    result = parse_json_response(data["choices"][0]["message"]["content"])
 
-    try:
-        result = json.loads(raw_text)
-    except json.JSONDecodeError:
-        cleaned = raw_text.strip().strip("```json").strip("```").strip()
-        result = json.loads(cleaned)
-
-    result["answers"] = answers
-    result["free_text"] = free_text
+    result["fixed_answers"] = fixed_answers
+    # NOTE: the user's raw free text is deliberately NOT copied into the result,
+    # so it can't be written to the public database by accident.
     return result
 
 
 # ---------------------------------------------------------------------------
-# DEMO / TEST
+# DEMO / TEST: simulates a survey using hardcoded answers instead of real
+# user input. Swap `simulated_answer_fn` for a real frontend/CLI input
+# function when wiring this into the actual product.
 # ---------------------------------------------------------------------------
-
 if __name__ == "__main__":
-    # Simulated answers for testing -- replace answer_fn with real
-    # frontend/CLI input collection when wiring into the product.
-    simulated = iter([
-        "Phone call",              # channel
-        "A family member",         # caller_claim
-        "Sounded a bit off",       # voice_quality
-        "Send money or gift cards",# ask
-        "Yes",                     # urgency
-        "Yes",                     # secrecy
+    # Simulated answers for testing -- replace with real input collection later
+    simulated_answers_queue = iter([
+        "Phone call",
+        "Send money or gift cards",
+        "Yes",
+        "Yes",
     ])
 
     def simulated_answer_fn(question):
-        answer = next(simulated)
+        answer = next(simulated_answers_queue)
         print(f"{question['question']} -> {answer}")
         return answer
 
-    print("--- Running questionnaire ---")
-    answers = run_questionnaire(simulated_answer_fn)
+    print("--- Running fixed questions ---")
+    fixed_answers = run_fixed_questions(simulated_answer_fn)
 
-    free_text = """Someone called claiming to be my grandson. Said he was in an
-    accident and in jail, needed bail money right away, and begged me not to
-    tell his parents. Wanted me to buy gift cards and read him the codes."""
+    free_text_description = """Someone called claiming to be my nephew. He sounded
+    upset and said he was in a hospital in another state after a car accident and
+    needed money for medical bills immediately. He asked me not to call his parents
+    because he was embarrassed. He wanted me to wire money through a service I'd
+    never heard of, not a normal bank transfer."""
 
-    print("\n--- Getting verdict ---")
-    result = get_verdict(answers, free_text)
-    print(json.dumps(result, indent=2))
+    print("\n--- Extracting structured report from free text ---")
+    report = extract_scam_report(fixed_answers, free_text_description)
+    print(json.dumps(report, indent=2))
