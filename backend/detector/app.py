@@ -4,7 +4,7 @@ from fastapi import FastAPI, File, Form, Header, HTTPException, Query, UploadFil
 from fastapi.middleware.cors import CORSMiddleware
 
 from ingest import IngestInputs, ingest_incident, upsert_report
-from news_wire import load_wire, refresh_wire
+from news_wire import live_cards, refresh_wire
 from process import ProcessInputs, process_audio
 from pipeline import analyze_incident
 from screen import run_screen
@@ -286,8 +286,8 @@ def _news_authorized(secret_header: str | None, authorization: str | None) -> bo
 
 @app.get("/v1/news", response_model=NewsFeedResponse)
 def get_news() -> NewsFeedResponse:
-    """Home-page wire cards. Widget-only; does not call Grok."""
-    return NewsFeedResponse.model_validate(load_wire())
+    """Home-page wire: newest scams first. Does not call Grok."""
+    return NewsFeedResponse.model_validate(live_cards())
 
 
 @app.post(

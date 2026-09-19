@@ -5,6 +5,8 @@ import { ARTICLES } from "../data/news.js";
 const POLL_MS = 20_000;
 
 function featuredOf(articles) {
+  const mixed = articles.filter((a) => a.tag === "new" || a.tag === "hot");
+  if (mixed.length) return mixed;
   const marked = articles.filter((article) => article.featured);
   return marked.length ? marked : articles.slice(0, 3);
 }
@@ -220,6 +222,8 @@ function ArticleLink({ article, className }) {
         {article.source}
         <span aria-hidden="true"> · </span>
         {formatDate(article.date)}
+        {article.tag === "new" ? <span className="news-tag is-new">New</span> : null}
+        {article.tag === "hot" ? <span className="news-tag is-hot">Hot</span> : null}
       </span>
       <strong>{article.title}</strong>
       <p>{article.dek}</p>
