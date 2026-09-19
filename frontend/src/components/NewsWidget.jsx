@@ -1,29 +1,86 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { ARTICLES, FEATURED } from "../data/news.js";
 
+const COUNT = FEATURED.length;
+const SLIDES = [...FEATURED, FEATURED[0]];
+
 export default function NewsWidget() {
-  const [index, setIndex] = useState(0);
+  const [offset, setOffset] = useState(0);
+  const [snap, setSnap] = useState(false);
   const [open, setOpen] = useState(false);
   const [paused, setPaused] = useState(false);
+  const busy = useRef(false);
+  const offsetRef = useRef(0);
+  const openRef = useRef(false);
+  const pausedRef = useRef(false);
+
+  offsetRef.current = offset;
+  openRef.current = open;
+  pausedRef.current = paused;
+
+  const settle = useCallback(() => {
+    busy.current = false;
+  }, []);
+
+  const goTo = useCallback(
+    (next) => {
+      if (busy.current) return;
+      const current = offsetRef.current >= COUNT ? 0 : offsetRef.current;
+      if (next === current) return;
+
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        setSnap(true);
+        setOffset(next);
+        settle();
+        return;
+      }
+
+      busy.current = true;
+      setSnap(false);
+      if (next === 0 && current === COUNT - 1) {
+        setOffset(COUNT);
+      } else {
+        setOffset(next);
+      }
+    },
+    [settle],
+  );
+
+  function onTrackEnd(event) {
+    if (event.propertyName !== "transform") return;
+    if (offset === COUNT) {
+      setSnap(true);
+      setOffset(0);
+      settle();
+      return;
+    }
+    settle();
+  }
 
   useEffect(() => {
-    if (open || paused) return undefined;
+    if (!snap) return undefined;
+    const id = window.requestAnimationFrame(() => setSnap(false));
+    return () => window.cancelAnimationFrame(id);
+  }, [snap]);
+
+  useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       return undefined;
     }
-    const id = window.setInterval(
-      () => setIndex((i) => (i + 1) % FEATURED.length),
-      6500,
-    );
+    const id = window.setInterval(() => {
+      if (openRef.current || pausedRef.current) return;
+      const current = offsetRef.current >= COUNT ? 0 : offsetRef.current;
+      goTo((current + 1) % COUNT);
+    }, 6500);
     return () => window.clearInterval(id);
-  }, [open, paused]);
+  }, [goTo]);
 
-  const current = FEATURED[index];
-  const stamp = `${String(index + 1).padStart(2, "0")} of ${String(FEATURED.length).padStart(2, "0")}`;
+  const visual = offset >= COUNT ? 0 : offset;
+  const stamp = `${String(visual + 1).padStart(2, "0")} of ${String(COUNT).padStart(2, "0")}`;
 
   return (
     <div
-      className="product-stage reveal delay-5"
+      className="product-stage reveal delay-4"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
@@ -48,9 +105,9 @@ export default function NewsWidget() {
                       key={article.id}
                       type="button"
                       role="tab"
-                      aria-selected={i === index}
-                      className={i === index ? "is-on" : ""}
-                      onClick={() => setIndex(i)}
+                      aria-selected={i === visual}
+                      className={i === visual ? "is-on" : ""}
+                      onClick={() => goTo(i)}
                     >
                       <span className="sr-only">{article.title}</span>
                     </button>
@@ -80,9 +137,26 @@ export default function NewsWidget() {
               ))}
             </ul>
           ) : (
-            <>
-              <ArticleLink article={current} className="news-feature" />
-            </>
+            <div className="news-viewport">
+              <div
+                className={`news-track${snap ? " is-snap" : ""}`}
+                style={{
+                  width: `${SLIDES.length * 100}%`,
+                  transform: `translateX(-${(offset * 100) / SLIDES.length}%)`,
+                }}
+                onTransitionEnd={onTrackEnd}
+              >
+                {SLIDES.map((article, i) => (
+                  <div
+                    className="news-slide"
+                    key={`${article.id}-${i}`}
+                    aria-hidden={i !== offset}
+                  >
+                    <ArticleLink article={article} className="news-feature" />
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       </div>

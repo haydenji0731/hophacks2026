@@ -644,7 +644,29 @@ textarea {
 }
 
 .news-body {
-  min-height: 220px;
+  min-height: 280px;
+  overflow: hidden;
+  padding-bottom: 1.75rem;
+}
+
+.news-viewport {
+  overflow: hidden;
+}
+
+.news-track {
+  display: flex;
+  will-change: transform;
+  transition: transform 0.72s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.news-track.is-snap {
+  transition: none;
+}
+
+.news-slide {
+  flex: 1 0 0;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .news-slot {
@@ -1298,8 +1320,10 @@ textarea:focus,
   .live-dot::before,
   .product-stage::before,
   .step-swap,
-  .step-scan {
+  .step-scan,
+  .news-track {
     animation: none !important;
+    transition: none !important;
   }
 
   .step-swap {
