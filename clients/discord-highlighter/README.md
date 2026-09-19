@@ -24,4 +24,3 @@ It matches Discord stable, PTB, and Canary.
 | `manifest.json` | Manifest V3, content script on Discord |
 | `content.js` | Marks user messages; MutationObserver for instant updates |
 | `content.css` | Red highlighter wash and left accent |
-| `icons/` | Extension icons |

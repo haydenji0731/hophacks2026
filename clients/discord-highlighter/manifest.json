@@ -3,11 +3,6 @@
   "name": "Discord User Message Highlighter",
   "version": "1.0.0",
   "description": "Highlights every Discord user chat message in red. Runs locally and updates as new messages appear.",
-  "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
-  },
   "content_scripts": [
     {
       "matches": [
