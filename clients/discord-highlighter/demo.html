@@ -68,7 +68,7 @@
         color: #b5bac1;
       }
       .result[data-band="caution"] {
-        color: #d4a017;
+        color: #e2b422;
       }
       .result[data-band="high"] {
         color: #e05a5a;
@@ -90,11 +90,45 @@
         background: #5865f2;
         flex: none;
       }
-      .name {
-        margin: 0 0 2px;
-        font-size: 1rem;
-        font-weight: 600;
+      .section-title {
+        margin: 28px 0 12px;
+        font-size: 0.95rem;
+        font-weight: 700;
         color: #f2f3f5;
+      }
+      .ig-thread {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin: 0 0 8px;
+      }
+      .ig-bubble {
+        align-self: flex-start;
+        max-width: 85%;
+        padding: 8px 12px;
+        border-radius: 18px;
+        background: #2b2d31;
+      }
+      .ig-thread .ig-bubble:first-child {
+        align-self: flex-end;
+        background: #3b3d44;
+      }
+      shreddit-comment,
+      shreddit-post {
+        display: block;
+        margin: 0 0 12px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        background: #2b2d31;
+      }
+      shreddit-comment p,
+      shreddit-post p {
+        margin: 0;
+      }
+      .reddit-meta {
+        margin: 0 0 4px;
+        font-size: 12px;
+        color: #b5bac1;
       }
     </style>
   </head>
@@ -102,7 +136,7 @@
     <div class="page">
       <h1>Scam Smell</h1>
       <p class="lede">
-        Offline warnings for Discord-style messages. Yellow is caution, red is high risk.
+        Offline warnings for Discord, Instagram, and Reddit. Yellow is caution, red is high risk.
         Hover a highlight for why. Normal chat is left alone — this is a signal, not a verdict.
       </p>
       <form class="paste" id="paste-form">
@@ -159,6 +193,46 @@
           </div>
         </li>
       </ol>
+      <h2 class="section-title">Instagram DM</h2>
+      <div class="ig-thread" data-pagelet="IGDMessagesList" aria-label="Conversation with Unknown">
+        <div class="ig-bubble" role="none">
+          <div role="presentation">
+            <div dir="auto">hey, pizza at 8 still good?</div>
+          </div>
+        </div>
+        <div class="ig-bubble" role="none">
+          <div role="presentation">
+            <div dir="auto">Click to verify your account</div>
+          </div>
+        </div>
+        <div class="ig-bubble" role="none">
+          <div role="presentation">
+            <div dir="auto">FREE Discord Nitro giveaway! First 10 people click here: https://discord.gift/abc123</div>
+          </div>
+        </div>
+      </div>
+      <h2 class="section-title">Reddit comment</h2>
+      <shreddit-post>
+        <p class="reddit-meta">r/scams · u/mira</p>
+        <h1 slot="title">Anyone else get this DM?</h1>
+        <div slot="text-body"><div class="md"><p>hey, pizza at 8 still good? posting for sanity.</p></div></div>
+      </shreddit-post>
+      <shreddit-comment author="irs-help">
+        <p class="reddit-meta">u/irs-help</p>
+        <div slot="comment">
+          <div class="md">
+            <p>IRS: pay overdue tax with Apple gift cards today, don't tell anyone</p>
+          </div>
+        </div>
+      </shreddit-comment>
+      <shreddit-comment author="verify-bot">
+        <p class="reddit-meta">u/verify-bot</p>
+        <div slot="comment">
+          <div class="md">
+            <p>Click to verify your account</p>
+          </div>
+        </div>
+      </shreddit-comment>
     </div>
     <script src="scorer.js"></script>
     <script src="content.js"></script>
