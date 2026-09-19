@@ -1,0 +1,57 @@
+{
+  "manifest_version": 3,
+  "name": "Sherpa",
+  "version": "1.9.2",
+  "description": "Highlighter for suspicious Discord, Instagram, Reddit, and Google Drive text. Warn or Block before a bad link opens.",
+  "action": {
+    "default_title": "Sherpa",
+    "default_popup": "popup.html"
+  },
+  "permissions": ["activeTab", "storage"],
+  "web_accessible_resources": [
+    {
+      "resources": ["report.html", "fonts/*"],
+      "matches": [
+        "https://discord.com/*",
+        "https://ptb.discord.com/*",
+        "https://canary.discord.com/*",
+        "https://www.instagram.com/*",
+        "https://instagram.com/*",
+        "https://www.reddit.com/*",
+        "https://old.reddit.com/*",
+        "https://new.reddit.com/*",
+        "https://sh.reddit.com/*",
+        "https://reddit.com/*",
+        "https://drive.google.com/*"
+      ]
+    }
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://discord.com/*",
+        "https://ptb.discord.com/*",
+        "https://canary.discord.com/*",
+        "https://www.instagram.com/*",
+        "https://instagram.com/*",
+        "https://www.reddit.com/*",
+        "https://old.reddit.com/*",
+        "https://new.reddit.com/*",
+        "https://sh.reddit.com/*",
+        "https://reddit.com/*"
+      ],
+      "css": ["content.css"],
+      "js": ["scorer.js", "settings.js", "content.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://drive.google.com/*"],
+      "all_frames": true,
+      "match_about_blank": true,
+      "match_origin_as_fallback": true,
+      "css": ["content.css"],
+      "js": ["scorer.js", "settings.js", "content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

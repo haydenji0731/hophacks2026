@@ -1,0 +1,457 @@
+<!doctype html>
+<html lang="en" data-sherpa-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sherpa preview</title>
+    <link rel="stylesheet" href="content.css" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: var(--sherpa-bg);
+        color: var(--sherpa-hl);
+        font: 15px/1.5 "JetBrains Mono", ui-monospace, monospace;
+      }
+      html[data-sherpa-theme="light"] body {
+        color: var(--sherpa-h1);
+      }
+      .page {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 28px 20px 50vh;
+      }
+      h1 {
+        margin: 0 0 10px;
+        font-size: 2.4rem;
+        font-weight: 700;
+        letter-spacing: -0.04em;
+        color: var(--sherpa-h3);
+      }
+      html[data-sherpa-theme="light"] h1 {
+        color: var(--sherpa-h1);
+      }
+      .lede {
+        margin: 0 0 20px;
+        color: var(--sherpa-h2);
+      }
+      .prefs,
+      .paste,
+      .ig-bubble,
+      shreddit-comment,
+      shreddit-post,
+      .g-pane {
+        background: color-mix(in srgb, var(--sherpa-h1) 72%, var(--sherpa-bg));
+      }
+      html[data-sherpa-theme="light"] .prefs,
+      html[data-sherpa-theme="light"] .paste,
+      html[data-sherpa-theme="light"] .ig-bubble,
+      html[data-sherpa-theme="light"] shreddit-comment,
+      html[data-sherpa-theme="light"] shreddit-post,
+      html[data-sherpa-theme="light"] .g-pane {
+        background: color-mix(in srgb, var(--sherpa-h3) 28%, var(--sherpa-bg));
+      }
+      .prefs {
+        display: grid;
+        gap: 10px;
+        margin: 0 0 20px;
+        padding: 14px;
+        border-radius: 12px;
+      }
+      .prefs label {
+        margin: 0;
+        font-weight: 600;
+        color: var(--sherpa-h3);
+      }
+      html[data-sherpa-theme="light"] .prefs label {
+        color: var(--sherpa-h1);
+      }
+      .switch-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+      }
+      .switch {
+        position: relative;
+        width: 44px;
+        height: 24px;
+        padding: 0;
+        border: 0;
+        border-radius: 999px;
+        background: var(--sherpa-h1);
+        cursor: pointer;
+      }
+      html[data-sherpa-theme="light"] .switch {
+        background: var(--sherpa-h3);
+      }
+      .switch[aria-checked="true"] {
+        background: var(--sherpa-hl);
+      }
+      .switch .knob {
+        position: absolute;
+        top: 3px;
+        left: 3px;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: var(--sherpa-bg);
+      }
+      .switch[aria-checked="true"] .knob {
+        transform: translateX(20px);
+      }
+      #agg-copy {
+        margin: 0;
+        color: var(--sherpa-h2);
+        font-size: 13px;
+      }
+      .check {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        font-weight: 500;
+        cursor: pointer;
+      }
+      .check input {
+        accent-color: var(--sherpa-hl);
+      }
+      .paste {
+        margin-bottom: 28px;
+        padding: 14px;
+        border-radius: 12px;
+      }
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: var(--sherpa-h3);
+      }
+      html[data-sherpa-theme="light"] label {
+        color: var(--sherpa-h1);
+      }
+      textarea {
+        box-sizing: border-box;
+        width: 100%;
+        min-height: 96px;
+        padding: 10px 12px;
+        border: 1px solid var(--sherpa-h2);
+        border-radius: 8px;
+        background: var(--sherpa-bg);
+        color: inherit;
+        font: inherit;
+        resize: vertical;
+      }
+      button {
+        margin-top: 10px;
+        padding: 8px 14px;
+        border: 0;
+        border-radius: 8px;
+        background: var(--sherpa-hl);
+        color: var(--sherpa-bg);
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      html[data-sherpa-theme="dark"] button {
+        color: var(--sherpa-h1);
+      }
+      .result {
+        margin-top: 12px;
+        min-height: 1.4em;
+        color: var(--sherpa-h2);
+      }
+      .result[data-band="caution"] {
+        color: var(--sherpa-h3);
+      }
+      .result[data-band="high"] {
+        color: var(--sherpa-hl);
+      }
+      .chat {
+        margin: 0;
+        padding: 0;
+      }
+      li[id^="chat-messages-"] {
+        display: flex;
+        gap: 16px;
+        padding: 4px 8px 12px;
+        list-style: none;
+      }
+      .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--sherpa-h2);
+        flex: none;
+      }
+      .name {
+        margin: 0 0 4px;
+        color: var(--sherpa-h3);
+        font-size: 0.95rem;
+      }
+      .section-title {
+        margin: 28px 0 12px;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--sherpa-h2);
+      }
+      .ig-thread {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin: 0 0 8px;
+      }
+      .ig-bubble {
+        align-self: flex-start;
+        max-width: 85%;
+        padding: 8px 12px;
+        border-radius: 18px;
+      }
+      .ig-thread .ig-bubble:first-child {
+        align-self: flex-end;
+        background: color-mix(in srgb, var(--sherpa-h2) 45%, var(--sherpa-bg));
+      }
+      shreddit-comment,
+      shreddit-post {
+        display: block;
+        margin: 0 0 12px;
+        padding: 10px 12px;
+        border-radius: 8px;
+      }
+      shreddit-comment p,
+      shreddit-post p {
+        margin: 0;
+      }
+      .reddit-meta,
+      .g-meta {
+        margin: 0 0 4px;
+        font-size: 12px;
+        color: var(--sherpa-h2);
+      }
+      .g-pane {
+        margin: 0 0 12px;
+        padding: 10px 12px;
+        border-radius: 8px;
+      }
+      .g-meta {
+        margin: 0 0 6px;
+      }
+      .docos-replyview-body {
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <h1>Sherpa</h1>
+      <p class="lede">
+        Yellow is SUSPICIOUS. Red is SCAM LIKELY: AVOID LINKS. Hover a highlight for the reason
+        when hover comments are on. Warn never interrupts a click. Block: highlighted links prompt
+        to continue/go back when clicked.
+      </p>
+      <section class="prefs">
+        <label>Mode</label>
+        <div class="switch-row">
+          <span>Warn</span>
+          <button type="button" class="switch" id="aggression" role="switch" aria-checked="false" aria-label="Block mode">
+            <span class="knob"></span>
+          </button>
+          <span>Block</span>
+        </div>
+        <p id="agg-copy"></p>
+        <label>Theme</label>
+        <div class="switch-row">
+          <span>Light</span>
+          <button type="button" class="switch" id="theme" role="switch" aria-checked="true" aria-label="Dark theme">
+            <span class="knob"></span>
+          </button>
+          <span>Dark</span>
+        </div>
+        <label class="check">
+          <input id="descriptions" type="checkbox" checked />
+          <span>Show hover comments</span>
+        </label>
+        <button type="button" class="sherpa-report" id="report" data-band="" data-text="">Report a scam</button>
+      </section>
+      <form class="paste" id="paste-form">
+        <label for="paste-text">Paste a DM, email snippet, or ad</label>
+        <textarea id="paste-text" placeholder="IRS: pay overdue tax with Apple gift cards today…"></textarea>
+        <button type="submit">Check locally</button>
+        <p class="result" id="paste-result" aria-live="polite"></p>
+      </form>
+      <ol class="chat" data-list-id="chat-messages">
+        <li id="chat-messages-1-100">
+          <div class="avatar" aria-hidden="true"></div>
+          <div>
+            <h3 class="name">Mira</h3>
+            <div id="message-content-100">hey, pizza at 8 still good?</div>
+          </div>
+        </li>
+        <li id="chat-messages-1-150">
+          <div class="avatar" aria-hidden="true"></div>
+          <div>
+            <h3 class="name">Amazon</h3>
+            <div id="message-content-150">Your Amazon order has shipped. Tracking number 1Z999 is on the way.</div>
+          </div>
+        </li>
+        <li id="chat-messages-1-200">
+          <div class="avatar" aria-hidden="true"></div>
+          <div>
+            <h3 class="name">Unknown</h3>
+            <div id="message-content-200">Click to verify your account</div>
+          </div>
+        </li>
+        <li id="chat-messages-1-300">
+          <div class="avatar" aria-hidden="true"></div>
+          <div>
+            <h3 class="name">IRS-Help</h3>
+            <div id="message-content-300">
+              IRS: pay overdue tax with Apple gift cards today, don't tell anyone
+            </div>
+          </div>
+        </li>
+        <li id="chat-messages-1-400">
+          <div class="avatar" aria-hidden="true"></div>
+          <div>
+            <h3 class="name">Prince</h3>
+            <div id="message-content-400">
+              I am the son of the late Nigerian prince. You are named as next of kin to transfer $21,000,000. Pay a processing fee via Western Union and keep this confidential.
+            </div>
+          </div>
+        </li>
+        <li id="chat-messages-1-500">
+          <div class="avatar" aria-hidden="true"></div>
+          <div>
+            <h3 class="name">NitroBot</h3>
+            <div id="message-content-500">FREE Discord Nitro giveaway! First 10 people click here: https://discord.gift/abc123</div>
+          </div>
+        </li>
+        <li id="chat-messages-1-600">
+          <div class="avatar" aria-hidden="true"></div>
+          <div>
+            <h3 class="name">PayNotice</h3>
+            <div id="message-content-600">
+              Click to verify your account at <a href="https://evil.example/paypal">paypal.com/login</a>
+            </div>
+          </div>
+        </li>
+        <li id="chat-messages-1-700">
+          <div class="avatar" aria-hidden="true"></div>
+          <div>
+            <h3 class="name">IRS-Link</h3>
+            <div id="message-content-700">
+              IRS: pay overdue tax with Apple gift cards today, don't tell anyone.
+              <a href="https://not-irs.example/pay">Open payment portal</a>
+            </div>
+          </div>
+        </li>
+      </ol>
+      <h2 class="section-title">Instagram DM</h2>
+      <form>
+        <div class="ig-thread" data-pagelet="IGDMessagesList" aria-label="Conversation with Unknown">
+          <div class="ig-bubble" role="none">
+            <div role="presentation">
+              <div dir="auto">hey, pizza at 8 still good?</div>
+            </div>
+          </div>
+          <div class="ig-bubble" role="none">
+            <div role="presentation">
+              <div>
+                <span dir="auto">Click</span>
+                <span dir="auto">to</span>
+                <span dir="auto">verify</span>
+                <span dir="auto">your</span>
+                <span dir="auto">account</span>
+              </div>
+            </div>
+          </div>
+          <div class="ig-bubble" role="none">
+            <div role="presentation">
+              <div dir="auto">IRS: pay overdue tax with Apple gift cards today, don't tell anyone</div>
+            </div>
+          </div>
+        </div>
+      </form>
+      <h2 class="section-title">Reddit comment</h2>
+      <shreddit-post>
+        <p class="reddit-meta">r/scams · u/mira</p>
+        <h1 slot="title">Anyone else get this DM?</h1>
+        <div slot="text-body"><div class="md"><p>hey, pizza at 8 still good? posting for sanity.</p></div></div>
+      </shreddit-post>
+      <shreddit-comment author="irs-help">
+        <p class="reddit-meta">u/irs-help</p>
+        <div slot="comment">
+          <div class="md">
+            <p>IRS: pay overdue tax with Apple gift cards today, don't tell anyone</p>
+          </div>
+        </div>
+      </shreddit-comment>
+      <shreddit-comment author="verify-bot">
+        <p class="reddit-meta">u/verify-bot</p>
+        <div slot="comment">
+          <div class="md">
+            <p>Click to verify your account</p>
+          </div>
+        </div>
+      </shreddit-comment>
+      <h2 class="section-title">Google Drive comment</h2>
+      <div data-sherpa-google>
+        <div class="g-pane">
+          <p class="g-meta">Drive activity · comment</p>
+          <div class="docos-replyview-body">
+            I need 3 ebay gift cards of $200 each. What's the closest store ?
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="scorer.js"></script>
+    <script src="settings.js"></script>
+    <script src="content.js"></script>
+    <script>
+      const COPY = {
+        warn: "Warn. Highlight suspicious text. Hover for the reason when hover comments are on. Links open normally.",
+        block: "Highlighted links prompt to continue/go back when clicked.",
+      };
+      const modeSwitch = document.getElementById("aggression");
+      const themeSwitch = document.getElementById("theme");
+      const desc = document.getElementById("descriptions");
+      const copyEl = document.getElementById("agg-copy");
+      function persist() {
+        const aggression = modeSwitch.getAttribute("aria-checked") === "true" ? "block" : "warn";
+        const theme = themeSwitch.getAttribute("aria-checked") === "true" ? "dark" : "light";
+        const next = { aggression, descriptions: desc.checked, theme };
+        globalThis.SherpaPrefs.save(next);
+        if (globalThis.Sherpa) globalThis.Sherpa.applySettings(next);
+        copyEl.textContent = COPY[aggression];
+      }
+      modeSwitch.addEventListener("click", () => {
+        const next = modeSwitch.getAttribute("aria-checked") !== "true";
+        modeSwitch.setAttribute("aria-checked", next ? "true" : "false");
+        persist();
+      });
+      themeSwitch.addEventListener("click", () => {
+        const next = themeSwitch.getAttribute("aria-checked") !== "true";
+        themeSwitch.setAttribute("aria-checked", next ? "true" : "false");
+        persist();
+      });
+      desc.addEventListener("change", persist);
+      desc.addEventListener("click", persist);
+      persist();
+
+      document.getElementById("paste-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const text = document.getElementById("paste-text").value;
+        const out = document.getElementById("paste-result");
+        const result = globalThis.ScamSmell.analyze(text);
+        out.dataset.band = result.band;
+        if (result.band === "ok") {
+          out.textContent = `Looks normal (${result.score}/100). Nothing highlighted.`;
+          return;
+        }
+        const warn =
+          result.band === "high" ? "SCAM LIKELY: AVOID LINKS" : "SUSPICIOUS";
+        const label = result.band === "high" ? "High risk signals" : "Caution";
+        out.textContent = `${warn} · ${label} · ${result.score}/100. ${result.reasons.join(" ")}`;
+      });
+    </script>
+  </body>
+</html>

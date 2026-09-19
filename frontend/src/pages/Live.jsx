@@ -252,7 +252,7 @@ export default function Live() {
         {hits.length
           ? hits.map((h) => (
               <span key={h.label} className="on">
-                {h.label}
+                {String(h.label).replaceAll("_", " ")}
               </span>
             ))
           : ["waiting for clip"].map((p) => <span key={p}>{p}</span>)}
