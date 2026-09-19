@@ -1,0 +1,90 @@
+ecovery_social_engineer: "account_hack_spread_warning",
+};
+
+/** Extra existing slugs that should inherit tags from a catalog method. */
+const CATALOG_ALSO = {
+  family_emergency: ["grandma_family_emergency_wire", "elder_cash_pickup_courier"],
+  romance_crypto: ["cryptocurrency_chat_mentor_scam", "whatsapp_investment_brand_impersonation"],
+  money_mule: ["package_mule_reship_job"],
+  fake_check_overpayment: ["mystery_shopper_fake_check", "western_union_courier_fake_check"],
+  dating_app_romance: [
+    "elder_romance_whatsapp_owed_money",
+    "romance_military_overseas",
+    "romance_long_con_family_sos",
+    "sugar_daddy_advance_fee",
+  ],
+  payment_app_goods_scam: ["zelle_venmo_wrong_person_refund"],
+  phishing_login: ["fake_invoice_email_phish", "email_account_recovery_phish"],
+  crypto_investment: ["cryptocurrency_chat_mentor_scam"],
+  pet_scam: ["pet_sitting_advance_scam"],
+  sextortion_social: ["onlyfans_content_leak_extort"],
+  qr_parking: ["qr_code_payment_redirect"],
+  wrong_number_romance: ["pig_butchering_crypto_romance"],
+  amazon_apple_refund: ["tech_support_remote_access"],
+};
+
+const PRIORITY_FREQUENCY = { high: 14, medium: 8, low: 4 };
+
+const ACRONYMS = new Set([
+  "irs",
+  "ssa",
+  "fbi",
+  "otp",
+  "mfa",
+  "atm",
+  "qr",
+  "ceo",
+  "bec",
+  "w2",
+  "ai",
+  "id",
+  "sms",
+  "usps",
+  "dhl",
+  "aca",
+]);
+
+const EXAMPLES = {
+  irs_ssa_tax_impersonation: [
+    "\u201cThis is the IRS. There is a warrant for your arrest. Stay on the line and pay with Apple gift cards.\u201d",
+    "A caller-ID that says SSA or Medicare, then a demand to \u201cverify\u201d your Social Security number.",
+    "A text: your tax refund is on hold until you click a payment link.",
+  ],
+  bank_amex_fbi_spoof_call: [
+    "\u201cThis is Chase Fraud. We need you on a three-way call with the FBI. Do not tell your family.\u201d",
+    "A number that looks like your bank, then instructions to withdraw cash or buy crypto.",
+    "They insist on FaceTime to \u201cverify you are not a hostage.\u201d",
+  ],
+  e_dating_money_request: [
+    "A match on Tinder or Hinge who moves to WhatsApp in a day and says \u201cI love you\u201d within a week.",
+    "They cannot video-chat (deployed, on an oil rig, at a hospital) and need money for a ticket, visa, or hospital bill.",
+    "After weeks of sweet talk they send a trading-app screenshot and ask you to \u201cinvest a little so we can be together.\u201d",
+  ],
+  cashier_check_overpayment: [
+    "A buyer sends a cashier\u2019s check for $4,800 on a $3,200 item and asks you to wire the extra $1,600 back.",
+    "\u201cMy assistant already mailed the check. Refund the difference so they can pick up tomorrow.\u201d",
+    "The check looks official. Your bank credits it, then it bounces a week later and you are on the hook.",
+  ],
+  marketplace_overpayment_fake_check: [
+    "A Marketplace buyer overpays with a money order and asks you to refund the extra before it clears.",
+    "They want you to ship as soon as you \u201csee\u201d the deposit, not after the check actually clears.",
+  ],
+  pig_butchering_crypto_romance: [
+    "A \u201cwrong number\u201d text turns into daily check-ins, then a crypto mentor with a private trading site.",
+    "The dashboard shows huge gains. Withdrawal is blocked until you pay a tax or \u201cunlock\u201d fee.",
+  ],
+  job_offer_training_equipment_fee: [
+    "A job offer that requires you to buy a laptop, \u201ctraining kit,\u201d or background-check software up front.",
+    "They promise reimbursement on your first paycheck. The paycheck never comes.",
+  ],
+  facebook_marketplace_payment_scam: [
+    "A buyer wants to pay outside Marketplace \u201cfor insurance\u201d and then ghosts after you ship.",
+    "A seller sends a fake tracking number after you Venmo them.",
+  ],
+  tech_support_remote_access: [
+    "A popup or call: \u201cYour computer has a virus. Install AnyDesk so Microsoft can fix it.\u201d",
+    "They \u201crefund\u201d you too much and ask you to send the extra back in gift cards.",
+  ],
+  family_member_impersonation_jail: [
+    "\u201cGrandma, I\u2019m in jail. Don\u2019t tell Mom. Wire bail to this lawyer.\u201d",
+    "A \u201cpublic defen
