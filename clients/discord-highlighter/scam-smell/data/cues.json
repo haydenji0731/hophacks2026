@@ -38,7 +38,7 @@
     {
       "id": "you_have_won",
       "family": "reward",
-      "patterns": ["you have won", "you've won", "you won", "you are a winner", "selected as a winner", "congratulations you won"],
+      "patterns": ["you have won", "you've won", "you won", "you are a winner", "selected as a winner", "congratulations you won", "you have been selected", "number was selected randomly"],
       "weight": 8
     },
     {
@@ -104,7 +104,7 @@
     {
       "id": "gift_card",
       "family": "payment",
-      "patterns": ["gift card", "gift cards", "giftcard", "gift-card"],
+      "patterns": ["gift card", "gift cards", "giftcard", "gift-card", "ebay gift"],
       "weight": 9,
       "negation_safe": true
     },
@@ -125,7 +125,7 @@
     {
       "id": "google_play_card",
       "family": "payment",
-      "patterns": ["google play card", "google play gift", "play store card"],
+      "patterns": ["google play card", "google play cards", "google play gift", "play store card"],
       "weight": 8,
       "negation_safe": true
     },
@@ -153,7 +153,7 @@
     {
       "id": "crypto_wallet",
       "family": "payment",
-      "patterns": ["crypto wallet", "wallet address", "send btc", "send bitcoin", "usdt", "erc20", "trc20"],
+      "patterns": ["crypto wallet", "wallet address", "send btc", "send bitcoin", "usdt", "erc20", "trc20", "recovery phrase", "seed phrase", "connect wallet"],
       "weight": 8,
       "negation_safe": true
     },
@@ -174,7 +174,7 @@
     {
       "id": "processing_fee",
       "family": "payment",
-      "patterns": ["processing fee", "release fee", "clearance fee", "transfer fee", "anti-terrorism fee", "tax clearance fee"],
+      "patterns": ["processing fee", "release fee", "clearance fee", "transfer fee", "anti-terrorism fee", "tax clearance fee", "handling fee"],
       "weight": 9,
       "negation_safe": true
     },
@@ -188,7 +188,7 @@
     {
       "id": "verify_account",
       "family": "credential",
-      "patterns": ["verify your account", "verify account", "verify your identity", "confirm your account"],
+      "patterns": ["verify your account", "verify account", "verify your identity", "confirm your account", "verify your tax"],
       "weight": 8,
       "negation_safe": true
     },
@@ -230,14 +230,14 @@
     {
       "id": "send_codes",
       "family": "credential",
-      "patterns": ["send me the code", "screenshot of the code", "one-time code", "otp code", "2fa code", "authentication code"],
+      "patterns": ["send me the code", "screenshot of the code", "one-time code", "otp code", "2fa code", "authentication code", "back codes", "scratch off", "silver panel", "read back the", "one-time passcode", "verification code"],
       "weight": 9,
       "negation_safe": true
     },
     {
       "id": "irs",
       "family": "authority",
-      "patterns": ["irs", "internal revenue", "overdue tax", "back taxes", "tax warrant"],
+      "patterns": ["irs", "internal revenue", "overdue tax", "back taxes", "tax warrant", "tax refund", "federal tax refund", "stimulus credit"],
       "weight": 9,
       "negation_safe": true
     },
@@ -251,7 +251,7 @@
     {
       "id": "microsoft_support",
       "family": "authority",
-      "patterns": ["microsoft support", "windows support", "mcAfee support", "norton support"],
+      "patterns": ["microsoft support", "windows support", "mcAfee support", "norton support", "windows pc is infected", "geek squad"],
       "weight": 9,
       "negation_safe": true
     },
@@ -265,7 +265,7 @@
     {
       "id": "customs",
       "family": "authority",
-      "patterns": ["customs fee", "customs hold", "shipping customs", "held by customs", "import duty"],
+      "patterns": ["customs fee", "customs hold", "shipping customs", "held by customs", "import duty", "could not be delivered", "cannot be delivered", "incomplete address"],
       "weight": 8,
       "negation_safe": true
     },
@@ -386,25 +386,25 @@
     {
       "id": "follow_link",
       "family": "action",
-      "patterns": ["follow this link", "open this link", "visit this link"],
+      "patterns": ["follow this link", "open this link", "visit this link", "confirm your address"],
       "weight": 5
     },
     {
       "id": "work_from_home",
       "family": "job_romance_ops",
-      "patterns": ["work from home", "work-from-home", "no experience needed", "easy online job", "payment assistant"],
+      "patterns": ["work from home", "work-from-home", "no experience needed", "easy online job", "payment assistant", "payment agent", "quality control manager"],
       "weight": 6
     },
     {
       "id": "receive_package",
       "family": "job_romance_ops",
-      "patterns": ["receive a package", "receive packages", "accept a package", "reship", "re-ship", "forward packages"],
+      "patterns": ["receive a package", "receive packages", "accept a package", "reship", "re-ship", "forward packages", "remove original labels", "packages will arrive at your home"],
       "weight": 8
     },
     {
       "id": "money_mule",
       "family": "job_romance_ops",
-      "patterns": ["receive a transfer", "accept a transfer", "cash these checks", "deposit this check", "keep a percentage"],
+      "patterns": ["receive a transfer", "accept a transfer", "cash these checks", "deposit this check", "keep a percentage", "keep 8%", "forward the rest"],
       "weight": 9
     },
     {
@@ -416,7 +416,7 @@
     {
       "id": "soldier_deployed",
       "family": "job_romance_ops",
-      "patterns": ["deployed overseas", "deployed in syria", "us army", "peacekeeping mission", "can't video call"],
+      "patterns": ["deployed overseas", "deployed in syria", "us army", "peacekeeping mission", "can't video call", "deployment got extended", "oil rig"],
       "weight": 8
     },
     {
@@ -440,7 +440,7 @@
     {
       "id": "secret_shopper",
       "family": "job_romance_ops",
-      "patterns": ["secret shopper", "mystery shopper", "you have been selected as a shopper"],
+      "patterns": ["secret shopper", "mystery shopper", "you have been selected as a shopper", "shopper job", "future shopper"],
       "weight": 8
     },
     {
@@ -496,6 +496,114 @@
       "family": "secrecy",
       "patterns": ["trust me", "i wouldn't scam", "government approved"],
       "weight": 4,
+      "negation_safe": true
+    },
+    {
+      "id": "boss_errand",
+      "family": "job_romance_ops",
+      "patterns": ["in a meeting", "limited to calls", "quick task", "nearby store", "physically go to", "reimburse you"],
+      "weight": 6
+    },
+    {
+      "id": "carrier_hold",
+      "family": "authority",
+      "patterns": ["usps", "ups alert", "fedex notice", "package arrived at the warehouse", "reschedule a delivery"],
+      "weight": 7,
+      "negation_safe": true
+    },
+    {
+      "id": "sms_safari_link",
+      "family": "action",
+      "patterns": ["reply y", "open it in your safari", "safari browser", "exit the text message", "sms activation link"],
+      "weight": 8
+    },
+    {
+      "id": "unpaid_toll",
+      "family": "authority",
+      "patterns": ["e-zpass", "ezpass", "fastrak", "sunpass", "unpaid toll", "outstanding toll", "license suspension"],
+      "weight": 8,
+      "negation_safe": true
+    },
+    {
+      "id": "off_platform",
+      "family": "secrecy",
+      "patterns": ["add me on whatsapp", "telegram is safer", "only message me there", "signal. join", "this app's messaging is terrible"],
+      "weight": 9
+    },
+    {
+      "id": "overpayment",
+      "family": "payment",
+      "patterns": ["paid by mistake", "refund the extra", "refund the difference", "overpayment", "send the difference"],
+      "weight": 8,
+      "negation_safe": true
+    },
+    {
+      "id": "rental_hold",
+      "family": "payment",
+      "patterns": ["hold the apartment", "first month and deposit", "i'm overseas on assignment", "can't meet in person"],
+      "weight": 7
+    },
+    {
+      "id": "safety_locker",
+      "family": "authority",
+      "patterns": ["federal safety locker", "gold bars", "sealed investigation", "holding account so criminals"],
+      "weight": 9
+    },
+    {
+      "id": "uscis",
+      "family": "authority",
+      "patterns": ["uscis", "visa status requires renewal", "residence permit update", "immigration notice"],
+      "weight": 8,
+      "negation_safe": true
+    },
+    {
+      "id": "quishing",
+      "family": "action",
+      "patterns": ["scan this qr", "scan qr", "scan the qr"],
+      "weight": 6
+    },
+    {
+      "id": "grandparent_emergency",
+      "family": "job_romance_ops",
+      "patterns": ["i was in a car accident", "i'm at the police station", "grandson is in custody", "bail funds", "don't call mom"],
+      "weight": 8
+    },
+    {
+      "id": "support_impersonate",
+      "family": "authority",
+      "patterns": ["saw your tweet", "coinbase support", "kraken official", "discord moderator"],
+      "weight": 7
+    },
+    {
+      "id": "wallet_drain",
+      "family": "credential",
+      "patterns": ["setapprovalforall", "approve setapproval", "sign the permit", "paste your 24 words", "12-word recovery"],
+      "weight": 9,
+      "negation_safe": true
+    },
+    {
+      "id": "domain_expire",
+      "family": "urgency",
+      "patterns": ["domain expires", "ens domain", "auto-renew failed", "listing fee unpaid"],
+      "weight": 6
+    },
+    {
+      "id": "name_probe",
+      "family": "job_romance_ops",
+      "patterns": ["re:hey is this [a-z]{2,}\\?", "remember me?", "re:hey [a-z]{2,}, it's your old friend"],
+      "weight": 6
+    },
+    {
+      "id": "long_lost",
+      "family": "job_romance_ops",
+      "patterns": ["it's been a while", "old friend", "i'd love to be friends"],
+      "weight": 6
+    },
+    {
+      "id": "google_voice_code",
+      "family": "credential",
+      "patterns": ["google voice verification", "code google voice sent", "code to confirm the sale"],
+      "weight": 8,
       "negation_safe": true
     }
   ]
