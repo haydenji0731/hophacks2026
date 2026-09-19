@@ -102,24 +102,14 @@ function categoryFor(hits: CueHit[], text: string): ScamCategory {
     ids.has("giveaway") ||
     ids.has("nitro_free") ||
     ids.has("you_have_won") ||
-    ids.has("lottery") ||
-    ids.has("instagram_giveaway")
+    ids.has("lottery")
   ) {
     return "giveaway";
   }
   if (ids.has("crypto_invest") || ids.has("recover_crypto") || ids.has("pig_butcher")) {
     return "investment";
   }
-  if (
-    families.has("credential") ||
-    ids.has("secure_link") ||
-    ids.has("login_link") ||
-    ids.has("instagram_support") ||
-    ids.has("meta_verified") ||
-    ids.has("copyright_strike") ||
-    ids.has("verification_fee") ||
-    ids.has("confirm_this_is_you")
-  ) {
+  if (families.has("credential") || ids.has("secure_link") || ids.has("login_link")) {
     return "phishing";
   }
   if (families.has("authority") && families.has("payment")) return "phishing";
