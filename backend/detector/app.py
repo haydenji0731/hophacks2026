@@ -2,10 +2,11 @@ from __future__ import annotations
 
 from fastapi import FastAPI, File, Form, Header, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 
 from ingest import IngestInputs, ingest_incident, upsert_report
 from news_wire import live_cards, refresh_wire
-from process import ProcessInputs, process_audio
+from process import ProcessInputs, dump_process_event, process_audio, process_audio_events
 from pipeline import analyze_incident
 from screen import run_screen
 from schemas import (
@@ -254,10 +255,12 @@ async def process(
     file: UploadFile = File(...),
     to: str | None = Form(default=None),
     force_escalate: bool = Form(default=False),
-) -> ProcessResponse:
+    stream: bool = Form(default=False),
+) -> ProcessResponse | StreamingResponse:
     """
     Full demo path: screen → if sensitive, STT + Grok → if scam, log + notify.
     Mac capture clients should POST audio chunks here (Linux backend).
+    Pass stream=true for NDJSON (screen, then transcript, then done).
     """
     audio = await _read_audio(file)
     if audio is None:
@@ -265,13 +268,18 @@ async def process(
             status_code=400,
             detail=ErrorDetail(error="missing_input", detail="Audio file required.").model_dump(),
         )
-    return process_audio(
-        ProcessInputs(
-            audio=audio,
-            to=(to or "").strip() or None,
-            force_escalate=force_escalate,
-        )
+    inputs = ProcessInputs(
+        audio=audio,
+        to=(to or "").strip() or None,
+        force_escalate=force_escalate,
     )
+    if stream:
+        def events():
+            for event in process_audio_events(inputs):
+                yield dump_process_event(event)
+
+        return StreamingResponse(events(), media_type="application/x-ndjson")
+    return process_audio(inputs)
 
 
 def _news_authorized(secret_header: str | None, authorization: str | None) -> bool:

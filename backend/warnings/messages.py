@@ -3,12 +3,8 @@ from __future__ import annotations
 from warn_config import Settings, settings
 from models import NotificationTier
 
-# One-sentence SMS. No scores, URLs, or extra instructions.
-_TIER_OPENER = {
-    "low": "Heads up",
-    "medium": "Warning",
-    "high": "Urgent",
-}
+# Generic SMS. No scores, scam type, URLs, or extra instructions.
+GENERIC_BODY = "Warning: possible scam in progress. End the call."
 
 
 def repeat_count(tier: NotificationTier, cfg: Settings | None = None) -> int:
@@ -20,16 +16,6 @@ def repeat_count(tier: NotificationTier, cfg: Settings | None = None) -> int:
     }[tier]
 
 
-def _clean_reason(reason: str, scam_type: str | None) -> str:
-    label = (scam_type or "").strip()
-    if label and label.lower() != "none":
-        return label
-    reason = (reason or "").strip()
-    if reason:
-        return reason.split(";")[0].strip()
-    return "a scam"
-
-
 def build_body(
     *,
     tier: NotificationTier,
@@ -39,5 +25,4 @@ def build_body(
     site_url: str | None = None,
     cfg: Settings | None = None,
 ) -> str:
-    why = _clean_reason(reason, scam_type)
-    return f"{_TIER_OPENER[tier]}: {why}."
+    return GENERIC_BODY

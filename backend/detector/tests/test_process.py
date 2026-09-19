@@ -1,3 +1,5 @@
+import json
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -128,3 +130,44 @@ def test_process_force_escalate(
     assert body["escalate"] is False
     assert body["escalated"] is True
     assert body["transcript"] == "hello"
+
+
+def test_process_stream_emits_screen_then_done(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(
+        "process.run_screen",
+        lambda *_a, **_k: _screen(
+            escalate=True,
+            ai=0.81,
+            hits=[{"label": "gift_cards", "score": 0.77}],
+        ),
+    )
+    monkeypatch.setattr("process.transcribe_audio_bytes", lambda *_a, **_k: "Send the codes.")
+    monkeypatch.setattr(
+        "process.run_grok_flags",
+        lambda _t: GrokFlags(
+            is_scam=True,
+            scam_type="gift_card_bail",
+            confidence=0.9,
+            reasoning="Codes.",
+            method="gift card payment request",
+            target="elderly individual",
+        ),
+    )
+    monkeypatch.setattr(
+        "process._try_upsert",
+        lambda _a: (__import__("schemas").DbUpsertResult(action="skipped"), []),
+    )
+    monkeypatch.setattr("process._try_notify", lambda _a, _to: (None, []))
+
+    with client.stream(
+        "POST",
+        "/v1/process",
+        files={"file": ("chunk.wav", b"fake", "audio/wav")},
+        data={"stream": "true"},
+    ) as response:
+        assert response.status_code == 200
+        stages = [json.loads(line)["stage"] for line in response.iter_lines() if line]
+
+    assert stages == ["screen", "transcript", "done"]

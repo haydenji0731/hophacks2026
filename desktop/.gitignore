@@ -1,0 +1,9 @@
+recordings/
+*.wav
+*.webm
+*.json
+listen-preview.png
+build/
+dist/
+assets/lighthouse.icns
+assets/lighthouse.iconset/

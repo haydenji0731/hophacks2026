@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import json
+from collections.abc import Iterator
 from dataclasses import dataclass
+from typing import Any
 
 from combine import notification_tier
 from grok import GrokError, run_grok_flags
@@ -21,11 +24,23 @@ class ProcessInputs:
 
 
 def process_audio(inputs: ProcessInputs) -> ProcessResponse:
+    result: ProcessResponse | None = None
+    for event in process_audio_events(inputs):
+        if event.get("stage") == "done":
+            result = event["result"]
+    if result is None:
+        raise RuntimeError("process produced no result")
+    return result
+
+
+def process_audio_events(inputs: ProcessInputs) -> Iterator[dict[str, Any]]:
+    """Yield screen, optional transcript, then the final ProcessResponse."""
     file_bytes, filename, content_type = inputs.audio
     warnings: list[str] = []
 
     screen = run_screen(file_bytes, filename, content_type)
     warnings.extend(screen.warnings)
+    yield _screen_event(screen, warnings)
 
     transcript: str | None = None
     grok: GrokFlags | None = None
@@ -42,6 +57,8 @@ def process_audio(inputs: ProcessInputs) -> ProcessResponse:
                 warnings.append("STT returned empty transcript")
         except STTError as exc:
             warnings.append(f"STT unavailable: {exc.message}")
+
+        yield {"stage": "transcript", "transcript": transcript or ""}
 
         if transcript:
             try:
@@ -88,25 +105,67 @@ def process_audio(inputs: ProcessInputs) -> ProcessResponse:
         notif_tier = notification_tier(scam_confidence)
         reason = _reason(screen, grok)
 
-    return ProcessResponse(
-        elevenlabs_ai_score=screen.elevenlabs_ai_score,
-        ai_voice_used=screen.ai_voice_used,  # type: ignore[arg-type]
-        ai_generated=screen.ai_generated,
-        keyword_hits=screen.keyword_hits,
-        alarm_score=screen.alarm_score,
-        sensitivity=screen.sensitivity,  # type: ignore[arg-type]
-        escalate=screen.escalate,
-        escalated=escalated,
-        clipped_seconds=screen.clipped_seconds,
-        transcript=transcript,
-        grok=grok,
-        scam_confidence=scam_confidence,
-        notification_tier=notif_tier,  # type: ignore[arg-type]
-        reason=reason,
-        warnings=warnings,
-        db=db,
-        notify=notify,
-    )
+    yield {
+        "stage": "done",
+        "result": ProcessResponse(
+            elevenlabs_ai_score=screen.elevenlabs_ai_score,
+            ai_voice_used=screen.ai_voice_used,  # type: ignore[arg-type]
+            ai_generated=screen.ai_generated,
+            keyword_hits=screen.keyword_hits,
+            alarm_score=screen.alarm_score,
+            sensitivity=screen.sensitivity,  # type: ignore[arg-type]
+            escalate=screen.escalate,
+            escalated=escalated,
+            clipped_seconds=screen.clipped_seconds,
+            transcript=transcript,
+            grok=grok,
+            scam_confidence=scam_confidence,
+            notification_tier=notif_tier,  # type: ignore[arg-type]
+            reason=reason,
+            warnings=warnings,
+            db=db,
+            notify=notify,
+        ),
+    }
+
+
+def dump_process_event(event: dict[str, Any]) -> str:
+    payload = dict(event)
+    result = payload.get("result")
+    if isinstance(result, ProcessResponse):
+        payload["result"] = result.model_dump()
+    return json.dumps(payload, default=_json_default) + "\n"
+
+
+def _json_default(value: object) -> object:
+    if hasattr(value, "item"):
+        return value.item()
+    return str(value)
+
+
+def _screen_event(screen: ScreenResult, warnings: list[str]) -> dict[str, Any]:
+    hits: list[dict[str, Any]] = []
+    for hit in screen.keyword_hits:
+        if not isinstance(hit, dict):
+            continue
+        score = hit.get("score")
+        hits.append(
+            {
+                "label": hit.get("label"),
+                "score": float(score) if isinstance(score, (int, float)) else 0.0,
+            }
+        )
+    return {
+        "stage": "screen",
+        "elevenlabs_ai_score": screen.elevenlabs_ai_score,
+        "ai_voice_used": screen.ai_voice_used,
+        "keyword_hits": hits,
+        "alarm_score": screen.alarm_score,
+        "sensitivity": screen.sensitivity,
+        "escalate": screen.escalate,
+        "clipped_seconds": screen.clipped_seconds,
+        "warnings": list(warnings),
+    }
 
 
 def _screen_reason(screen: ScreenResult) -> str:

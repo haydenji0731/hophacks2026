@@ -1,5 +1,5 @@
 from warn_config import Settings
-from messages import build_body, repeat_count
+from messages import GENERIC_BODY, build_body, repeat_count
 
 
 def _cfg(**kw):
@@ -22,21 +22,22 @@ def test_repeat_count_high_is_repeated():
     assert repeat_count("high", cfg) == 3
 
 
-def test_body_always_has_reason_no_url():
+def test_body_is_generic_no_url():
     cfg = _cfg()
     for tier in ("low", "medium", "high"):
         body = build_body(tier=tier, reason="urgency + gift-card ask", cfg=cfg)
-        assert "urgency + gift-card ask" in body
+        assert body == GENERIC_BODY
         assert "http" not in body
         assert "wehatescammers" not in body
+        assert "gift-card" not in body
 
 
-def test_high_tier_is_more_forceful():
+def test_tiers_share_the_same_copy():
     cfg = _cfg()
     low = build_body(tier="low", reason="x", cfg=cfg)
     high = build_body(tier="high", reason="x", cfg=cfg)
-    assert "Urgent" in high
-    assert "Urgent" not in low
+    assert low == high
+    assert low.startswith("Warning:")
 
 
 def test_confidence_not_in_body():
@@ -46,11 +47,11 @@ def test_confidence_not_in_body():
     assert "sure" not in body
 
 
-def test_falls_back_to_scam_type_when_reason_empty():
+def test_scam_type_not_in_sms():
     cfg = _cfg()
     body = build_body(tier="medium", reason="", scam_type="IRS refund", cfg=cfg)
-    assert "IRS refund" in body
-    assert "82%" not in body
+    assert "IRS" not in body
+    assert "possible scam" in body
 
 
 def test_site_url_not_in_sms():
