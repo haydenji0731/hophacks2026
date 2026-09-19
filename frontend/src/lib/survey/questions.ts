@@ -23,7 +23,28 @@ function impersonation(scam: Scam): boolean {
     return true;
   }
   return hasAny(blob(scam), [
-    "irs", "ssa", "fbi", "bank", "amex", "chase", "microsoft", "apple", "usps", "fedex", "dhl", "insurance", "law firm", "immigration", "utility", "medicare", "nypd", "meta support", "tech support", "warranty", "ceo", "vendor",
+    "irs",
+    "ssa",
+    "fbi",
+    "bank",
+    "amex",
+    "chase",
+    "microsoft",
+    "apple",
+    "usps",
+    "fedex",
+    "dhl",
+    "insurance",
+    "law firm",
+    "immigration",
+    "utility",
+    "medicare",
+    "nypd",
+    "meta support",
+    "tech support",
+    "warranty",
+    "ceo",
+    "vendor",
   ]);
 }
 
@@ -37,7 +58,19 @@ function urgency(scam: Scam): boolean {
     return true;
   }
   return hasAny(blob(scam), [
-    "urgency", "secrecy", "secret", "warrant", "arrest", "shutoff", "immediately", "deportation", "bail", "emergency", "threat", "pressure", "stay on line",
+    "urgency",
+    "secrecy",
+    "secret",
+    "warrant",
+    "arrest",
+    "shutoff",
+    "immediately",
+    "deportation",
+    "bail",
+    "emergency",
+    "threat",
+    "pressure",
+    "stay on line",
   ]);
 }
 
@@ -50,6 +83,56 @@ function remoteOrCode(scam: Scam): boolean {
     return true;
   }
   return hasAny(blob(scam), [
-    "otp", "remote access", "anydesk", "teamviewer", "seed phrase", "password", "verification", "2fa", "login", "borrow phone", "call forwarding", "sim swap", "token",
+    "otp",
+    "remote access",
+    "anydesk",
+    "teamviewer",
+    "seed phrase",
+    "password",
+    "verification",
+    "2fa",
+    "login",
+    "borrow phone",
+    "call forwarding",
+    "sim swap",
+    "token",
   ]);
 }
+
+const THEME_TAGS: Record<string, Parameters<typeof tagMatch>[1]> = {
+  job: {
+    hooks: ["easy_money", "remote_work", "work_from_home", "brand_employer"],
+    asks: ["upfront_fee", "receive_and_forward_money", "deposit_own_money"],
+  },
+  marketplace: {
+    channels: ["marketplace"],
+    asks: ["deposit_before_viewing", "fake_check", "zelle", "venmo"],
+  },
+  romance: {
+    hooks: ["romance", "love_bombing", "friendship", "wrong_number"],
+  },
+  package: {
+    hooks: ["delivery_problem", "customs_parcel"],
+  },
+  account: {
+    asks: ["otp_code", "otp", "password", "seed_phrase", "remote_access"],
+    hooks: ["account_locked", "account_hacked", "account_compromise"],
+  },
+  family: {
+    hooks: ["family_crisis", "secrecy", "ai_voice", "friend_impersonation"],
+  },
+  investment: {
+    hooks: ["investment_opportunity", "high_returns", "fomo"],
+    asks: ["cryptocurrency_deposit", "wallet_connect"],
+  },
+  government: {
+    hooks: [
+      "government_impersonation",
+      "arrest_threat",
+      "loan_forgiveness",
+      "benefits_threat",
+      "court_authority",
+      "service_shutoff",
+    ],
+  },
+};
