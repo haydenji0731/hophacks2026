@@ -111,15 +111,69 @@ export const SCAM_TYPES = [
   },
 ];
 
+// Warning signs that count toward the "likely / unlikely" verdict.
+// Each rule adds `weight` points when it matches. Score >= LIKELY_AT => likely a scam.
+const LIKELY_AT = 3;
+
+const FLAG_RULES = [
+  {
+    weight: 3,
+    test: (a) => a.money === "gift_card",
+    text: "They asked you to pay with gift cards. Real companies and agencies never do this.",
+  },
+  {
+    weight: 3,
+    test: (a) => a.money === "wire",
+    text: "They asked for a wire transfer or cash, which is hard to trace or get back.",
+  },
+  {
+    weight: 3,
+    test: (a) => a.money === "crypto",
+    text: "They asked you to pay with crypto or Bitcoin. Real organizations do not ask for this.",
+  },
+  {
+    weight: 3,
+    test: (a) => a.money === "link",
+    text: "They asked you to click a link or share a code, a common way scammers steal accounts.",
+  },
+  {
+    weight: 2,
+    test: (a) => a.urgency === "yes",
+    text: "They rushed you or told you to keep it secret. Scammers use pressure so you cannot think or check.",
+  },
+  {
+    weight: 1,
+    test: (a) => a.impersonation === "yes",
+    text: "They claimed to be someone you would trust, such as a bank, agency, or family member.",
+  },
+  {
+    weight: 1,
+    test: (a) => a.ai_voice === "yes",
+    text: "The voice sounded fake or off. Scammers can now copy real voices with AI.",
+  },
+];
+
 export function diagnose(answers) {
-  const filled = QUESTIONS.filter((q) => Boolean(answers?.[q.id])).length;
-  const hasDetails = Boolean(String(answers?.details || "").trim());
+  const safe = answers || {};
+  const filled = QUESTIONS.filter((q) => Boolean(safe[q.id])).length;
+  const hasDetails = Boolean(String(safe.details || "").trim());
   const answeredCount = filled + (hasDetails ? 1 : 0);
 
+  // 1) Verdict: how many warning signs did they describe?
+  const matched = FLAG_RULES.filter((rule) => rule.test(safe));
+  const riskScore = matched.reduce((sum, rule) => sum + rule.weight, 0);
+  const flags = matched.map((rule) => rule.text);
+
+  let verdict;
+  if (filled < 3) verdict = "unsure";
+  else if (riskScore >= LIKELY_AT) verdict = "likely";
+  else verdict = "unlikely";
+
+  // 2) Which known scam type does it look most like? (only shown for "likely")
   const ranked = SCAM_TYPES.map((scam) => {
     let score = 0;
     for (const [qid, mapping] of Object.entries(scam.scores)) {
-      const chosen = answers[qid];
+      const chosen = safe[qid];
       if (chosen && mapping[chosen]) score += mapping[chosen];
     }
     if (hasDetails) score += 0.5;
@@ -127,15 +181,19 @@ export function diagnose(answers) {
   }).sort((a, b) => b.score - a.score);
 
   const top = ranked[0];
-  const likely = Boolean(top) && top.score >= 3 && filled >= 2;
-  const insufficient = !likely;
+  const hasMatch = verdict === "likely" && Boolean(top) && top.score >= 3;
+
   return {
-    likely,
-    insufficient,
+    verdict, // "likely" | "unlikely" | "unsure"
+    likely: verdict === "likely",
+    unlikely: verdict === "unlikely",
+    insufficient: verdict === "unsure",
+    riskScore,
+    flags,
     answeredCount,
-    primary: likely ? top : null,
-    alternatives: likely ? ranked.slice(1, 4).filter((s) => s.score > 0) : [],
-    answers,
+    primary: hasMatch ? top : null,
+    alternatives: hasMatch ? ranked.slice(1, 4).filter((s) => s.score > 0) : [],
+    answers: safe,
   };
 }
 

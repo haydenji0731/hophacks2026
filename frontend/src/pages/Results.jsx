@@ -2,6 +2,8 @@ import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { diagnose, reportPayload } from "../data/questions.js";
 
+const GREEN = "#4ade80";
+
 export default function Results() {
   const location = useLocation();
   const answers = location.state?.answers;
@@ -53,7 +55,7 @@ export default function Results() {
       <section className="page">
         <h1>Your results</h1>
         <p className="lede" style={{ marginLeft: 0 }}>
-          Start with the questionnaire so we can match what happened to a known pattern.
+          Start with the questionnaire so we can check what happened.
         </p>
         <Link className="btn btn-primary" to="/questionnaire">
           Am I being scammed?
@@ -67,13 +69,12 @@ export default function Results() {
       <section className="page a11y-large">
         <h1>Not enough information yet</h1>
         <p className="lede" style={{ marginLeft: 0 }}>
-          We need a few more answers before we can suggest a scam type. Nothing you
-          told us so far is enough to match a pattern.
+          We don't have enough answers to say whether this is a scam.
         </p>
         <div className="result-primary">
           <p>
             Hang up if you feel pressured, and call the real organization on a number
-            you already trust — not a number from the message or caller.
+            you already trust, not a number from the message or caller.
           </p>
         </div>
         <div className="cta-row" style={{ justifyContent: "flex-start" }}>
@@ -88,31 +89,70 @@ export default function Results() {
     );
   }
 
+  const isLikely = result.likely;
+
   return (
     <section className="page a11y-large">
-      <h1>This looks most like</h1>
+      <p className="muted" style={{ margin: 0 }}>
+        Based on your answers
+      </p>
+      <h1 style={{ color: isLikely ? "var(--accent)" : GREEN }}>
+        {isLikely ? "Likely a scam" : "Unlikely to be a scam"}
+      </h1>
       <p className="muted">
-        This is a guide, not a guarantee. When in doubt, hang up and call the real
-        organization on a number you already trust.
+        {isLikely
+          ? "Several things you described are common warning signs. Do not send money or share codes. Hang up and call the real organization on a number you already trust."
+          : "This does not look like a typical scam based on your answers. That is a guide, not a guarantee. If anything still feels wrong, hang up and call the organization on a number you already trust."}
       </p>
 
       <div className="result-primary">
-        <h2>{result.primary.name}</h2>
-        <p>{result.primary.summary}</p>
-      </div>
-
-      {result.alternatives.length > 0 ? (
-        <>
-          <h2>Other possibilities</h2>
-          <ul className="scam-list">
-            {result.alternatives.map((s) => (
-              <li key={s.id} className="result-alt">
-                <strong>{s.name}</strong>
-                <p className="muted">{s.summary}</p>
-              </li>
+        <h2>{isLikely ? "Why we say this" : "What we noticed"}</h2>
+        {result.flags.length > 0 ? (
+          <ul>
+            {result.flags.map((flag) => (
+              <li key={flag}>{flag}</li>
             ))}
           </ul>
+        ) : (
+          <p>
+            You did not describe any of the usual warning signs: a request for payment,
+            a link or code, pressure to act fast, or a voice that sounded off.
+          </p>
+        )}
+        {!isLikely && result.flags.length > 0 ? (
+          <p className="muted">These alone are not enough to call it a scam.</p>
+        ) : null}
+      </div>
+
+      {isLikely && result.primary ? (
+        <>
+          <h2>Your most likely match</h2>
+          <div className="result-primary">
+            <h2>{result.primary.name}</h2>
+            <p>{result.primary.summary}</p>
+          </div>
+
+          {result.alternatives.length > 0 ? (
+            <>
+              <h2>Other possibilities</h2>
+              <ul className="scam-list">
+                {result.alternatives.map((s) => (
+                  <li key={s.id} className="result-alt">
+                    <strong>{s.name}</strong>
+                    <p className="muted">{s.summary}</p>
+                  </li>
+                ))}
+              </ul>
+            </>
+          ) : null}
         </>
+      ) : null}
+
+      {isLikely && !result.primary ? (
+        <p className="muted">
+          We could not match this to one specific scam type, but the warning signs above
+          still apply.
+        </p>
       ) : null}
 
       {reportMessage ? (
@@ -122,18 +162,20 @@ export default function Results() {
       ) : null}
 
       <div className="cta-row" style={{ justifyContent: "flex-start" }}>
-        <button
-          className="btn btn-primary"
-          type="button"
-          onClick={submitReport}
-          disabled={reportState === "saving" || reportState === "done"}
-        >
-          {reportState === "saving"
-            ? "Saving…"
-            : reportState === "done"
-              ? "Reported"
-              : "This is what happened to me"}
-        </button>
+        {isLikely && result.primary ? (
+          <button
+            className="btn btn-primary"
+            type="button"
+            onClick={submitReport}
+            disabled={reportState === "saving" || reportState === "done"}
+          >
+            {reportState === "saving"
+              ? "Saving…"
+              : reportState === "done"
+                ? "Reported"
+                : "This is what happened to me"}
+          </button>
+        ) : null}
         <Link className="btn btn-secondary" to="/questionnaire">
           Answer again
         </Link>
