@@ -1,0 +1,553 @@
+[
+  {
+    "id": "7539ed1b-46f6-4165-876e-6a28c39e8e03",
+    "slug": "grandma_family_emergency_wire",
+    "platforms": [
+      "phone"
+    ],
+    "aiGenerated": null,
+    "victimRoles": [
+      "elderly individual",
+      "grandparent"
+    ],
+    "demands": [
+      "wire",
+      "cash",
+      "gift_card"
+    ],
+    "description": "grandparent scam; grandson granddaughter jail bail hospital emergency; secrecy wire gift cards",
+    "frequency": 1,
+    "tags": {
+      "channels": [
+        "phone",
+        "sms",
+        "messaging_app"
+      ],
+      "hooks": [
+        "family_crisis",
+        "secrecy",
+        "urgency",
+        "ai_voice"
+      ],
+      "asks": [
+        "gift_card",
+        "wire_transfer",
+        "payment_app",
+        "cryptocurrency"
+      ],
+      "signals": [
+        "keep_it_secret",
+        "sounds_like_relative",
+        "lawyer_on_line"
+      ]
+    },
+    "catalogIds": [],
+    "aliases": [
+      "grandparent scam",
+      "grandchild in jail",
+      "AI voice clone emergency",
+      "fake bail request",
+      "Family Emergency / Grandparent Scam",
+      "family_emergency"
+    ],
+    "origin": "both",
+    "questionnairePriority": "high",
+    "name": "Grandma Family Emergency Wire",
+    "signals": [
+      "Grandparent scam",
+      "Grandson granddaughter jail bail hospital emergency",
+      "Secrecy wire gift cards"
+    ],
+    "examples": [
+      "A grandchild is in a car crash or locked up and needs money in the next hour, in secret.",
+      "The voice sounds off or like a recording. They refuse a video call."
+    ],
+    "whatToDo": [
+      "Stop the conversation. Do not send more money, codes, or remote-access access.",
+      "Verify through a number or website you look up yourself — never one they provided.",
+      "Report it at reportfraud.ftc.gov. If money moved, call your bank or card issuer now.",
+      "Gift-card loads are treated like cash. Tell the store and the card issuer immediately; reversal is rare.",
+      "Call the sending bank’s fraud line and ask them to recall the wire. Speed matters more than courtesy."
+    ],
+    "simpleWhatToDo": [
+      "Stop talking to them. Do not send money, gift cards, or codes.",
+      "Do not call a number they gave you. Use a number from your statement, a bill, or a trusted person.",
+      "Do not buy gift cards for anyone who called you. Banks and the IRS never ask for that."
+    ]
+  },
+  {
+    "id": "f053463d-5ca4-4c11-bbf6-df231ee4fec4",
+    "slug": "pet_sale_rehome_fee",
+    "platforms": [
+      "web",
+      "other",
+      "sms"
+    ],
+    "aiGenerated": null,
+    "victimRoles": [
+      "pet buyer",
+      "adopter",
+      "marketplace buyer",
+      "marketplace seller"
+    ],
+    "demands": [
+      "wire",
+      "crypto",
+      "gift_card",
+      "cash"
+    ],
+    "description": "Fake pet listings request deposits or shipping fees for animals that do not exist; sellers invent endless extra fees (crate, vaccines, customs).",
+    "frequency": 1,
+    "tags": {
+      "channels": [
+        "email",
+        "messaging_app",
+        "sms",
+        "marketplace",
+        "social_dm"
+      ],
+      "hooks": [
+        "cute_pet",
+        "below_market_price"
+      ],
+      "asks": [
+        "gift_card",
+        "wire_transfer",
+        "cryptocurrency",
+        "payment_app",
+        "deposit",
+        "shipping_fee"
+      ],
+      "signals": [
+        "cannot_meet",
+        "escalating_fees",
+        "ships_from_afar"
+      ]
+    },
+    "catalogIds": [
+      "pet_scam"
+    ],
+    "aliases": [
+      "puppy scam",
+      "fake pet breeder",
+      "pet shipping deposit",
+      "Pet / Puppy Online Purchase Scam",
+      "pet_scam"
+    ],
+    "origin": "both",
+    "questionnairePriority": "medium",
+    "seedDescription": "fake puppy kitten rehome; shipping fee crate fee vet fee before animal never arrives",
+    "reportTo": [
+      "FTC",
+      "BBB",
+      "platform"
+    ],
+    "name": "Pet / Puppy Online Purchase Scam",
+    "signals": [
+      "Ad for desirable pet at low price.",
+      "Seller cannot meet; requires deposit/shipping.",
+      "More fees.",
+      "No pet delivered."
+    ],
+    "examples": [
+      "Ad for desirable pet at low price.",
+      "Seller cannot meet; requires deposit/shipping.",
+      "More fees."
+    ],
+    "whatToDo": [
+      "Meet locally / use reputable shelters",
+      "Report to FTC and BBB",
+      "Do not pay deposits for pets sight-unseen from strangers",
+      "Avoid gift-card payments",
+      "Stop the conversation. Do not send more money, codes, or remote-access access.",
+      "Verify through a number or website you look up yourself — never one they provided.",
+      "Report it at reportfraud.ftc.gov. If money moved, call your bank or card issuer now.",
+      "Gift-card loads are treated like cash. Tell the store and the card issuer immediately; reversal is rare."
+    ],
+    "simpleWhatToDo": [
+      "Meet locally / use reputable shelters",
+      "Report to FTC and BBB",
+      "Do not call a number they gave you. Use a number from your statement, a bill, or a trusted person.",
+      "Tell a family member, friend, or the real company. Then report it at reportfraud.ftc.gov."
+    ]
+  },
+  {
+    "id": "fd99ba96-10ef-4c36-8ff7-d755735987ac",
+    "slug": "parking_ticket_qr_scam",
+    "platforms": [
+      "other",
+      "web"
+    ],
+    "aiGenerated": null,
+    "victimRoles": [
+      "driver",
+      "consumer"
+    ],
+    "demands": [
+      "cash",
+      "crypto",
+      "other"
+    ],
+    "description": "Scammers overlay fake QR codes on parking meters or signs; scanning opens a phishing payment page that steals card data or sets up recurring charges.",
+    "frequency": 1,
+    "tags": {
+      "channels": [
+        "messaging_app",
+        "email",
+        "qr_code",
+        "in_person"
+      ],
+      "hooks": [
+        "pay_for_parking",
+        "convenience"
+      ],
+      "asks": [
+        "cryptocurrency",
+        "payment_app",
+        "card_details",
+        "personal_info"
+      ],
+      "signals": [
+        "sticker_over_original_code",
+        "suspicious_url_preview"
+      ]
+    },
+    "catalogIds": [
+      "qr_parking"
+    ],
+    "aliases": [
+      "parking meter QR scam",
+      "quishing",
+      "fake parking payment QR",
+      "QR Code Parking / Quishing",
+      "qr_parking"
+    ],
+    "origin": "both",
+    "questionnairePriority": "medium",
+    "seedDescription": "fake parking ticket on windshield with qr to pay; malicious payment page",
+    "reportTo": [
+      "FTC",
+      "local parking authority"
+    ],
+    "name": "QR Code Parking / Quishing",
+    "signals": [
+      "Victim scans QR on meter/sign.",
+      "Fake payment site collects card details.",
+      "Unauthorized charges follow.",
+      "Sometimes malware or credential theft."
+    ],
+    "examples": [
+      "Victim scans QR on meter/sign.",
+      "Fake payment site collects card details.",
+      "Unauthorized charges follow."
+    ],
+    "whatToDo": [
+      "Use official parking apps",
+      "Inspect URL preview",
+      "Report to FTC and local parking authority",
+      "Do not scan suspicious stickers",
+      "Do not enter card info without inspecting URL",
+      "Stop the conversation. Do not send more money, codes, or remote-access access.",
+      "Verify through a number or website you look up yourself — never one they provided.",
+      "Report it at reportfraud.ftc.gov. If money moved, call your bank or card issuer now."
+    ],
+    "simpleWhatToDo": [
+      "Use official parking apps",
+      "Inspect URL preview",
+      "Do not call a number they gave you. Use a number from your statement, a bill, or a trusted person.",
+      "Tell a family member, friend, or the real company. Then report it at reportfraud.ftc.gov."
+    ]
+  },
+  {
+    "id": "c22580e7-2fc9-4e17-a8c0-cd2579a63b13",
+    "slug": "reseller_arbitrage_kit_scam",
+    "platforms": [
+      "web",
+      "other"
+    ],
+    "aiGenerated": null,
+    "victimRoles": [
+      "job seeker",
+      "side hustle seeker"
+    ],
+    "demands": [
+      "wire",
+      "crypto",
+      "cash",
+      "other"
+    ],
+    "description": "reseller arbitrage or product testing kit; buy inventory upfront; platform never reimburses",
+    "frequency": 1,
+    "tags": {
+      "channels": [
+        "email",
+        "messaging_app"
+      ],
+      "hooks": [],
+      "asks": [
+        "wire_transfer",
+        "cryptocurrency",
+        "payment_app"
+      ],
+      "signals": []
+    },
+    "catalogIds": [],
+    "aliases": [],
+    "origin": "reddit",
+    "questionnairePriority": null,
+    "name": "Reseller Arbitrage Kit Scam",
+    "signals": [
+      "Reseller arbitrage or product testing kit",
+      "Buy inventory upfront",
+      "Platform never reimburses"
+    ],
+    "examples": [
+      "People report: Reseller arbitrage or product testing kit.",
+      "People report: Buy inventory upfront.",
+      "People report: Platform never reimburses."
+    ],
+    "whatToDo": [
+      "Stop the conversation. Do not send more money, codes, or remote-access access.",
+      "Verify through a number or website you look up yourself — never one they provided.",
+      "Report it at reportfraud.ftc.gov. If money moved, call your bank or card issuer now.",
+      "Crypto transfers are usually irreversible. Save wallet addresses, TXIDs, and chat logs for a report.",
+      "Call the sending bank’s fraud line and ask them to recall the wire. Speed matters more than courtesy."
+    ],
+    "simpleWhatToDo": [
+      "Stop talking to them. Do not send money, gift cards, or codes.",
+      "Do not call a number they gave you. Use a number from your statement, a bill, or a trusted person.",
+      "Tell a family member, friend, or the real company. Then report it at reportfraud.ftc.gov."
+    ]
+  },
+  {
+    "id": "9bab5e3e-9321-45ae-a50f-2fcff64cf1e7",
+    "slug": "shipping_label_label_scam",
+    "platforms": [
+      "web",
+      "other",
+      "sms"
+    ],
+    "aiGenerated": null,
+    "victimRoles": [
+      "marketplace seller",
+      "online seller"
+    ],
+    "demands": [
+      "other",
+      "cash"
+    ],
+    "description": "buyer sends fake prepaid label or asks seller use their label; package diverted; label scam",
+    "frequency": 1,
+    "tags": {
+      "channels": [
+        "email",
+        "messaging_app",
+        "sms"
+      ],
+      "hooks": [],
+      "asks": [
+        "payment_app"
+      ],
+      "signals": []
+    },
+    "catalogIds": [],
+    "aliases": [],
+    "origin": "reddit",
+    "questionnairePriority": null,
+    "name": "Shipping Label Label Scam",
+    "signals": [
+      "Buyer sends fake prepaid label or asks seller use their label",
+      "Package diverted",
+      "Label scam"
+    ],
+    "examples": [
+      "People report: Buyer sends fake prepaid label or asks seller use their label.",
+      "People report: Package diverted.",
+      "People report: Label scam."
+    ],
+    "whatToDo": [
+      "Stop the conversation. Do not send more money, codes, or remote-access access.",
+      "Verify through a number or website you look up yourself — never one they provided.",
+      "Report it at reportfraud.ftc.gov. If money moved, call your bank or card issuer now."
+    ],
+    "simpleWhatToDo": [
+      "Stop talking to them. Do not send money, gift cards, or codes.",
+      "Do not call a number they gave you. Use a number from your statement, a bill, or a trusted person.",
+      "Tell a family member, friend, or the real company. Then report it at reportfraud.ftc.gov."
+    ]
+  },
+  {
+    "id": "e6a148d0-ba5d-49f2-af32-a73b6a072f2d",
+    "slug": "student_loan_forgiveness_phish",
+    "platforms": [
+      "web",
+      "phone",
+      "sms"
+    ],
+    "aiGenerated": null,
+    "victimRoles": [
+      "student loan borrower",
+      "taxpayer"
+    ],
+    "demands": [
+      "other",
+      "wire",
+      "cash"
+    ],
+    "description": "Scammers offer student-loan forgiveness or payment reduction for an upfront fee or by harvesting your FSA ID; real federal help is free at StudentAid.gov.",
+    "frequency": 1,
+    "tags": {
+      "channels": [
+        "email",
+        "phone",
+        "sms",
+        "robocall"
+      ],
+      "hooks": [
+        "loan_forgiveness",
+        "government_program"
+      ],
+      "asks": [
+        "ssn",
+        "wire_transfer",
+        "payment_app",
+        "upfront_fee",
+        "fsa_id"
+      ],
+      "signals": [
+        "unsolicited_forgiveness_offer",
+        "pay_for_federal_program"
+      ]
+    },
+    "catalogIds": [
+      "student_loan_forgiveness"
+    ],
+    "aliases": [
+      "student loan robocall",
+      "FSA ID phishing",
+      "loan forgiveness fee",
+      "Student Loan Forgiveness / Debt Relief Scam",
+      "student_loan_forgiveness"
+    ],
+    "origin": "both",
+    "questionnairePriority": "high",
+    "seedDescription": "fake student loan forgiveness; phishing portal harvests login ssn; upfront fee for forgiveness",
+    "reportTo": [
+      "FTC",
+      "Federal Student Aid",
+      "CFPB"
+    ],
+    "name": "Student Loan Forgiveness / Debt Relief Scam",
+    "signals": [
+      "Robocall/text/email promises forgiveness or lower payments.",
+      "Asks for FSA ID, SSN, or upfront fee.",
+      "May enroll victim in worthless 'program.'",
+      "Loans unchanged; identity at risk."
+    ],
+    "examples": [
+      "Robocall/text/email promises forgiveness or lower payments.",
+      "Asks for FSA ID, SSN, or upfront fee.",
+      "May enroll victim in worthless 'program.'"
+    ],
+    "whatToDo": [
+      "Use only StudentAid.gov",
+      "Report to FTC and Federal Student Aid feedback",
+      "Never pay for federal loan forgiveness help",
+      "Do not share FSA ID",
+      "Stop the conversation. Do not send more money, codes, or remote-access access.",
+      "Verify through a number or website you look up yourself — never one they provided.",
+      "Report it at reportfraud.ftc.gov. If money moved, call your bank or card issuer now.",
+      "Call the sending bank’s fraud line and ask them to recall the wire. Speed matters more than courtesy."
+    ],
+    "simpleWhatToDo": [
+      "Use only StudentAid.gov",
+      "Report to FTC and Federal Student Aid feedback",
+      "Do not call a number they gave you. Use a number from your statement, a bill, or a trusted person.",
+      "Tell a family member, friend, or the real company. Then report it at reportfraud.ftc.gov."
+    ]
+  },
+  {
+    "id": "3bd81c35-a223-4154-9e79-bb050f0310b4",
+    "slug": "toll_road_text_phish",
+    "platforms": [
+      "sms",
+      "web"
+    ],
+    "aiGenerated": null,
+    "victimRoles": [
+      "driver",
+      "phone owner",
+      "consumer"
+    ],
+    "demands": [
+      "other",
+      "cash"
+    ],
+    "description": "Unexpected texts claim you owe unpaid highway tolls and link to a phishing page that steals payment and identity data.",
+    "frequency": 1,
+    "tags": {
+      "channels": [
+        "sms",
+        "email"
+      ],
+      "hooks": [
+        "unpaid_debt",
+        "urgency"
+      ],
+      "asks": [
+        "payment_app",
+        "click_link",
+        "card_details",
+        "drivers_license"
+      ],
+      "signals": [
+        "unexpected_toll_text",
+        "phishing_link"
+      ]
+    },
+    "catalogIds": [
+      "unpaid_toll_sms"
+    ],
+    "aliases": [
+      "toll road phishing text",
+      "E-ZPass scam text",
+      "Unpaid Toll Text Scam",
+      "unpaid_toll_sms"
+    ],
+    "origin": "both",
+    "questionnairePriority": "high",
+    "seedDescription": "unpaid toll text with malicious payment link; credential or card harvest",
+    "reportTo": [
+      "FTC",
+      "carrier",
+      "state toll agency"
+    ],
+    "name": "Unpaid Toll Text Scam",
+    "signals": [
+      "SMS alleges unpaid tolls with a dollar amount and link.",
+      "Fake toll-agency site collects card and personal info.",
+      "Theft and possible identity fraud."
+    ],
+    "examples": [
+      "SMS alleges unpaid tolls with a dollar amount and link.",
+      "Fake toll-agency site collects card and personal info.",
+      "Theft and possible identity fraud."
+    ],
+    "whatToDo": [
+      "Check with the official state toll agency site/app",
+      "Forward to 7726",
+      "Report to FTC",
+      "Do not click the link",
+      "Do not pay from the text",
+      "Stop the conversation. Do not send more money, codes, or remote-access access.",
+      "Verify through a number or website you look up yourself — never one they provided.",
+      "Report it at reportfraud.ftc.gov. If money moved, call your bank or card issuer now."
+    ],
+    "simpleWhatToDo": [
+      "Check with the official state toll agency site/app",
+      "Forward to 7726",
+      "Do not call a number they gave you. Use a number from your statement, a bill, or a trusted person.",
+      "Tell a family member, friend, or the real company. Then report it at reportfraud.ftc.gov."
+    ]
+  }
+]
