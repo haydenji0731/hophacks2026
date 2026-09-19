@@ -1,17 +1,51 @@
-/* Red highlighter wash, similar to Discord's own mention highlight. */
-[id^="chat-messages-"].discord-user-msg-highlight {
-  background: rgba(239, 68, 68, 0.16) !important;
-  box-shadow: inset 4px 0 0 #ef4444 !important;
-}
-
-[id^="chat-messages-"].discord-user-msg-highlight [id^="message-content-"] {
-  background-image: linear-gradient(
-    transparent 8%,
-    rgba(239, 68, 68, 0.38) 8%,
-    rgba(239, 68, 68, 0.38) 92%,
-    transparent 92%
-  );
-  border-radius: 2px;
+/* Ink sits only on the text, not the avatar or message row. */
+.discord-hl-mark {
+  --hl-h: 0.86em;
+  display: inline;
+  padding: 0.05em 0.34em 0.1em;
+  margin: 0 0.02em;
+  border-radius: 0.7em;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
+  background-repeat: no-repeat;
+  background-position: left 52%;
+  background-size: 0 var(--hl-h);
+  /* Left cap + cylinder body + leading nib. The nib stays on the right
+     of the growing background so it looks like a marker dragging across. */
+  background-image:
+    radial-gradient(
+      ellipse 0.4em 50% at 0% 50%,
+      rgba(220, 38, 38, 0.52) 0 62%,
+      transparent 64%
+    ),
+    radial-gradient(
+      ellipse 0.46em 50% at 100% 50%,
+      rgba(185, 28, 28, 0.62) 0 58%,
+      transparent 62%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(254, 202, 202, 0.18) 0%,
+      rgba(248, 113, 113, 0.5) 16%,
+      rgba(220, 38, 38, 0.64) 48%,
+      rgba(153, 27, 27, 0.5) 82%,
+      rgba(254, 202, 202, 0.12) 100%
+    );
+  animation: discord-hl-swipe 0.32s cubic-bezier(0.18, 0.82, 0.28, 1) forwards;
+}
+
+@keyframes discord-hl-swipe {
+  from {
+    background-size: 0 var(--hl-h);
+  }
+  to {
+    background-size: 100% var(--hl-h);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .discord-hl-mark {
+    animation: none;
+    background-size: 100% var(--hl-h);
+  }
 }

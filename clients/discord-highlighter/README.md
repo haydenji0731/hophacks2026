@@ -1,6 +1,6 @@
 # Discord User Message Highlighter
 
-A local Chrome extension that paints every Discord user chat message with a red highlight. New messages are marked as soon as they appear. Nothing is sent off your machine.
+A local Chrome extension that draws a red highlighter across Discord user chat text. The stroke swipes left to right and leaves a rounded, cylindrical mark on the words only — not the avatar or the message row. Nothing is sent off your machine.
 
 ## Load it in Chrome
 
@@ -9,11 +9,13 @@ A local Chrome extension that paints every Discord user chat message with a red 
 3. Click **Load unpacked** and select this folder (the one with `manifest.json`)
 4. Open [discord.com](https://discord.com) in Chrome
 
+If the extension is already loaded, click **Reload** on its card after pulling changes.
+
 That is the whole setup. There is no account, API key, or build step.
 
 ## What it highlights
 
-Chat messages with actual user text. Date separators and most system events (joins, pins, and similar) are left alone.
+The actual message text. Avatars, the surrounding message box, date separators, and most system events (joins, pins, and similar) are left alone.
 
 It matches Discord stable, PTB, and Canary.
 
@@ -22,5 +24,5 @@ It matches Discord stable, PTB, and Canary.
 | File | Role |
 | --- | --- |
 | `manifest.json` | Manifest V3, content script on Discord |
-| `content.js` | Marks user messages; MutationObserver for instant updates |
-| `content.css` | Red highlighter wash and left accent |
+| `content.js` | Wraps user text; MutationObserver for instant updates |
+| `content.css` | Left-to-right highlighter swipe + cylindrical ink |
