@@ -80,6 +80,7 @@ In progress. The first slice that is in this repo is the **ElevenLabs AI-audio t
 | Path | Status |
 | --- | --- |
 | [`backend/ai_audio`](backend/ai_audio) | ElevenLabs synthetic-voice detector (`elevenlabs_ai_score`, `ai_voice_used`) |
+| [`backend/db`](backend/db) | Postgres scam-pattern schema (SQLAlchemy + Alembic) |
 | React questionnaire + scam pages | Planned |
 | Grok clean / categorize + vector DB | Planned |
 | Twilio severity warnings | Planned |
