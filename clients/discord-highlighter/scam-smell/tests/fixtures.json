@@ -7,7 +7,7 @@
   {
     "id": "click_verify",
     "text": "Click to verify your account",
-    "expectedBand": "caution",
+    "expectedBand": "high",
     "mustIncludeReason": "verify"
   },
   {
@@ -70,5 +70,55 @@
     "id": "short_link_phish",
     "text": "Your Steam account will be terminated. Login here http://bit.ly/steam-auth to verify your account.",
     "expectedBand": "high"
+  },
+  {
+    "id": "ceo_gift_cards",
+    "text": "Ok, I have a presentation in a few, I need you to physically go to any nearby store and purchase me a gift card. I need the card's back codes for a presentation. I would reimburse you when am through.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "usps_warehouse",
+    "text": "The USPS package arrived at the warehouse but could not be delivered due to incomplete address information. Please confirm your address in the link. (Please reply Y, then exit the text message and open it again to activate the link, or copy the link and open it in your Safari browser).",
+    "expectedBand": "high"
+  },
+  {
+    "id": "ezpass_toll",
+    "text": "E-ZPass Lane: We have noticed an outstanding toll amount of $2.99 on your record. To avoid a late fee of $50.00, visit this link.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "wrong_number_open",
+    "text": "hey is this Alice? I'm Mandy, it's been a while.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "off_app_whatsapp",
+    "text": "This app's messaging is terrible — add me on WhatsApp so we can talk properly.",
+    "expectedBand": "caution"
+  },
+  {
+    "id": "mystery_shopper_cards",
+    "text": "Deposit it on my account & get 2 Gift Cards $500 each. This is supposedly to be used for a future Shopper job. Send a picture of front/back too.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "otp_readback",
+    "text": "This is your bank's fraud department — please read back the one-time passcode we just texted you to confirm your identity.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "grandparent_cards",
+    "text": "Grandma it's me — I was in a car accident and I'm at the police station. Please buy $1,000 in Google Play cards and don't call Mom yet.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "seed_phrase_ask",
+    "text": "Support: your wallet is out of sync. Reply with your 12-word recovery phrase so we can restore access and credit the bonus.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "benign_informed_delivery",
+    "text": "USPS Informed Delivery: You have mail and packages scheduled. View today's digest in your Informed Delivery dashboard. No action required.",
+    "expectedBand": "ok"
   }
 ]

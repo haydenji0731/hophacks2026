@@ -83,10 +83,27 @@ const pop = document.getElementById("sherpa-hl-pop");
 assert.ok(pop, "hover should open a floating description");
 assert.equal(pop.hidden, false);
 assert.match(pop.textContent, /SCAM LIKELY: AVOID LINKS/);
+
+const overlay = document.createElement("div");
+overlay.id = "hover-blocker";
+overlay.style.cssText = "position:fixed;inset:0;";
+document.body.appendChild(overlay);
+document.elementsFromPoint = () => [overlay, mark];
+overlay.dispatchEvent(
+  new document.defaultView.MouseEvent("pointermove", { bubbles: true, clientX: 24, clientY: 24 }),
+);
+assert.equal(document.getElementById("sherpa-hl-pop").hidden, false, "hover must work through an overlay");
+assert.match(document.getElementById("sherpa-hl-pop").textContent, /SCAM LIKELY: AVOID LINKS/);
+
 api.applySettings({ aggression: "warn", descriptions: false });
+overlay.dispatchEvent(
+  new document.defaultView.MouseEvent("pointermove", { bubbles: true, clientX: 24, clientY: 24 }),
+);
 mark.dispatchEvent(new document.defaultView.MouseEvent("pointerenter", { bubbles: true }));
 assert.equal(api.showPop(document, mark), null);
 assert.equal(document.getElementById("sherpa-hl-pop").hidden, true, "descriptions off must hide the hover box");
+assert.equal(document.documentElement.dataset.sherpaHl, "off");
+assert.equal(document.documentElement.dataset.sherpaDesc, "0");
 
 console.log("ok");
 process.exit(0);

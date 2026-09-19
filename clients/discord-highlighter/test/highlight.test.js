@@ -114,14 +114,14 @@ assert.equal(hidden.hidden, true);
 setTimeout(() => {
   const incomingMark = incoming.querySelector("." + HIGHLIGHT_CLASS);
   assert.ok(incomingMark);
-  assert.equal(incomingMark.classList.contains("discord-hl-mark--caution"), true);
+  assert.equal(incomingMark.classList.contains("discord-hl-mark--high"), true);
   applySettings({ aggression: "warn", descriptions: true });
   const incomingPop = showPop(document, incomingMark);
-  assert.match(incomingPop.textContent, /SUSPICIOUS/);
+  assert.match(incomingPop.textContent, /SCAM LIKELY: AVOID LINKS/);
   hidePop(document);
   const pendingMark = pending.querySelector("." + HIGHLIGHT_CLASS);
   assert.ok(pendingMark, "outgoing message should highlight after Discord fills the node");
-  assert.equal(pendingMark.classList.contains("discord-hl-mark--caution"), true);
+  assert.equal(pendingMark.classList.contains("discord-hl-mark--high"), true);
   console.log("ok");
   process.exit(0);
 }, 40);
