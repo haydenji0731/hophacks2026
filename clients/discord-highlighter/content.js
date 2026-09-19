@@ -1,6 +1,9 @@
 (() => {
   const HIGHLIGHT_CLASS = "discord-hl-mark";
-  const POP_ID = "discord-hl-pop";
+  const WHY_CLASS = "sherpa-why-panel";
+  const GATE_CLASS = "sherpa-gate";
+  const prefsApi = globalThis.SherpaPrefs;
+  let settings = prefsApi ? prefsApi.normalize(prefsApi.DEFAULTS) : { aggression: "point", descriptions: true };
   const BLOCK_TAGS = /^(PRE|UL|OL|BLOCKQUOTE|DIV|TABLE|H[1-6]|HR)$/;
   const SKIP_CHROME = "nav, header, footer, aside, [role='navigation'], [role='banner'], [role='tablist'], button, [role='button'], time, textarea, [contenteditable='true'], form";
   const IG_UI =
@@ -359,6 +362,9 @@
     });
     contentEl.normalize();
     delete contentEl.dataset.scamKey;
+    const sibling = contentEl.nextElementSibling;
+    if (sibling && sibling.classList && sibling.classList.contains(WHY_CLASS)) sibling.remove();
+    contentEl.querySelectorAll("." + WHY_CLASS).forEach((panel) => panel.remove());
   }
 
   function wrapInlineRuns(contentEl, result) {
@@ -459,87 +465,70 @@
     mark.dataset.reasons = JSON.stringify(result.reasons || []);
   }
 
-  function ensurePop(doc) {
-    let pop = doc.getElementById(POP_ID);
-    if (pop) return pop;
-    pop = doc.createElement("div");
-    pop.id = POP_ID;
-    pop.className = "discord-hl-pop";
-    pop.hidden = true;
-    doc.body.appendChild(pop);
-    return pop;
-  }
-
   function clickWarning(band) {
-    return band === "high" ? "DO NOT CLICK" : "BE CAREFUL BEFORE CLICKING THIS";
+    return band === "high" ? "DO NOT CLICK ANY LINKS." : "BE MINDFUL OF LINKS";
   }
 
-  function popupPosition(markRect, popSize, viewport, gap = 8, margin = 8) {
-    const maxWidth = Math.max(0, viewport.width - margin * 2);
-    const width = Math.min(popSize.width || 268, maxWidth);
-    const height = popSize.height > 1 ? popSize.height : 140;
-    let left = markRect.left;
-    left = Math.min(Math.max(margin, left), viewport.width - width - margin);
-    if (!Number.isFinite(left) || left < margin) left = margin;
-
-    const below = markRect.bottom + gap;
-    const above = markRect.top - height - gap;
-    const fitsBelow = below + height <= viewport.height - margin;
-    const fitsAbove = above >= margin;
-    let top;
-    if (fitsBelow) top = below;
-    else if (fitsAbove) top = above;
-    else top = Math.max(margin, viewport.height - height - margin);
-
-    return { top, left };
+  function applySettings(next) {
+    settings = prefsApi ? prefsApi.normalize(next) : { aggression: "point", descriptions: true };
+    if (typeof document !== "undefined" && document.querySelectorAll) {
+      document.querySelectorAll("." + WHY_CLASS).forEach((panel) => {
+        if (!settings.descriptions) panel.hidden = true;
+      });
+    }
+    return settings;
   }
 
-  function showPop(doc, mark) {
-    const pop = ensurePop(doc);
-    const band = mark.dataset.band || "caution";
-    const category = CATEGORY_LABEL[mark.dataset.category] || "Suspicious message";
-    let reasons = [];
+  function resolveHref(anchor, baseHref) {
+    const href = (anchor && anchor.getAttribute && anchor.getAttribute("href")) || "";
+    if (!href || href.charAt(0) === "#" || /^javascript:/i.test(href)) return null;
     try {
-      reasons = JSON.parse(mark.dataset.reasons || "[]");
+      return new URL(href, baseHref || "https://example.com/");
     } catch {
-      reasons = [];
-    }
-    const title = band === "high" ? "High risk signals" : "Caution";
-    pop.dataset.band = band;
-    pop.innerHTML =
-      `<p class="discord-hl-warn">${clickWarning(band)}</p>` +
-      `<strong>${title} · ${category}</strong>` +
-      (reasons.length
-        ? `<ul>${reasons.map((r) => `<li>${escapeHtml(r)}</li>`).join("")}</ul>`
-        : `<p>This wording matches common scam pressure tactics. It is a warning, not a verdict.</p>`);
-    pop.hidden = false;
-    pop.style.top = "0px";
-    pop.style.left = "0px";
-    void pop.offsetHeight;
-    const view = doc.defaultView;
-    const pos = popupPosition(
-      mark.getBoundingClientRect(),
-      pop.getBoundingClientRect(),
-      { width: view.innerWidth, height: view.innerHeight },
-    );
-    pop.style.top = `${pos.top}px`;
-    pop.style.left = `${pos.left}px`;
-    const r = pop.getBoundingClientRect();
-    const margin = 8;
-    if (r.bottom > view.innerHeight - margin || r.top < margin || r.right > view.innerWidth - margin) {
-      const fixed = popupPosition(
-        mark.getBoundingClientRect(),
-        { width: r.width, height: r.height },
-        { width: view.innerWidth, height: view.innerHeight },
-      );
-      pop.style.top = `${fixed.top}px`;
-      pop.style.left = `${fixed.left}px`;
+      return null;
     }
   }
 
-  function hidePop(doc) {
-    const pop = doc.getElementById(POP_ID);
-    if (pop) pop.hidden = true;
+  function claimedHosts(text) {
+    const matches = String(text || "").match(/(?:[a-z0-9-]+\.)+[a-z]{2,}/gi) || [];
+    return matches.map((host) => host.replace(/^www\./i, "").toLowerCase());
+  }
+
+  const BRAND_HOST = [
+    ["discord", /(?:^|\.)discord\.com$|(?:^|\.)discord\.gg$/],
+    ["steam", /(?:^|\.)steampowered\.com$|(?:^|\.)steamcommunity\.com$/],
+    ["paypal", /(?:^|\.)paypal\.com$/],
+    ["instagram", /(?:^|\.)instagram\.com$/],
+    ["facebook", /(?:^|\.)facebook\.com$|(?:^|\.)fb\.com$/],
+    ["google", /(?:^|\.)google\.com$/],
+    ["microsoft", /(?:^|\.)microsoft\.com$|(?:^|\.)live\.com$|(?:^|\.)office\.com$/],
+    ["apple", /(?:^|\.)apple\.com$|(?:^|\.)icloud\.com$/],
+    ["amazon", /(?:^|\.)amazon\.com$/],
+    ["irs", /(?:^|\.)irs\.gov$/],
+  ];
+
+  function linkMismatch(anchor, baseHref) {
+    const url = resolveHref(anchor, baseHref);
+    if (!url) return false;
+    const actual = url.hostname.replace(/^www\./i, "").toLowerCase();
+    const text = ((anchor && (anchor.innerText || anchor.textContent)) || "").trim();
+    const claimed = claimedHosts(text);
+    for (const host of claimed) {
+      if (actual === host || actual.endsWith("." + host) || host.endsWith("." + actual)) continue;
+      return true;
+    }
+    const lower = text.toLowerCase();
+    for (const [name, re] of BRAND_HOST) {
+      if (lower.includes(name) && !re.test(actual)) return true;
+    }
+    return false;
+  }
+
+  function shouldIntercept(aggression, ctx) {
+    if (aggression === "point") return false;
+    if (aggression === "block") return Boolean(ctx && ctx.inHighlight);
+    if (!ctx) return false;
+    return Boolean(ctx.mismatch || (ctx.inHighlight && ctx.band === "high"));
   }
 
   function escapeHtml(value) {
@@ -549,26 +538,190 @@
       .replace(/>/g, "&gt;");
   }
 
-  function bindPop(doc) {
-    if (doc.documentElement.dataset.discordHlPop === "1") return;
-    doc.documentElement.dataset.discordHlPop = "1";
-    let hideTimer = 0;
+  function parseReasons(mark) {
+    try {
+      return JSON.parse((mark && mark.dataset && mark.dataset.reasons) || "[]");
+    } catch {
+      return [];
+    }
+  }
+
+  function whyHost(mark) {
+    return (mark && mark.closest && mark.closest("[data-scam-key]")) || mark;
+  }
+
+  function findWhy(mark) {
+    const host = whyHost(mark);
+    if (!host) return null;
+    const next = host.nextElementSibling;
+    if (next && next.classList && next.classList.contains(WHY_CLASS)) return next;
+    return host.querySelector ? host.querySelector("." + WHY_CLASS) : null;
+  }
+
+  function mismatchedIn(mark, baseHref) {
+    const host = whyHost(mark) || mark;
+    if (!host || !host.querySelectorAll) return [];
+    return Array.from(host.querySelectorAll("a[href]")).filter((anchor) => linkMismatch(anchor, baseHref));
+  }
+
+  function fillWhy(panel, mark, baseHref) {
+    const band = (mark && mark.dataset && mark.dataset.band) || "caution";
+    const category = CATEGORY_LABEL[mark && mark.dataset && mark.dataset.category] || "Suspicious message";
+    const reasons = parseReasons(mark);
+    const title = band === "high" ? "High risk signals" : "Caution";
+    const mismatches = mismatchedIn(mark, baseHref);
+    panel.dataset.band = band;
+    panel.innerHTML =
+      `<p class="discord-hl-warn">${clickWarning(band)}</p>` +
+      `<strong>${title} · ${category}</strong>` +
+      (reasons.length
+        ? `<ul>${reasons.map((reason) => `<li>${escapeHtml(reason)}</li>`).join("")}</ul>`
+        : `<p>This wording matches common scam pressure tactics. It is a warning, not a verdict.</p>`)
+      +
+      (mismatches.length
+        ? `<p>Link text does not match the site it actually opens.</p>`
+        : "");
+  }
+
+  function toggleWhy(mark, force) {
+    if (!mark) return null;
+    const host = whyHost(mark);
+    if (!host || !host.parentNode) return null;
+    let panel = findWhy(mark);
+    const shouldOpen = force === true || (force !== false && (!panel || panel.hidden));
+    if (!settings.descriptions || !shouldOpen) {
+      if (panel) panel.hidden = true;
+      return panel || null;
+    }
+    if (!panel) {
+      panel = mark.ownerDocument.createElement("div");
+      panel.className = WHY_CLASS;
+      panel.hidden = true;
+      if (host.nextSibling) host.parentNode.insertBefore(panel, host.nextSibling);
+      else host.parentNode.appendChild(panel);
+    }
+    const view = mark.ownerDocument.defaultView;
+    const baseHref = view && view.location ? view.location.href : "";
+    fillWhy(panel, mark, baseHref);
+    panel.hidden = false;
+    return panel;
+  }
+
+  function highlightContext(anchor, baseHref) {
+    const mark = anchor && anchor.closest ? anchor.closest("." + HIGHLIGHT_CLASS) : null;
+    return {
+      inHighlight: Boolean(mark),
+      band: mark ? mark.dataset.band || "caution" : "ok",
+      mismatch: linkMismatch(anchor, baseHref),
+      mark,
+    };
+  }
+
+  function hideGate(doc) {
+    if (!doc || !doc.querySelectorAll) return;
+    doc.querySelectorAll("." + GATE_CLASS).forEach((node) => node.remove());
+  }
+
+  function gateCopy(info) {
+    if (info && info.mismatch) {
+      return {
+        title: "This link does not match its destination",
+        body: "The words on the link do not match the site it actually opens.",
+      };
+    }
+    if (info && info.band === "high") {
+      return {
+        title: clickWarning("high"),
+        body: "This link sits in a high-risk highlight.",
+      };
+    }
+    return {
+      title: clickWarning("caution"),
+      body: "This link sits in highlighted text.",
+    };
+  }
+
+  function showGate(doc, info, onContinue) {
+    hideGate(doc);
+    const root = doc.createElement("div");
+    root.className = GATE_CLASS;
+    root.setAttribute("role", "dialog");
+    root.setAttribute("aria-modal", "true");
+    const copy = gateCopy(info);
+    const href = (info && info.href) || "";
+    root.innerHTML =
+      `<div class="sherpa-gate-card">` +
+      `<p class="discord-hl-warn">${escapeHtml(copy.title)}</p>` +
+      `<p>${escapeHtml(copy.body)}</p>` +
+      `<p>You are being redirected to:</p>` +
+      `<p class="sherpa-gate-url">${escapeHtml(href)}</p>` +
+      `<div class="sherpa-gate-actions">` +
+      `<button type="button" data-act="back">Go back</button>` +
+      `<button type="button" data-act="go">Continue</button>` +
+      `</div></div>`;
+    const finish = (go) => {
+      hideGate(doc);
+      if (go && typeof onContinue === "function") onContinue();
+    };
+    root.addEventListener("click", (event) => {
+      const act = event.target && event.target.getAttribute && event.target.getAttribute("data-act");
+      if (act === "back") finish(false);
+      if (act === "go") finish(true);
+      if (event.target === root) finish(false);
+    });
+    (doc.body || doc.documentElement).appendChild(root);
+    return root;
+  }
+
+  function bindGuides(doc) {
+    if (!doc || !doc.documentElement || doc.documentElement.dataset.sherpaGuides === "1") return;
+    doc.documentElement.dataset.sherpaGuides = "1";
     doc.addEventListener(
-      "mouseover",
+      "click",
       (event) => {
-        const mark = event.target.closest ? event.target.closest("." + HIGHLIGHT_CLASS) : null;
+        if (!event.target || !event.target.closest) return;
+        if (event.target.closest("." + GATE_CLASS)) return;
+        if (event.target.closest("a[href]")) return;
+        const mark = event.target.closest("." + HIGHLIGHT_CLASS);
         if (!mark) return;
-        doc.defaultView.clearTimeout(hideTimer);
-        showPop(doc, mark);
+        toggleWhy(mark);
       },
       true,
     );
+  }
+
+  function bindIntercepts(doc) {
+    if (!doc || !doc.documentElement || doc.documentElement.dataset.sherpaGate === "1") return;
+    doc.documentElement.dataset.sherpaGate = "1";
+    const allowed = new WeakSet();
     doc.addEventListener(
-      "mouseout",
+      "click",
       (event) => {
-        const mark = event.target.closest ? event.target.closest("." + HIGHLIGHT_CLASS) : null;
-        if (!mark) return;
-        hideTimer = doc.defaultView.setTimeout(() => hidePop(doc), 120);
+        if (!event.target || !event.target.closest) return;
+        const anchor = event.target.closest("a[href]");
+        if (!anchor || allowed.has(anchor) || anchor.closest("." + GATE_CLASS)) return;
+        const view = doc.defaultView;
+        const baseHref = view && view.location ? view.location.href : "";
+        const url = resolveHref(anchor, baseHref);
+        if (!url) return;
+        const ctx = highlightContext(anchor, baseHref);
+        if (!shouldIntercept(settings.aggression, ctx)) return;
+        event.preventDefault();
+        event.stopPropagation();
+        if (event.stopImmediatePropagation) event.stopImmediatePropagation();
+        showGate(doc, { href: url.href, ...ctx }, () => {
+          allowed.add(anchor);
+          if (!view) return;
+          if (anchor.target === "_blank" && typeof view.open === "function") {
+            view.open(url.href, "_blank", "noopener");
+            return;
+          }
+          try {
+            view.location.href = url.href;
+          } catch {
+            if (typeof view.open === "function") view.open(url.href, "_self");
+          }
+        });
       },
       true,
     );
@@ -622,8 +775,20 @@
       return Boolean(node.parentElement && node.parentElement.closest("." + HIGHLIGHT_CLASS));
     }
     if (node.nodeType !== 1) return false;
-    if (node.classList && node.classList.contains(HIGHLIGHT_CLASS)) return true;
-    return Boolean(node.closest && node.closest("." + HIGHLIGHT_CLASS));
+    if (
+      node.classList &&
+      (node.classList.contains(HIGHLIGHT_CLASS) ||
+        node.classList.contains(WHY_CLASS) ||
+        node.classList.contains(GATE_CLASS))
+    ) {
+      return true;
+    }
+    return Boolean(
+      node.closest &&
+        (node.closest("." + HIGHLIGHT_CLASS) ||
+          node.closest("." + WHY_CLASS) ||
+          node.closest("." + GATE_CLASS)),
+    );
   }
 
   function processAddedNode(node) {
@@ -660,7 +825,12 @@
   }
 
   function start(doc = document) {
-    bindPop(doc);
+    if (prefsApi) {
+      prefsApi.load(applySettings);
+      prefsApi.subscribe(applySettings);
+    }
+    bindGuides(doc);
+    bindIntercepts(doc);
     scan(doc);
     const view = doc.defaultView;
     const Observer =
@@ -749,13 +919,28 @@
 
   if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage) {
     chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-      if (!msg || msg.type !== "scam-smell-ping") return;
-      sendResponse(pingStatus(document));
+      if (!msg) return;
+      if (msg.type === "sherpa-ping" || msg.type === "scam-smell-ping") {
+        sendResponse(pingStatus(document));
+        return;
+      }
+      if (msg.type === "sherpa-prefs") {
+        if (prefsApi) {
+          prefsApi.load((value) => {
+            applySettings(value);
+            sendResponse({ ok: true, settings });
+          });
+          return true;
+        }
+        sendResponse({ ok: true, settings });
+      }
     });
   }
 
   const api = {
     HIGHLIGHT_CLASS,
+    WHY_CLASS,
+    GATE_CLASS,
     isUserMessage,
     mark,
     scan,
@@ -763,11 +948,18 @@
     start,
     analyze,
     clickWarning,
-    popupPosition,
-    showPop,
+    applySettings,
+    resolveHref,
+    linkMismatch,
+    shouldIntercept,
+    highlightContext,
+    toggleWhy,
+    showGate,
+    hideGate,
     adaptersFor,
     pingStatus,
   };
+  globalThis.Sherpa = api;
 
   if (typeof document !== "undefined" && document.documentElement) {
     start(document);
