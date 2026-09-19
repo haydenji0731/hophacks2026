@@ -26,7 +26,7 @@ def parse_demands_from_text(*texts: str) -> list[Demand]:
         return []
 
     rules: list[tuple[tuple[str, ...], Demand]] = [
-        (("gift card", "giftcard", "google play", "itunes", "steam card"), Demand.gift_card),
+        (("gift card", "giftcard", "gift_card", "google play", "itunes", "steam card"), Demand.gift_card),
         (("wire", "western union"), Demand.wire),
         (("crypto", "bitcoin", "btc", "usdt", " eth "), Demand.crypto),
         (("cheque", " check", "check ", "cashier"), Demand.check),
