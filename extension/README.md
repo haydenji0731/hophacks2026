@@ -26,9 +26,9 @@ L4  badge (soft) → banner (hard)  never echo the user's text
 ```
 
 ```
-rules.json ──compileRules.js──► { tokenMap, phrases, combos }
+rules.json ──compileRules.js──▶ { tokenMap, phrases, combos }
                                       │
-page text ──scan.js (debounce/hash)──► score.js (pure)
+page text ──scan.js (debounce/hash)──▶ score.js (pure)
                                       │
                                { score, reasons, topScamId }
                                       │
@@ -40,9 +40,10 @@ page text ──scan.js (debounce/hash)──► score.js (pure)
 ## Load unpacked
 
 1. Chrome → `chrome://extensions` → Developer mode
-2. **Load unpacked** → this `extension/` directory
-3. Pin the action. Master + site toggles are in the popup
-4. Open **Open test fixture**, or run the local fixture server below
+2. If `icons/` is missing, run `node extension/scripts/generate-icons.mjs`
+3. **Load unpacked** → this `extension/` directory
+4. Pin the action. Master + site toggles are in the popup
+5. Open **Open test fixture**, or run the local fixture server below
 
 ## Test
 
