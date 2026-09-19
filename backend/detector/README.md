@@ -22,10 +22,12 @@ uv sync --group dev --extra kws
 uv run uvicorn app:app --reload --host 0.0.0.0 --port 8000
 ```
 
-First-time KWS models (Linux):
+First-time KWS (Linux): install onnxruntime extra, then **custom phrase models** (not stock alexa):
 
 ```bash
 uv run python -c "import openwakeword; openwakeword.utils.download_models()"
+# add trained scam-phrase .onnx files to backend/detector/wakeword_models/
+# (gift_card, bail, arrest_warrant, … — see keywords.py SCAM_WAKE_PHRASES)
 ```
 
 ## Mac capture client

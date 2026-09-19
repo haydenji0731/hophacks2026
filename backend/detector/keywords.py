@@ -7,18 +7,28 @@ import logging
 import wave
 from dataclasses import dataclass, field
 from functools import lru_cache
+from pathlib import Path
+
+from settings import settings
 
 logger = logging.getLogger(__name__)
 
-# Default pretrained labels we care about for scam demos + generic attention words.
-# Custom scam phrase models can be added later under MODEL_PATHS.
-DEFAULT_TARGET_LABELS = {
-    "alexa",
-    "hey_mycroft",
-    "hey_jarvis",
-    "timer",
-    "weather",
-}
+# Phrases we actually care about for the screen (not stock alexa/jarvis).
+# openWakeWord needs a trained .onnx per label; drop files in wakeword_models/.
+SCAM_WAKE_PHRASES: tuple[tuple[str, str], ...] = (
+    ("gift_card", "gift card"),
+    ("google_play", "google play"),
+    ("social_security", "social security"),
+    ("irs", "I R S"),
+    ("arrest_warrant", "arrest warrant"),
+    ("dont_tell", "don't tell"),
+    ("wire_transfer", "wire transfer"),
+    ("verification_code", "verification code"),
+    ("your_grandson", "your grandson"),
+    ("bail", "bail"),
+)
+
+TARGET_LABELS = {label for label, _ in SCAM_WAKE_PHRASES}
 
 
 @dataclass
@@ -32,14 +42,51 @@ class KeywordSpotResult:
     hits: list[KeywordHit] = field(default_factory=list)
     available: bool = True
     warning: str | None = None
+    loaded_labels: list[str] = field(default_factory=list)
+
+
+def _model_dir() -> Path:
+    raw = getattr(settings, "wakeword_model_dir", "") or ""
+    if raw:
+        return Path(raw)
+    return Path(__file__).resolve().parent / "wakeword_models"
+
+
+def discover_custom_models() -> list[str]:
+    directory = _model_dir()
+    if not directory.is_dir():
+        return []
+    return sorted(str(path) for path in directory.glob("*.onnx"))
+
+
+def select_hits(
+    max_scores: dict[str, float],
+    *,
+    threshold: float,
+    target_labels: set[str] | None = None,
+) -> list[KeywordHit]:
+    wanted = TARGET_LABELS if target_labels is None else target_labels
+    hits = [
+        KeywordHit(label=label, score=score)
+        for label, score in sorted(max_scores.items(), key=lambda x: -x[1])
+        if score >= threshold and (not wanted or label in wanted or _slug(label) in wanted)
+    ]
+    return hits
+
+
+def _slug(label: str) -> str:
+    return label.lower().replace(" ", "_").replace("-", "_")
 
 
 @lru_cache(maxsize=1)
 def _load_oww_model():
-    """Prefer ONNX — TFLite/LiteRT often fails on server Python stacks."""
+    """Load custom scam-phrase ONNX models only (not stock alexa/weather)."""
     from openwakeword.model import Model
 
-    return Model(inference_framework="onnx")
+    paths = discover_custom_models()
+    if not paths:
+        return None
+    return Model(wakeword_models=paths, inference_framework="onnx")
 
 
 def spot_keywords(
@@ -47,12 +94,13 @@ def spot_keywords(
     filename: str = "audio.wav",
     content_type: str = "audio/wav",
     *,
-    threshold: float = 0.5,
+    threshold: float | None = None,
 ) -> KeywordSpotResult:
     """
     Run openWakeWord on audio bytes. Returns hits above threshold.
     Soft-fails if openWakeWord / onnxruntime unavailable (e.g. macOS 12).
     """
+    cut = settings.wakeword_threshold if threshold is None else threshold
     try:
         import numpy as np  # noqa: F401
         from openwakeword.model import Model  # noqa: F401
@@ -61,6 +109,19 @@ def spot_keywords(
             hits=[],
             available=False,
             warning=f"openWakeWord unavailable: {exc}",
+        )
+
+    model = _load_oww_model()
+    if model is None:
+        phrases = ", ".join(phrase for _, phrase in SCAM_WAKE_PHRASES)
+        return KeywordSpotResult(
+            hits=[],
+            available=False,
+            warning=(
+                "No scam-phrase openWakeWord models. "
+                f"Add .onnx files under {_model_dir()} for: {phrases}. "
+                "Stock alexa/jarvis models are not used."
+            ),
         )
 
     try:
@@ -72,9 +133,8 @@ def spot_keywords(
             warning=f"audio convert failed for KWS: {exc}",
         )
 
+    loaded = [str(name) for name in getattr(model, "models", {}).keys()]
     try:
-        model = _load_oww_model()
-        # Feed in ~80ms frames (1280 samples @ 16kHz)
         frame = 1280
         max_scores: dict[str, float] = {}
         for i in range(0, max(len(pcm) - frame, 0) + 1, frame):
@@ -87,18 +147,20 @@ def spot_keywords(
                 if float(score) > prev:
                     max_scores[label] = float(score)
 
-        hits = [
-            KeywordHit(label=label, score=score)
-            for label, score in sorted(max_scores.items(), key=lambda x: -x[1])
-            if score >= threshold
-        ]
-        return KeywordSpotResult(hits=hits, available=True, warning=None)
+        hits = select_hits(max_scores, threshold=cut, target_labels=set())
+        return KeywordSpotResult(
+            hits=hits,
+            available=True,
+            warning=None,
+            loaded_labels=loaded,
+        )
     except Exception as exc:
         logger.exception("openWakeWord predict failed")
         return KeywordSpotResult(
             hits=[],
             available=False,
             warning=f"openWakeWord predict failed: {exc}",
+            loaded_labels=loaded,
         )
 
 
@@ -108,7 +170,6 @@ def _to_pcm16_mono_16k(file_bytes: bytes, filename: str, content_type: str) -> "
     name = (filename or "").lower()
     is_wav = name.endswith(".wav") or "wav" in (content_type or "")
     if is_wav:
-        # Prefer stdlib wave so we don't need ffmpeg for Mac capture WAVs.
         try:
             return _pcm_from_wav_bytes(file_bytes)
         except Exception:

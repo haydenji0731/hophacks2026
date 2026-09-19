@@ -1,3 +1,4 @@
+from keywords import select_hits
 from screen import compute_alarm, map_ai_generated
 
 
@@ -6,6 +7,18 @@ def test_map_ai_generated() -> None:
     assert map_ai_generated("no") is False
     assert map_ai_generated("unknown") is None
     assert map_ai_generated(None) is None
+
+
+def test_select_hits_filters_and_thresholds() -> None:
+    scores = {"gift_card": 0.9, "alexa": 0.99, "bail": 0.4}
+    hits = select_hits(scores, threshold=0.5, target_labels={"gift_card", "bail"})
+    assert [h.label for h in hits] == ["gift_card"]
+
+
+def test_select_hits_all_labels_when_unfiltered() -> None:
+    scores = {"gift_card": 0.9, "bail": 0.8}
+    hits = select_hits(scores, threshold=0.5, target_labels=set())
+    assert [h.label for h in hits] == ["gift_card", "bail"]
 
 
 def test_alarm_not_sensitive_when_cold() -> None:
