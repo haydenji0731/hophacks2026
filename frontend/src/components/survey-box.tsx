@@ -15,7 +15,7 @@ import {
   shouldStop,
 } from "@/lib/survey/engine";
 import { postDetectorReport } from "@/lib/survey/backend-report";
-import { nextSteps, profileFromAnswers, resultLimit } from "@/lib/survey/profile";
+import { profileFromAnswers, resultLimit } from "@/lib/survey/profile";
 import { saveSurvey } from "@/lib/survey/session";
 import {
   SKIP,
@@ -35,7 +35,7 @@ async function readLocalText(file: File): Promise<{ ok: true; text: string } | {
   if (!readable) {
     return {
       ok: false,
-      reason: "We cannot read screenshots or PDFs on this device. Paste a few lines of the chat instead.",
+      reason: "We cannot read screenshots or PDFs here. Paste a few lines of the chat instead.",
     };
   }
   const text = await file.text();
@@ -70,8 +70,6 @@ export function SurveyBox() {
   const askedCount = answers.filter(
     (answer) => answer.questionId !== "details" && answer.questionId !== "evidence"
   ).length;
-  const liveTop = ranked.slice(0, 3);
-  const typeScale = profile.simplified ? "text-xl sm:text-2xl" : "text-lg";
 
   function answerQuestion(questionId: string, value: string, finish = false) {
     const nextAnswers = [
@@ -89,7 +87,7 @@ export function SurveyBox() {
 
   function skipCurrent() {
     if (!current) return;
-    answerQuestion(current.id, SKIP, current.kind === "text" || current.kind === "upload" && done);
+    answerQuestion(current.id, SKIP, current.kind === "text" || (current.kind === "upload" && done));
   }
 
   function submitDetails() {
@@ -150,36 +148,21 @@ export function SurveyBox() {
   }
 
   return (
-    <Card
-      id="survey"
-      className={`relative scroll-mt-24 border-primary/25 bg-card/90 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.04)] ${
-        profile.simplified ? "text-lg" : ""
-      }`}
-    >
-      <div className="pointer-events-none absolute -top-3 left-6 rounded-full border border-primary/40 bg-background px-3 py-0.5 text-[11px] font-medium tracking-[0.18em] text-primary uppercase">
-        Survey
-      </div>
-      <CardHeader className="pt-6">
+    <Card id="survey" className="scroll-mt-24 bg-card">
+      <CardHeader>
         <CardTitle className="font-heading text-2xl sm:text-3xl">
           {profile.age === "child" ? "Let’s check this together" : "Am I being scammed?"}
         </CardTitle>
-        <p className="text-sm text-muted-foreground sm:text-base">
-          {profile.arrival === "phone"
-            ? "You were told to hang up and come here. Every question can be skipped."
-            : profile.arrival === "extension"
-              ? "You can paste the chat if you want — you do not have to. Every question can be skipped."
-              : "A few questions against known scam patterns. Skip anything you do not want to answer."}
-        </p>
         <Progress value={Math.min(100, (askedCount / Math.max(MAX_ASKED, 1)) * 100)} className="pt-2">
           <span className="text-xs text-muted-foreground">
-            {showingResults ? "Match ready" : `${askedCount} answered · skip anytime`}
+            {showingResults ? "Match ready" : `${askedCount} answered`}
           </span>
         </Progress>
       </CardHeader>
       <CardContent className="space-y-5">
         {!showingResults && current ? (
           <div className="space-y-4">
-            <p className={`${typeScale} font-medium leading-snug`}>{current.prompt}</p>
+            <p className="text-lg font-medium leading-snug sm:text-xl">{current.prompt}</p>
             {current.helper ? (
               <p className="text-sm text-muted-foreground sm:text-base">{current.helper}</p>
             ) : null}
@@ -188,13 +171,9 @@ export function SurveyBox() {
               <div className="space-y-3">
                 {current.kind === "upload" ? (
                   <label className="flex cursor-pointer flex-col items-start gap-2 rounded-xl border border-dashed border-border px-4 py-6 text-sm text-muted-foreground hover:border-primary/50 hover:bg-muted/30">
-                    <span className="font-medium text-foreground">
-                      Attach a text export (optional)
-                    </span>
+                    <span className="font-medium text-foreground">Attach a text export</span>
                     <span>
-                      {fileName
-                        ? `Selected: ${fileName}. It stays on this device.`
-                        : "WhatsApp/Telegram exports, .txt, or .csv. Not required."}
+                      {fileName ? `Selected: ${fileName}` : "WhatsApp/Telegram exports, .txt, or .csv."}
                     </span>
                     <input
                       type="file"
@@ -213,7 +192,6 @@ export function SurveyBox() {
                       : "They said they were from my bank and wanted Apple gift cards…"
                   }
                   rows={4}
-                  className={profile.simplified ? "min-h-28 text-lg" : ""}
                 />
                 {fileError ? <p className="text-sm text-destructive">{fileError}</p> : null}
                 <div className="flex flex-wrap gap-2">
@@ -230,9 +208,7 @@ export function SurveyBox() {
                   <Button
                     size="lg"
                     variant="ghost"
-                    onClick={() =>
-                      answerQuestion(current.id, SKIP, current.kind === "text")
-                    }
+                    onClick={() => answerQuestion(current.id, SKIP, current.kind === "text")}
                   >
                     Skip
                   </Button>
@@ -248,8 +224,7 @@ export function SurveyBox() {
                         type="button"
                         className={cn(
                           buttonVariants({ variant: "outline", size: "lg" }),
-                          "h-auto min-h-12 justify-start whitespace-normal px-4 py-3 text-left",
-                          profile.simplified ? "text-base sm:text-lg" : ""
+                          "h-auto min-h-12 justify-start whitespace-normal px-4 py-3 text-left"
                         )}
                         onClick={() => answerQuestion(current.id, option.id)}
                       >
@@ -258,8 +233,8 @@ export function SurveyBox() {
                     )
                   )}
                 </div>
-                <Button variant="ghost" className="px-0" onClick={skipCurrent}>
-                  Skip this question
+                <Button variant="ghost" className="px-0 text-muted-foreground" onClick={skipCurrent}>
+                  Skip
                 </Button>
               </div>
             )}
@@ -271,38 +246,20 @@ export function SurveyBox() {
                 </Button>
               ) : null}
               {askedCount > 0 ? (
-                <Button
-                  variant="ghost"
-                  onClick={() => answerQuestion("details", details, true)}
-                >
+                <Button variant="ghost" onClick={() => answerQuestion("details", details, true)}>
                   Show matches now
                 </Button>
               ) : null}
             </div>
-
-            {askedCount > 0 && !profile.simplified ? (
-              <p className="text-xs text-muted-foreground">
-                Leading so far: {liveTop.map((row) => row.scam.name).join(" · ")}
-              </p>
-            ) : null}
           </div>
         ) : (
           <div className="space-y-5">
             <div>
               <h3 className="font-heading text-xl sm:text-2xl">
-                {profile.simplified ? "This looks like the match" : "Most likely match"}
+                {profile.simplified ? "Closest match" : "Likely matches"}
               </h3>
-              <p className="text-sm text-muted-foreground sm:text-base">
-                {profile.simplified
-                  ? "Read the example and the next steps. If it does not sound right, skip down to report a different scam."
-                  : "Ranked from your answers plus how often each pattern showed up. This is a triage, not a verdict."}
-              </p>
             </div>
-            <RankedList
-              ranked={ranked.slice(0, resultLimit(profile))}
-              simplified={profile.simplified}
-              nextStepsFor={(scam) => nextSteps(scam, profile)}
-            />
+            <RankedList ranked={ranked.slice(0, resultLimit(profile))} />
             <div className="flex flex-wrap gap-2">
               <Button size="lg" onClick={() => void confirmMatch()} disabled={confirming}>
                 {confirming
@@ -312,7 +269,7 @@ export function SurveyBox() {
                     : "This is what happened to me"}
               </Button>
               <Button size="lg" variant="outline" onClick={() => router.push("/results")}>
-                {profile.simplified ? "See more detail" : "Open full results"}
+                Full results
               </Button>
               <Button size="lg" variant="outline" onClick={() => router.push("/report")}>
                 Report a different scam
@@ -323,7 +280,7 @@ export function SurveyBox() {
             </div>
             {confirmMessage ? (
               <p className={`text-sm ${confirmError ? "text-destructive" : "text-muted-foreground"}`}>
-                {confirmMessage} On-device copy is still saved in this browser.
+                {confirmMessage}
               </p>
             ) : null}
           </div>
