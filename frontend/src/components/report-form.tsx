@@ -120,7 +120,6 @@ export function ReportForm() {
     >
       <fieldset className="space-y-3">
         <legend className="text-lg font-medium">Which is closest?</legend>
-        <p className="text-sm text-muted-foreground">Skip any question. E-dating and cashier’s-check overpay are listed first because people ask for them by name.</p>
         <div className="grid gap-2 sm:grid-cols-2">
           {FEATURED.map((item) => (
             <Button
@@ -147,8 +146,8 @@ export function ReportForm() {
             </Button>
           ))}
         </div>
-        <Button type="button" variant="ghost" className="px-0" onClick={() => setPattern("new")}>
-          Skip — I will describe it instead
+        <Button type="button" variant="ghost" className="px-0 text-muted-foreground" onClick={() => setPattern("new")}>
+          Skip
         </Button>
       </fieldset>
 
@@ -168,8 +167,8 @@ export function ReportForm() {
             </Button>
           ))}
         </div>
-        <Button type="button" variant="ghost" className="px-0" onClick={() => setChannel("skip")}>
-          Skip this question
+        <Button type="button" variant="ghost" className="px-0 text-muted-foreground" onClick={() => setChannel("skip")}>
+          Skip
         </Button>
       </fieldset>
 
@@ -189,8 +188,8 @@ export function ReportForm() {
             </Button>
           ))}
         </div>
-        <Button type="button" variant="ghost" className="px-0" onClick={() => setDemand("skip")}>
-          Skip this question
+        <Button type="button" variant="ghost" className="px-0 text-muted-foreground" onClick={() => setDemand("skip")}>
+          Skip
         </Button>
       </fieldset>
 
