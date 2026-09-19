@@ -111,19 +111,33 @@
     <script type="module">
       import { compileRules } from "../src/shared/compileRules.js";
       import { score } from "../src/shared/score.js";
+      import { LINK_HIT_SCORE } from "../src/shared/constants.js";
+      import { compileHosts, hostnameFromHref } from "../src/content/links.js";
 
       const catalog = await fetch(new URL("../rules/rules.json", import.meta.url)).then((r) => r.json());
+      const hostDoc = await fetch(new URL("../rules/hosts.json", import.meta.url)).then((r) => r.json());
       const compiled = compileRules(catalog);
+      const hostSet = compileHosts(hostDoc);
 
       for (const card of document.querySelectorAll("article[data-expect]")) {
         const text = card.querySelector("p:not(.tag)")?.textContent || "";
         const result = score(text, compiled);
+        const reasons = result.reasons.slice();
+        let total = result.score;
+        let top = result.topScamId;
+        for (const anchor of card.querySelectorAll("a[href]")) {
+          const host = hostnameFromHref(anchor.getAttribute("href"));
+          if (!hostSet.has(host)) continue;
+          total += LINK_HIT_SCORE;
+          reasons.push("suspicious link host");
+          top = "phishing_link";
+        }
         const el = document.createElement("p");
         el.className = "score";
         const level =
-          result.score >= compiled.thresholdHard ? "hard" : result.score >= compiled.thresholdSoft ? "soft" : "none";
+          total >= compiled.thresholdHard ? "hard" : total >= compiled.thresholdSoft ? "soft" : "none";
         el.classList.add(level);
-        el.textContent = `score ${result.score} · ${level} · ${result.topScamId || "no scam id"} · ${result.reasons.join(", ") || "no rules"}`;
+        el.textContent = `score ${total} · ${level} · ${top || "no scam id"} · ${reasons.join(", ") || "no rules"}`;
         card.appendChild(el);
       }
     </script>

@@ -27,10 +27,11 @@ export function normalizeHost(value) {
   return host.replace(/^www\./, "");
 }
 
-export function hostnameFromHref(href) {
+export function hostnameFromHref(href, base) {
   if (!href) return "";
+  const fallback = typeof location !== "undefined" ? location.href : "https://example.com/";
   try {
-    return normalizeHost(new URL(href, location.href).hostname);
+    return normalizeHost(new URL(href, base || fallback).hostname);
   } catch {
     return "";
   }

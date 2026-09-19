@@ -8,9 +8,10 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { ALLOWED_STORAGE_KEYS, STORAGE_KEYS } from "../src/shared/constants.js";
+import { ALLOWED_STORAGE_KEYS, LINK_HIT_SCORE, STORAGE_KEYS } from "../src/shared/constants.js";
 import { compileRules } from "../src/shared/compileRules.js";
 import { score } from "../src/shared/score.js";
+import { compileHosts, hostnameFromHref } from "../src/content/links.js";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const catalog = JSON.parse(readFileSync(join(root, "rules/rules.json"), "utf8"));
@@ -93,6 +94,26 @@ extras.push({
   id: "storage_allowlist",
   ok: missingKeys.length === 0 && allowed.size === required.length,
   errors: missingKeys.length ? [`missing ${missingKeys.join(",")}`] : [],
+});
+
+const hostDoc = JSON.parse(readFileSync(join(root, "rules/hosts.json"), "utf8"));
+const hostSet = compileHosts(hostDoc);
+const badHost = hostnameFromHref("https://irs-refund-secure.com/pay");
+const goodHost = hostnameFromHref("https://www.linkedin.com/in/example");
+extras.push({
+  id: "l1_host_set",
+  ok: hostSet.has(badHost) && !hostSet.has(goodHost),
+  errors: hostSet.has(badHost) && !hostSet.has(goodHost)
+    ? []
+    : [`bad=${badHost} good=${goodHost}`],
+});
+
+const linkText = score("Verify your refund here: irs-refund-secure.com", compiled);
+const linkCombined = linkText.score + (hostSet.has(badHost) ? LINK_HIT_SCORE : 0);
+extras.push({
+  id: "fixture_suspicious_link",
+  ok: linkCombined >= hard,
+  errors: linkCombined >= hard ? [] : [`combined ${linkCombined} < hard ${hard}`],
 });
 
 for (const row of extras) {
