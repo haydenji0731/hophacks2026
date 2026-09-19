@@ -14,8 +14,9 @@ class Settings(BaseSettings):
     # Screen → escalate (dumb v1; replaceable with a statistical model later)
     ai_escalate_threshold: float = 0.50
     min_keyword_hits_to_escalate: int = 1
-    wakeword_threshold: float = 0.50
-    wakeword_model_dir: str = ""
+    clap_threshold: float = 0.30
+    clap_model: str = "laion/clap-htsat-unfused"
+
 
 
     # Grok STT

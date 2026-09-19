@@ -1,4 +1,4 @@
-"""openWakeWord keyword spotting on a short audio clip (Linux-oriented)."""
+"""Cheap phrase screen: CLAP audio↔text embeddings (no STT, no TTS, no OWW training)."""
 
 from __future__ import annotations
 
@@ -7,28 +7,42 @@ import logging
 import wave
 from dataclasses import dataclass, field
 from functools import lru_cache
-from pathlib import Path
+
+import numpy as np
 
 from settings import settings
 
 logger = logging.getLogger(__name__)
 
-# Phrases we actually care about for the screen (not stock alexa/jarvis).
-# openWakeWord needs a trained .onnx per label; drop files in wakeword_models/.
-SCAM_WAKE_PHRASES: tuple[tuple[str, str], ...] = (
-    ("gift_card", "gift card"),
-    ("google_play", "google play"),
-    ("social_security", "social security"),
-    ("irs", "I R S"),
-    ("arrest_warrant", "arrest warrant"),
-    ("dont_tell", "don't tell"),
-    ("wire_transfer", "wire transfer"),
-    ("verification_code", "verification code"),
-    ("your_grandson", "your grandson"),
-    ("bail", "bail"),
+# (label, spoken variants). Phone-oriented phrases from Reddit seed + classic call scripts.
+SCAM_WAKE_PHRASES: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("gift_card", ("gift card", "gift cards", "google play")),
+    ("wire_transfer", ("wire transfer", "western union")),
+    ("social_security", ("social security",)),
+    ("irs", ("I R S", "internal revenue service")),
+    ("arrest_warrant", ("arrest warrant",)),
+    ("dont_tell", ("don't tell anyone", "keep this secret")),
+    ("verification_code", ("verification code",)),
+    ("your_grandson", ("your grandson",)),
+    ("pay_bail", ("pay bail", "bail money")),
+    ("fraud_department", ("fraud department",)),
+    ("delivery_fee", ("delivery fee", "customs duty")),
+    ("remote_access", ("remote access", "team viewer")),
+    ("account_suspended", ("account suspended",)),
+    ("shut_off", ("power shut off", "utility disconnection")),
+    ("identity_theft", ("identity theft",)),
+    ("extended_warranty", ("extended warranty",)),
+    ("bitcoin_atm", ("bitcoin A T M",)),
+    ("face_time", ("face time",)),
+    ("process_server", ("process server",)),
+    ("refund_department", ("refund department",)),
 )
 
 TARGET_LABELS = {label for label, _ in SCAM_WAKE_PHRASES}
+
+_CLAP_SR = 48000
+_WIN_S = 5.0
+_HOP_S = 2.5
 
 
 @dataclass
@@ -45,20 +59,6 @@ class KeywordSpotResult:
     loaded_labels: list[str] = field(default_factory=list)
 
 
-def _model_dir() -> Path:
-    raw = getattr(settings, "wakeword_model_dir", "") or ""
-    if raw:
-        return Path(raw)
-    return Path(__file__).resolve().parent / "wakeword_models"
-
-
-def discover_custom_models() -> list[str]:
-    directory = _model_dir()
-    if not directory.is_dir():
-        return []
-    return sorted(str(path) for path in directory.glob("*.onnx"))
-
-
 def select_hits(
     max_scores: dict[str, float],
     *,
@@ -66,27 +66,33 @@ def select_hits(
     target_labels: set[str] | None = None,
 ) -> list[KeywordHit]:
     wanted = TARGET_LABELS if target_labels is None else target_labels
-    hits = [
+    return [
         KeywordHit(label=label, score=score)
         for label, score in sorted(max_scores.items(), key=lambda x: -x[1])
-        if score >= threshold and (not wanted or label in wanted or _slug(label) in wanted)
+        if score >= threshold and (not wanted or label in wanted)
     ]
-    return hits
-
-
-def _slug(label: str) -> str:
-    return label.lower().replace(" ", "_").replace("-", "_")
 
 
 @lru_cache(maxsize=1)
-def _load_oww_model():
-    """Load custom scam-phrase ONNX models only (not stock alexa/weather)."""
-    from openwakeword.model import Model
+def _load_clap():
+    import torch
+    from transformers import ClapModel, ClapProcessor
 
-    paths = discover_custom_models()
-    if not paths:
-        return None
-    return Model(wakeword_models=paths, inference_framework="onnx")
+    name = getattr(settings, "clap_model", None) or "laion/clap-htsat-unfused"
+    processor = ClapProcessor.from_pretrained(name)
+    model = ClapModel.from_pretrained(name)
+    model.eval()
+    queries: list[str] = []
+    query_labels: list[str] = []
+    for label, variants in SCAM_WAKE_PHRASES:
+        for variant in variants:
+            queries.append(variant)
+            query_labels.append(label)
+    text_inputs = processor(text=queries, return_tensors="pt", padding=True)
+    with torch.no_grad():
+        text_emb = model.get_text_features(**text_inputs)
+        text_emb = torch.nn.functional.normalize(text_emb, dim=-1)
+    return processor, model, text_emb, tuple(query_labels)
 
 
 def spot_keywords(
@@ -97,76 +103,93 @@ def spot_keywords(
     threshold: float | None = None,
 ) -> KeywordSpotResult:
     """
-    Run openWakeWord on audio bytes. Returns hits above threshold.
-    Soft-fails if openWakeWord / onnxruntime unavailable (e.g. macOS 12).
+    Score sliding audio windows against phrase text embeddings (CLAP cosine).
+    Does not transcribe. Soft-fails if transformers/torch/CLAP are missing.
     """
-    cut = settings.wakeword_threshold if threshold is None else threshold
+    cut = settings.clap_threshold if threshold is None else threshold
     try:
-        import numpy as np  # noqa: F401
-        from openwakeword.model import Model  # noqa: F401
+        processor, model, text_emb, query_labels = _load_clap()
     except Exception as exc:
-        return KeywordSpotResult(
-            hits=[],
-            available=False,
-            warning=f"openWakeWord unavailable: {exc}",
-        )
-
-    model = _load_oww_model()
-    if model is None:
-        phrases = ", ".join(phrase for _, phrase in SCAM_WAKE_PHRASES)
         return KeywordSpotResult(
             hits=[],
             available=False,
             warning=(
-                "No scam-phrase openWakeWord models. "
-                f"Add .onnx files under {_model_dir()} for: {phrases}. "
-                "Stock alexa/jarvis models are not used."
+                f"CLAP phrase spotter unavailable ({exc}). "
+                "On Linux: uv sync --extra kws"
             ),
         )
 
     try:
-        pcm = _to_pcm16_mono_16k(file_bytes, filename, content_type)
+        pcm16 = _to_pcm16_mono_16k(file_bytes, filename, content_type)
+        audio_48k = _resample_to_48k(pcm16)
     except Exception as exc:
         return KeywordSpotResult(
             hits=[],
             available=False,
-            warning=f"audio convert failed for KWS: {exc}",
+            warning=f"audio convert failed for CLAP: {exc}",
         )
 
-    loaded = [str(name) for name in getattr(model, "models", {}).keys()]
     try:
-        frame = 1280
-        max_scores: dict[str, float] = {}
-        for i in range(0, max(len(pcm) - frame, 0) + 1, frame):
-            chunk = pcm[i : i + frame]
-            if len(chunk) < frame:
-                break
-            prediction = model.predict(chunk)
-            for label, score in prediction.items():
+        import torch
+
+        max_scores: dict[str, float] = {label: 0.0 for label in TARGET_LABELS}
+        for window in _iter_windows(audio_48k, _CLAP_SR, _WIN_S, _HOP_S):
+            inputs = processor(
+                audios=window,
+                sampling_rate=_CLAP_SR,
+                return_tensors="pt",
+                padding=True,
+            )
+            with torch.no_grad():
+                audio_emb = model.get_audio_features(**inputs)
+                audio_emb = torch.nn.functional.normalize(audio_emb, dim=-1)
+                sims = (audio_emb @ text_emb.T).squeeze(0).cpu().numpy()
+            for score, label in zip(sims, query_labels, strict=False):
                 prev = max_scores.get(label, 0.0)
                 if float(score) > prev:
                     max_scores[label] = float(score)
 
-        hits = select_hits(max_scores, threshold=cut, target_labels=set())
+        hits = select_hits(max_scores, threshold=cut)
         return KeywordSpotResult(
             hits=hits,
             available=True,
             warning=None,
-            loaded_labels=loaded,
+            loaded_labels=sorted(TARGET_LABELS),
         )
     except Exception as exc:
-        logger.exception("openWakeWord predict failed")
+        logger.exception("CLAP phrase spot failed")
         return KeywordSpotResult(
             hits=[],
             available=False,
-            warning=f"openWakeWord predict failed: {exc}",
-            loaded_labels=loaded,
+            warning=f"CLAP phrase spotter failed: {exc}",
         )
 
 
-def _to_pcm16_mono_16k(file_bytes: bytes, filename: str, content_type: str) -> "np.ndarray":
-    import numpy as np
+def _iter_windows(audio: np.ndarray, sr: int, win_s: float, hop_s: float):
+    win = int(win_s * sr)
+    hop = int(hop_s * sr)
+    if len(audio) <= win:
+        yield audio.astype(np.float32)
+        return
+    last = 0
+    for start in range(0, len(audio) - win + 1, hop):
+        yield audio[start : start + win].astype(np.float32)
+        last = start
+    tail = audio[last + hop :]
+    if len(tail) >= sr:
+        yield tail.astype(np.float32)
 
+
+def _resample_to_48k(pcm16: np.ndarray) -> np.ndarray:
+    x = pcm16.astype(np.float32)
+    n = len(x)
+    if n == 0:
+        return x
+    t_new = np.linspace(0, n - 1, n * 3)
+    return np.interp(t_new, np.arange(n), x) / 32768.0
+
+
+def _to_pcm16_mono_16k(file_bytes: bytes, filename: str, content_type: str) -> np.ndarray:
     name = (filename or "").lower()
     is_wav = name.endswith(".wav") or "wav" in (content_type or "")
     if is_wav:
@@ -188,10 +211,8 @@ def _to_pcm16_mono_16k(file_bytes: bytes, filename: str, content_type: str) -> "
     return np.frombuffer(audio.raw_data, dtype=np.int16)
 
 
-def _pcm_from_wav_bytes(file_bytes: bytes) -> "np.ndarray":
+def _pcm_from_wav_bytes(file_bytes: bytes) -> np.ndarray:
     import audioop
-
-    import numpy as np
 
     with wave.open(io.BytesIO(file_bytes), "rb") as wf:
         n_channels = wf.getnchannels()
