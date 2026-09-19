@@ -1,15 +1,7 @@
-import { Link, useNavigate } from "react-router-dom";
-import { QUESTIONS } from "../data/questions.js";
-
-const first = QUESTIONS[0];
+import { Link } from "react-router-dom";
+import NewsWidget from "../components/NewsWidget.jsx";
 
 export default function Home() {
-  const navigate = useNavigate();
-
-  function startWith(value) {
-    navigate("/questionnaire", { state: { preset: { [first.id]: value } } });
-  }
-
   return (
     <section className="hero">
       <p className="eyebrow reveal delay-1">Threat check · inbound</p>
@@ -31,36 +23,7 @@ export default function Home() {
         </Link>
       </div>
 
-      <div className="product-stage reveal delay-5">
-        <div className="product-window">
-          <span className="hud-corner tl" aria-hidden="true" />
-          <span className="hud-corner tr" aria-hidden="true" />
-          <span className="hud-corner bl" aria-hidden="true" />
-          <span className="hud-corner br" aria-hidden="true" />
-          <div className="window-scan" aria-hidden="true" />
-          <div className="window-bar">
-            <span className="live-dot">LIVE</span>
-            <span>check / 01 of {String(QUESTIONS.length).padStart(2, "0")}</span>
-            <span>ETA 60s</span>
-          </div>
-          <div className="window-body">
-            <h2>{first.prompt}</h2>
-            <p className="muted">{first.help}</p>
-            <div className="chip-row">
-              {first.options.map((opt) => (
-                <button
-                  key={opt.value}
-                  type="button"
-                  className="chip"
-                  onClick={() => startWith(opt.value)}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
+      <NewsWidget />
 
       <div className="stats reveal delay-6">
         <div className="stat">
