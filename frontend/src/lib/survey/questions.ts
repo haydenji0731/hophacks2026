@@ -136,3 +136,52 @@ const THEME_TAGS: Record<string, Parameters<typeof tagMatch>[1]> = {
     ],
   },
 };
+
+const THEME_KEYWORDS: Record<string, string[]> = {
+  job: ["job", "training", "recruiter", "mystery shopper", "mule", "work from home", "watch to earn", "handmade", "reseller"],
+  marketplace: [
+    "marketplace",
+    "rental",
+    "ticket",
+    "ebay",
+    "paypal friends",
+    "auction",
+    "pet sale",
+    "vehicle",
+    "shipping label",
+    "overpayment",
+    "cashier",
+  ],
+  romance: ["romance", "dating", "e-dating", "e_dating", "sugar", "pig butchering", "sextortion", "wrong number", "tinder"],
+  package: ["parcel", "delivery", "usps", "fedex", "brushing", "unordered package", "customs"],
+  account: ["account", "otp", "phish", "login", "instagram", "sim swap", "captcha", "wallet", "recovery"],
+  family: ["family", "grandma", "grandson", "jail", "bail", "parent mil", "elderly", "courier"],
+  investment: ["investment", "crypto trading", "pig butchering", "trading app", "mentor", "giveaway", "recovery agent"],
+  government: ["irs", "ssa", "fbi", "tax", "immigration", "utility", "student loan", "arrest warrant", "law firm", "medicare"],
+};
+
+function themeMatch(scam: Scam, value: string): boolean | null {
+  if (value === "other") return null;
+  const spec = THEME_TAGS[value];
+  const keys = THEME_KEYWORDS[value];
+  const tagHit = spec ? tagMatch(scam, spec) : false;
+  const keyHit = keys ? hasAny(blob(scam), keys) : false;
+  if (tagHit || keyHit) return true;
+  const sibling = Object.keys(THEME_TAGS).some((id) => {
+    if (id === value) return false;
+    const otherSpec = THEME_TAGS[id];
+    const otherKeys = THEME_KEYWORDS[id];
+    return (otherSpec && tagMatch(scam, otherSpec)) || (otherKeys && hasAny(blob(scam), otherKeys));
+  });
+  return sibling ? false : null;
+}
+
+function channelOf(answers: Record<string, string>): string {
+  if (answers.source === "phone") return "phone";
+  return answers.channel ?? "";
+}
+
+function themeOf(answers: Record<string, string>): string {
+  if (answers.notify_about && answers.notify_about !== "skip") return answers.notify_about;
+  return answers.theme ?? "";
+}
