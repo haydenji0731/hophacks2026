@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ARTICLES } from "../data/news.js";
 
@@ -11,10 +11,24 @@ function featuredOf(articles) {
 
 export default function NewsWidget() {
   const [articles, setArticles] = useState(ARTICLES);
-  const [index, setIndex] = useState(0);
+  const featured = featuredOf(articles);
+  const count = featured.length;
+  const slides = count ? [...featured, featured[0]] : [];
+
+  const [offset, setOffset] = useState(0);
+  const [snap, setSnap] = useState(false);
   const [open, setOpen] = useState(false);
   const [paused, setPaused] = useState(false);
-  const featured = featuredOf(articles);
+  const busy = useRef(false);
+  const offsetRef = useRef(0);
+  const openRef = useRef(false);
+  const pausedRef = useRef(false);
+  const countRef = useRef(count);
+
+  offsetRef.current = offset;
+  openRef.current = open;
+  pausedRef.current = paused;
+  countRef.current = count;
 
   useEffect(() => {
     let cancelled = false;
@@ -39,28 +53,78 @@ export default function NewsWidget() {
   }, []);
 
   useEffect(() => {
-    setIndex((i) => (featured.length ? i % featured.length : 0));
-  }, [featured.length]);
+    setOffset((o) => (count ? o % count : 0));
+    busy.current = false;
+  }, [count]);
+
+  const settle = useCallback(() => {
+    busy.current = false;
+  }, []);
+
+  const goTo = useCallback(
+    (next) => {
+      const total = countRef.current;
+      if (!total || busy.current) return;
+      const current = offsetRef.current >= total ? 0 : offsetRef.current;
+      if (next === current) return;
+
+      if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        setSnap(true);
+        setOffset(next);
+        settle();
+        return;
+      }
+
+      busy.current = true;
+      setSnap(false);
+      if (next === 0 && current === total - 1) {
+        setOffset(total);
+      } else {
+        setOffset(next);
+      }
+    },
+    [settle],
+  );
+
+  function onTrackEnd(event) {
+    if (event.propertyName !== "transform") return;
+    if (offset === countRef.current) {
+      setSnap(true);
+      setOffset(0);
+      settle();
+      return;
+    }
+    settle();
+  }
 
   useEffect(() => {
-    if (open || paused || featured.length < 2) return undefined;
+    if (!snap) return undefined;
+    const id = window.requestAnimationFrame(() => setSnap(false));
+    return () => window.cancelAnimationFrame(id);
+  }, [snap]);
+
+  useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       return undefined;
     }
-    const id = window.setInterval(
-      () => setIndex((i) => (i + 1) % featured.length),
-      6500,
-    );
+    const id = window.setInterval(() => {
+      if (openRef.current || pausedRef.current) return;
+      const total = countRef.current;
+      if (total < 2) return;
+      const current = offsetRef.current >= total ? 0 : offsetRef.current;
+      goTo((current + 1) % total);
+    }, 6500);
     return () => window.clearInterval(id);
-  }, [open, paused, featured.length]);
+  }, [goTo]);
 
-  const current = featured[index] || featured[0];
-  if (!current) return null;
-  const stamp = `${String(index + 1).padStart(2, "0")} of ${String(featured.length).padStart(2, "0")}`;
+  if (!count) return null;
+
+  const visual = offset >= count ? 0 : offset;
+  const stamp = `${String(visual + 1).padStart(2, "0")} of ${String(count).padStart(2, "0")}`;
 
   return (
     <div
-      className="product-stage reveal delay-5"
+      className="product-stage reveal delay-4"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
@@ -85,9 +149,9 @@ export default function NewsWidget() {
                       key={article.id}
                       type="button"
                       role="tab"
-                      aria-selected={i === index}
-                      className={i === index ? "is-on" : ""}
-                      onClick={() => setIndex(i)}
+                      aria-selected={i === visual}
+                      className={i === visual ? "is-on" : ""}
+                      onClick={() => goTo(i)}
                     >
                       <span className="sr-only">{article.title}</span>
                     </button>
@@ -117,7 +181,26 @@ export default function NewsWidget() {
               ))}
             </ul>
           ) : (
-            <ArticleLink article={current} className="news-feature" />
+            <div className="news-viewport">
+              <div
+                className={`news-track${snap ? " is-snap" : ""}`}
+                style={{
+                  width: `${slides.length * 100}%`,
+                  transform: `translateX(-${(offset * 100) / slides.length}%)`,
+                }}
+                onTransitionEnd={onTrackEnd}
+              >
+                {slides.map((article, i) => (
+                  <div
+                    className="news-slide"
+                    key={`${article.id}-${i}`}
+                    aria-hidden={i !== offset}
+                  >
+                    <ArticleLink article={article} className="news-feature" />
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </div>
       </div>

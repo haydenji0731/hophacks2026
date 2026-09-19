@@ -687,7 +687,29 @@ textarea {
 }
 
 .news-body {
-  min-height: 220px;
+  min-height: 280px;
+  overflow: hidden;
+  padding-bottom: 1.75rem;
+}
+
+.news-viewport {
+  overflow: hidden;
+}
+
+.news-track {
+  display: flex;
+  will-change: transform;
+  transition: transform 0.72s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.news-track.is-snap {
+  transition: none;
+}
+
+.news-slide {
+  flex: 1 0 0;
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .news-slot {
@@ -1649,6 +1671,89 @@ textarea:focus,
   }
 }
 
+.band-wipe {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: none;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.band-wipe[data-phase] {
+  pointer-events: auto;
+}
+
+.band-wipe-strip {
+  flex: 1 1 0;
+  min-height: 0;
+  transform: scaleY(0);
+  transform-origin: top;
+}
+
+.band-wipe[data-phase="in"] .band-wipe-strip {
+  animation: band-wipe-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--d, 0s);
+}
+
+.band-wipe[data-phase="out"] .band-wipe-strip {
+  transform-origin: top;
+  animation: band-wipe-out 0.32s cubic-bezier(0.77, 0, 0.18, 1) both;
+  animation-delay: var(--d, 0s);
+}
+
+@keyframes band-wipe-in {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+
+@keyframes band-wipe-out {
+  from { transform: scaleY(1); }
+  to { transform: scaleY(0); }
+}
+
+.band-wipe-mark {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1.5rem;
+  font-family: var(--display);
+  font-weight: 750;
+  font-size: clamp(2.4rem, 9vw, 6.2rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: center;
+  color: rgb(255 230 230 / 0.38);
+  line-height: 0.95;
+  pointer-events: none;
+  opacity: 0;
+}
+
+.band-wipe[data-phase="in"] .band-wipe-mark {
+  animation: band-wipe-mark-in 0.35s ease 0.35s both;
+}
+
+.band-wipe[data-phase="out"] .band-wipe-mark {
+  animation: band-wipe-mark-out 0.25s ease both;
+}
+
+@keyframes band-wipe-mark-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes band-wipe-mark-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
 @media (max-width: 720px) {
   .header-inner,
   .footer-inner,
@@ -1696,8 +1801,14 @@ textarea:focus,
   .live-dot::before,
   .product-stage::before,
   .step-swap,
-  .step-scan {
+  .step-scan,
+  .news-track {
     animation: none !important;
+    transition: none !important;
+  }
+
+  .band-wipe {
+    display: none !important;
   }
 
   .step-swap {
