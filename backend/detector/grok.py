@@ -12,6 +12,22 @@ class GrokError(Exception):
         self.status_code = status_code
 
 
+def parse_ai_generated(value: Any) -> bool | None:
+    if value is None:
+        return None
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        normalized = value.strip().lower()
+        if normalized in {"true", "yes", "y", "1"}:
+            return True
+        if normalized in {"false", "no", "n", "0"}:
+            return False
+        if normalized in {"unknown", "unclear", "n/a", ""}:
+            return None
+    return None
+
+
 def parse_grok_payload(payload: Any) -> GrokFlags:
     if not isinstance(payload, dict):
         raise GrokError("Grok returned a non-object payload")
@@ -30,6 +46,7 @@ def parse_grok_payload(payload: Any) -> GrokFlags:
         reasoning=str(payload.get("reasoning") or ""),
         method=str(payload.get("method") or "none"),
         target=str(payload.get("target") or "unclear"),
+        ai_generated=parse_ai_generated(payload.get("ai_generated")),
     )
 
 

@@ -19,6 +19,10 @@ class GrokFlags(BaseModel):
         default="unclear",
         description="Who the scam appears to target (role/demographic), from detect_scam.",
     )
+    ai_generated: bool | None = Field(
+        default=None,
+        description="Whether Grok judges the speech/message AI-generated; None = unknown.",
+    )
 
 
 class AnalyzeResponse(BaseModel):
@@ -63,3 +67,17 @@ class NotifyResult(BaseModel):
 class IngestResponse(AnalyzeResponse):
     db: DbUpsertResult | None = None
     notify: NotifyResult | None = None
+
+
+class ReportRequest(BaseModel):
+    scam_type: str
+    method: str = "none"
+    target: str = "unclear"
+    reasoning: str = ""
+    ai_generated: bool | None = None
+    platform: str = "phone"
+
+
+class ReportResponse(BaseModel):
+    db: DbUpsertResult
+    warnings: list[str] = Field(default_factory=list)
