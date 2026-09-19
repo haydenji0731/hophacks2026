@@ -286,6 +286,9 @@ const SLIDES_HTML = `<!doctype html><html><body>
       <div id="drive_main_page">
         <div class="docos-replyview-body">I need 3 ebay gift cards of $200 each. What's the closest store ?</div>
         <div class="docos-replyview-body">hey are we still on for pizza later?</div>
+        <div role="button" aria-label="Comment">
+          <div class="docos-docoview-content">IRS: pay overdue tax with Apple gift cards today, don't tell anyone</div>
+        </div>
       </div>
     </body></html>`,
   );
@@ -296,8 +299,31 @@ const SLIDES_HTML = `<!doctype html><html><body>
   const pizza = Array.from(document.querySelectorAll(".docos-replyview-body")).find((el) =>
     el.textContent.includes("pizza"),
   );
+  const clickable = document.querySelector(".docos-docoview-content");
   assert.ok(gift.querySelector("." + api.HIGHLIGHT_CLASS), "Drive comments should highlight");
   assert.equal(pizza.querySelector("." + api.HIGHLIGHT_CLASS), null);
+  assert.ok(
+    clickable.querySelector("." + api.HIGHLIGHT_CLASS),
+    "Drive comments inside role=button cards should still highlight",
+  );
+}
+
+{
+  const { document, api } = load(
+    "https://docs.google.com/document/d/abc/edit",
+    `<!doctype html><html><body>
+      <div id="docs-chrome"><button>Share</button></div>
+      <div role="button" class="docos-anchoreddocoview">
+        <div class="docos-replyview-body">Click to verify your account</div>
+      </div>
+    </body></html>`,
+  );
+  api.scan(document);
+  const verify = document.querySelector(".docos-replyview-body");
+  assert.ok(
+    verify.querySelector("." + api.HIGHLIGHT_CLASS),
+    "Docs comments inside clickable cards should highlight without a reload",
+  );
 }
 
 console.log("ok");

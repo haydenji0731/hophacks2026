@@ -93,6 +93,16 @@ const below = popupPosition(
 );
 assert.equal(below.top, 72);
 
+const igAbove = popupPosition(
+  { top: 500, bottom: 524, left: 20 },
+  { width: 268, height: 120 },
+  { width: 1280, height: 800 },
+  22,
+  8,
+  true,
+);
+assert.equal(igAbove.top, 500 - 120 - 22, "Instagram hover cards should sit above late-thread highlights");
+
 const ping = pingStatus(document);
 assert.equal(ping.ok, true);
 assert.match(String(ping.site), /discord/);

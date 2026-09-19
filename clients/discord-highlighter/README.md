@@ -15,7 +15,7 @@ Open the toolbar popup and use the Warn / Block switch.
 | **Warn** (default) | Highlight the text. Hover a highlight for the reason when hover comments are on. Links open normally. |
 | **Block** | Highlighted links prompt to continue/go back when clicked. Ordinary links are left alone. |
 
-**Show hover comments** is a checkbox in the same menu. Unchecking it hides the hover reason cards immediately and leaves the colored marks on.
+**Show hover comments** is a checkbox in the same menu. Clicking it shows or hides the hover reason cards on the current tab right away and leaves the colored marks on. You should not need to reload the page.
 
 ## Theme
 
@@ -68,8 +68,8 @@ Avatars, nav chrome, and composers are never painted.
 | Discord | User messages (stable, PTB, Canary), including ones you just sent. Survives DM / channel switches. |
 | Instagram | Direct messages, captions, and comments. Rebuilds word-split bubbles inside the DM form and paints only the text. |
 | Reddit | Post bodies/titles and comments (new and old Reddit). |
-| Google Docs | Comments, chat, canvas typing (including the hidden editor iframe), and a live ink bar on the page. |
-| Google Drive | Comments and activity on `drive.google.com`, plus Docs opened from Drive. |
+| Google Docs | Comments (including clickable / `role=button` cards and the newer docos panes), chat, canvas typing (including the hidden editor iframe), and a live ink bar on the page. |
+| Google Drive | Comments and activity on `drive.google.com` (file viewer, comment sidebar, clickable cards), plus Docs opened from Drive. |
 | Google Slides | Comments, speaker notes, on-slide text boxes, and typed notes. |
 
 ## Develop

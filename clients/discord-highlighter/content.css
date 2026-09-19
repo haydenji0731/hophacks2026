@@ -99,6 +99,8 @@ html[data-sherpa-theme="light"] .sherpa-gate-card {
 
 .discord-hl-pop {
   position: fixed;
+  inset: auto;
+  margin: 0;
   z-index: 2147483646;
   width: 268px;
   max-width: calc(100vw - 16px);
