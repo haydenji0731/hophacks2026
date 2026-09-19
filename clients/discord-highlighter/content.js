@@ -42,6 +42,74 @@
     }
   }
 
+  function parentHostname(doc) {
+    try {
+      const view = doc && doc.defaultView;
+      const parent = view && view.parent;
+      if (!parent || parent === view) return "";
+      return parent.location.hostname || "";
+    } catch {
+      return "";
+    }
+  }
+
+  function effectiveHost(doc) {
+    return hostnameOf(doc) || parentHostname(doc) || "";
+  }
+
+  function queryAllDeep(root, selector) {
+    const out = [];
+    const seen = new Set();
+    const add = (el) => {
+      if (!el || seen.has(el)) return;
+      seen.add(el);
+      out.push(el);
+    };
+    const walk = (node) => {
+      if (!node) return;
+      if (node.nodeType === 1 && node.matches) {
+        try {
+          if (node.matches(selector)) add(node);
+        } catch {
+          // invalid selector in this root
+        }
+      }
+      let matches = [];
+      try {
+        matches = node.querySelectorAll ? node.querySelectorAll(selector) : [];
+      } catch {
+        matches = [];
+      }
+      Array.from(matches).forEach(add);
+      const all = node.querySelectorAll ? node.querySelectorAll("*") : [];
+      for (const el of all) {
+        if (el.shadowRoot) walk(el.shadowRoot);
+      }
+      if (node.shadowRoot) walk(node.shadowRoot);
+    };
+    walk(root);
+    return out;
+  }
+
+  function eachSameOriginDoc(doc, visit) {
+    if (!doc || typeof visit !== "function") return;
+    const seen = new Set();
+    const walk = (node) => {
+      if (!node || seen.has(node)) return;
+      seen.add(node);
+      visit(node);
+      const frames = node.querySelectorAll ? node.querySelectorAll("iframe") : [];
+      Array.from(frames).forEach((iframe) => {
+        try {
+          if (iframe.contentDocument) walk(iframe.contentDocument);
+        } catch {
+          // cross-origin child
+        }
+      });
+    };
+    walk(doc);
+  }
+
   function skipChrome(el) {
     return Boolean(el && el.closest && el.closest(SKIP_CHROME));
   }
@@ -313,13 +381,18 @@
     },
   };
 
-  const GOOGLE_UI =
-    "nav, header, [role='navigation'], [role='banner'], [role='menubar'], [role='menu'], button, [role='button'], textarea, svg, img, video, .docs-title-input, .docs-title-widget, #docs-chrome, .goog-menuitem, .menu-button";
+  const GOOGLE_CHROME =
+    "nav, header, [role='navigation'], [role='banner'], [role='menubar'], [role='menu'], textarea, svg, img, video, .docs-title-input, .docs-title-widget, #docs-chrome, .goog-menuitem, .menu-button";
   const GOOGLE_COMPOSE =
-    ".docos-input, .docos-input-textarea, .docos-replyview-replybox, [aria-label='Join the discussion'], [aria-label^='New comment' i]";
+    ".docos-input, .docos-input-textarea, .docos-replyview-replybox, .docos-replyview-edit-pane, [aria-label='Join the discussion'], [aria-label^='New comment' i], [aria-label^='Reply' i][contenteditable='true']";
+  const GOOGLE_CANVAS_SEL =
+    ".kix-lineview-text-block, .kix-wordhtmlgenerator-word-node, .kix-paragraphrenderer";
   const GOOGLE_HOST_SEL = [
     ".docos-replyview-body",
     ".docos-replyview-comment",
+    ".docos-replyview-content",
+    ".docos-docoview-content",
+    ".docos-collapsible-replyview",
     ".docs-chat-message",
     "[data-comment-id]",
     "[data-purpose='speaker-notes']",
@@ -327,13 +400,15 @@
     ".sketchy-speakernotes",
     "[aria-label='Speaker notes']",
     ".sketchy-text-content",
-    ".kix-lineview-text-block",
-    ".kix-wordhtmlgenerator-word-node",
-    ".kix-paragraphrenderer",
     "[aria-label='Comments'] [role='article']",
+    "[aria-label='Comments'] [role='listitem']",
     "[aria-label*='comment' i] .docos-replyview-body",
-    ".drive-viewer-paginated-page",
+    "[aria-label*='Comments' i] p",
+    ".drive-viewer-paginated-page .textLayer",
+    ".drive-viewer-paginated-page [role='document']",
     "[data-target='doc'] .docos-replyview-body",
+    ".docos-anchoreddocoview .docos-docoview-content",
+    ".docos-streamdocoview .docos-docoview-content",
   ].join(",");
 
   const GOOGLE = {
@@ -342,14 +417,22 @@
       /(?:^|\.)docs\.google\.com$|(?:^|\.)slides\.google\.com$|(?:^|\.)drive\.google\.com$/.test(host),
     skip(el) {
       if (!el || el.nodeType !== 1 || !el.closest) return true;
-      if (el.closest(GOOGLE_UI)) return true;
       if (el.closest(GOOGLE_COMPOSE)) return true;
+      // Comment cards on Docs/Drive are often role=button. Still highlight them.
+      if (el.closest(GOOGLE_HOST_SEL) || (el.matches && el.matches(GOOGLE_HOST_SEL))) return false;
+      if (el.closest(GOOGLE_CHROME)) return true;
       return false;
     },
     isHost(el) {
       if (!el || el.nodeType !== 1 || this.skip(el)) return false;
       if (!(el.matches && el.matches(GOOGLE_HOST_SEL))) return false;
-      if (el.matches("[data-comment-id]") && el.querySelector && el.querySelector(".docos-replyview-body")) {
+      // Canvas Docs text is painted, not real DOM. Live ink handles typing.
+      if (el.matches(GOOGLE_CANVAS_SEL)) return false;
+      if (
+        el.matches("[data-comment-id], .docos-replyview-comment, .docos-collapsible-replyview") &&
+        el.querySelector &&
+        el.querySelector(".docos-replyview-body, .docos-replyview-content, .docos-docoview-content")
+      ) {
         return false;
       }
       const text = String(el.innerText || el.textContent || "").replace(/\s+/g, " ").trim();
@@ -361,18 +444,20 @@
       return found && this.isHost(found) ? found : null;
     },
     hostsIn(root) {
-      if (!root || !root.querySelectorAll) return [];
+      if (!root) return [];
       const found = [];
       if (this.isHost(root)) found.push(root);
-      root.querySelectorAll(GOOGLE_HOST_SEL).forEach((el) => {
+      queryAllDeep(root, GOOGLE_HOST_SEL).forEach((el) => {
         if (this.isHost(el)) found.push(el);
       });
       return unique(found);
     },
     contentOf(host) {
       if (!host) return host;
-      if (host.matches && host.matches("[data-comment-id]")) {
-        return host.querySelector(".docos-replyview-body") || host;
+      if (host.matches && host.matches("[data-comment-id], .docos-replyview-comment, .docos-collapsible-replyview")) {
+        return (
+          host.querySelector(".docos-replyview-body, .docos-replyview-content, .docos-docoview-content") || host
+        );
       }
       return host;
     },
@@ -381,7 +466,7 @@
   const ALL_ADAPTERS = [DISCORD, INSTAGRAM, REDDIT, GOOGLE];
 
   function adaptersFor(doc) {
-    const host = hostnameOf(doc);
+    const host = effectiveHost(doc);
     const matched = ALL_ADAPTERS.filter((a) => a.matchHost(host));
     if (matched.length) return matched;
     return ALL_ADAPTERS;
@@ -552,23 +637,25 @@
     return band === "high" ? "SCAM LIKELY: AVOID LINKS" : "SUSPICIOUS";
   }
 
+  function paintDocSettings(doc) {
+    if (!doc || !doc.documentElement) return;
+    doc.documentElement.dataset.sherpaDesc = settings.descriptions ? "1" : "0";
+    doc.documentElement.dataset.sherpaHl = "on";
+    if (prefsApi && prefsApi.applyTheme) prefsApi.applyTheme(doc, settings.theme);
+    if (!settings.descriptions) hidePop(doc);
+    if (doc.querySelectorAll) {
+      doc.querySelectorAll("." + WHY_CLASS).forEach((panel) => {
+        if (!settings.descriptions) panel.hidden = true;
+      });
+    }
+  }
+
   function applySettings(next, origin) {
     settings = prefsApi
       ? prefsApi.normalize(next)
       : { aggression: "warn", descriptions: true, theme: "dark" };
     if (typeof document !== "undefined") {
-      if (document.documentElement) {
-        document.documentElement.dataset.sherpaDesc = settings.descriptions ? "1" : "0";
-        document.documentElement.dataset.sherpaHl = "on";
-        if (prefsApi && prefsApi.applyTheme) prefsApi.applyTheme(document, settings.theme);
-      }
-      if (!settings.descriptions) {
-        hidePop(document);
-      }
-      document.querySelectorAll &&
-        document.querySelectorAll("." + WHY_CLASS).forEach((panel) => {
-          if (!settings.descriptions) panel.hidden = true;
-        });
+      eachSameOriginDoc(document, paintDocSettings);
     }
     if (origin !== "message") {
       try {
@@ -658,7 +745,11 @@
     }
   }
 
-  function popupPosition(markRect, popSize, viewport, gap = 8, margin = 8) {
+  function popupGapFor(doc) {
+    return /(?:^|\.)instagram\.com$/.test(effectiveHost(doc)) ? 22 : 8;
+  }
+
+  function popupPosition(markRect, popSize, viewport, gap = 8, margin = 8, preferAbove = false) {
     const maxWidth = Math.max(0, viewport.width - margin * 2);
     const width = Math.min(popSize.width || 268, maxWidth);
     const height = popSize.height > 1 ? popSize.height : 140;
@@ -671,8 +762,10 @@
     const fitsBelow = below + height <= viewport.height - margin;
     const fitsAbove = above >= margin;
     let top;
-    if (fitsBelow) top = below;
+    if (preferAbove && fitsAbove) top = above;
+    else if (!preferAbove && fitsBelow) top = below;
     else if (fitsAbove) top = above;
+    else if (fitsBelow) top = below;
     else top = Math.max(margin, viewport.height - height - margin);
 
     return { top, left };
@@ -727,16 +820,20 @@
         // already open
       }
     }
+    pop.style.inset = "auto";
+    pop.style.margin = "0";
     pop.style.top = "0px";
     pop.style.left = "0px";
     void pop.offsetHeight;
     const view = doc.defaultView;
     if (!view) return pop;
-    const pos = popupPosition(
-      mark.getBoundingClientRect(),
-      pop.getBoundingClientRect(),
-      { width: view.innerWidth, height: view.innerHeight },
-    );
+    const host = effectiveHost(doc);
+    const instagram = /(?:^|\.)instagram\.com$/.test(host);
+    const gap = popupGapFor(doc);
+    const markRect = mark.getBoundingClientRect();
+    const viewport = { width: view.innerWidth, height: view.innerHeight };
+    const preferAbove = instagram && markRect.top > viewport.height * 0.42;
+    const pos = popupPosition(markRect, pop.getBoundingClientRect(), viewport, gap, 8, preferAbove);
     pop.style.top = `${pos.top}px`;
     pop.style.left = `${pos.left}px`;
     const r = pop.getBoundingClientRect();
@@ -745,7 +842,10 @@
       const fixed = popupPosition(
         mark.getBoundingClientRect(),
         { width: r.width, height: r.height },
-        { width: view.innerWidth, height: view.innerHeight },
+        viewport,
+        gap,
+        margin,
+        preferAbove,
       );
       pop.style.top = `${fixed.top}px`;
       pop.style.left = `${fixed.left}px`;
@@ -1018,10 +1118,11 @@
   function isGoogleSurface(doc) {
     if (!doc) return false;
     if (parentIsGoogle(doc)) return true;
+    if (GOOGLE.matchHost(effectiveHost(doc))) return true;
     return Boolean(
       doc.querySelector &&
         doc.querySelector(
-          "[data-sherpa-google], .kix-appview-editor, .docs-texteventtarget-iframe, #docs-editor, .punch-viewer, iframe[class*='texteventtarget'], #drive_main_page, .a-s-tb-sc",
+          "[data-sherpa-google], .kix-appview-editor, .docs-texteventtarget-iframe, #docs-editor, .punch-viewer, iframe[class*='texteventtarget'], #drive_main_page, .a-s-tb-sc, .docos-docoview-content, .docos-replyview-body",
         ),
     );
   }
@@ -1351,17 +1452,76 @@
     );
   }
 
+  function bindChildFrames(doc) {
+    if (!doc || !doc.documentElement || doc.documentElement.dataset.sherpaFrames === "1") return;
+    doc.documentElement.dataset.sherpaFrames = "1";
+    const hook = (iframe) => {
+      if (!iframe || iframe.dataset.sherpaFrame === "1") return;
+      iframe.dataset.sherpaFrame = "1";
+      const attach = () => {
+        try {
+          const idoc = iframe.contentDocument;
+          if (idoc && idoc.documentElement) start(idoc);
+        } catch {
+          // cross-origin child
+        }
+      };
+      iframe.addEventListener("load", attach);
+      attach();
+    };
+    const scanFrames = (root) => {
+      if (!root || !root.querySelectorAll) return;
+      root.querySelectorAll("iframe").forEach(hook);
+    };
+    scanFrames(doc);
+    const view = doc.defaultView;
+    const Observer =
+      (view && view.MutationObserver) ||
+      (typeof MutationObserver !== "undefined" ? MutationObserver : null);
+    if (Observer) {
+      const observer = new Observer((mutations) => {
+        for (const mutation of mutations) {
+          for (const added of mutation.addedNodes || []) {
+            if (!added || added.nodeType !== 1) continue;
+            if ((added.tagName || "").toLowerCase() === "iframe") hook(added);
+            else scanFrames(added);
+          }
+        }
+      });
+      observer.observe(doc.documentElement || doc, { childList: true, subtree: true });
+    }
+  }
+
+  function bindPrefMessages(doc) {
+    if (!doc || !doc.documentElement || doc.documentElement.dataset.sherpaPrefsMsg === "1") return;
+    doc.documentElement.dataset.sherpaPrefsMsg = "1";
+    const view = doc.defaultView;
+    if (!view || typeof view.addEventListener !== "function") return;
+    view.addEventListener("message", (event) => {
+      if (!event || !event.data || event.data.type !== "sherpa-prefs" || !event.data.settings) return;
+      if (!trustedLiveOrigin(event, view)) return;
+      applySettings(event.data.settings, "message");
+    });
+  }
+
   function start(doc = document) {
-    if (prefsApi) {
+    if (prefsApi && !globalThis.__sherpaPrefsBound) {
+      globalThis.__sherpaPrefsBound = true;
       prefsApi.load(applySettings);
       prefsApi.subscribe(applySettings);
     }
+    paintDocSettings(doc);
+    const booted = Boolean(doc && doc.documentElement && doc.documentElement.dataset.sherpaBoot === "1");
+    if (doc && doc.documentElement) doc.documentElement.dataset.sherpaBoot = "1";
     bindPop(doc);
     bindReport(doc);
     bindIntercepts(doc);
+    bindPrefMessages(doc);
     bindGoogleSelection(doc);
     bindGoogleTyping(doc);
+    bindChildFrames(doc);
     scan(doc);
+    if (booted) return null;
     const view = doc.defaultView;
     const Observer =
       (view && view.MutationObserver) ||
@@ -1485,6 +1645,7 @@
     shouldIntercept,
     highlightContext,
     popupPosition,
+    popupGapFor,
     showPop,
     hidePop,
     markFromPoint,
