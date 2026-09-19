@@ -1,9 +1,11 @@
 (() => {
-  const DEFAULTS = { aggression: "point", descriptions: true };
-  const LEVELS = ["point", "warn", "block"];
+  const DEFAULTS = { aggression: "warn", descriptions: true };
+  const LEVELS = ["warn", "block"];
 
   function normalize(raw) {
-    const aggression = LEVELS.includes(raw && raw.aggression) ? raw.aggression : DEFAULTS.aggression;
+    let aggression = raw && raw.aggression;
+    if (aggression === "point") aggression = "warn";
+    if (!LEVELS.includes(aggression)) aggression = DEFAULTS.aggression;
     return {
       aggression,
       descriptions: raw && raw.descriptions === false ? false : true,

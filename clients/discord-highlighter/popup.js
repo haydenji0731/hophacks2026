@@ -2,19 +2,14 @@
   const titleEl = document.getElementById("status-title");
   const detailEl = document.getElementById("status-detail");
   const box = document.getElementById("status");
-  const testOut = document.getElementById("self-test");
   const slider = document.getElementById("aggression");
   const copyEl = document.getElementById("agg-copy");
   const descBox = document.getElementById("descriptions");
   const prefs = globalThis.SherpaPrefs;
 
   const COPY = {
-    point:
-      "Point (Guide). Mark the text and stop there. Open a highlight for the reason. No click interrupts.",
-    warn:
-      "Warn (Guard). Same as Point, and high-risk or mismatched links ask Continue / Go back before they open.",
-    block:
-      "Block. Links inside highlighted text always stop first and show the real destination.",
+    warn: "Warn. Highlight suspicious text. Hover for the reason when descriptions are on. Links open normally.",
+    block: "Block. Same highlights, and a click on a highlighted link always asks Continue / Go back with the real destination.",
   };
 
   function setStatus(ok, title, detail) {
@@ -26,11 +21,11 @@
   function renderPrefs(value) {
     slider.value = String(prefs.indexOf(value.aggression));
     descBox.checked = value.descriptions;
-    copyEl.textContent = COPY[value.aggression] || COPY.point;
+    copyEl.textContent = COPY[value.aggression] || COPY.warn;
   }
 
   function persist() {
-    const aggression = prefs.LEVELS[Number(slider.value)] || "point";
+    const aggression = prefs.LEVELS[Number(slider.value)] || "warn";
     prefs.save({ aggression, descriptions: descBox.checked }, renderPrefs);
     if (typeof chrome !== "undefined" && chrome.tabs && chrome.tabs.query) {
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -85,24 +80,8 @@
     );
   }
 
-  function runSelfTest() {
-    const api = globalThis.ScamSmell;
-    if (!api || typeof api.analyze !== "function") {
-      testOut.textContent = "Self-test failed: scorer did not load.";
-      return;
-    }
-    const safe = api.analyze("Your Amazon order has shipped");
-    const scam = api.analyze("IRS: pay overdue tax with Apple gift cards today, don't tell anyone");
-    if (safe.band === "ok" && scam.band === "high") {
-      testOut.textContent = `Self-test passed. Safe sample ${safe.score}/100 · scam sample ${scam.score}/100.`;
-      return;
-    }
-    testOut.textContent = `Self-test failed. Safe=${safe.band} scam=${scam.band}.`;
-  }
-
   slider.addEventListener("input", persist);
   descBox.addEventListener("change", persist);
-  document.getElementById("test-btn").addEventListener("click", runSelfTest);
   prefs.load(renderPrefs);
   checkTab();
 })();

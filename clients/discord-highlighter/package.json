@@ -1,6 +1,6 @@
 {
   "name": "sherpa",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "private": true,
   "description": "Sherpa: Chrome extension that flags suspicious Discord, Instagram, Reddit, Docs, and Slides text offline.",
   "scripts": {

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Sherpa",
-  "version": "1.4.0",
-  "description": "Offline highlighter for suspicious Discord, Instagram, Reddit, Google Docs, and Google Slides text. Point, Warn, or Block before a bad link opens.",
+  "version": "1.5.0",
+  "description": "Offline highlighter for suspicious Discord, Instagram, Reddit, Google Docs, and Google Slides text. Warn or Block before a bad link opens.",
   "action": {
     "default_title": "Sherpa",
     "default_popup": "popup.html"
