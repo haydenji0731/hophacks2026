@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Scam Smell</title>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        margin: 0;
+        width: 280px;
+        padding: 14px;
+        background: #1e1f22;
+        color: #dbdee1;
+        font: 13px/1.4 "gg sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      }
+      header {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 12px;
+      }
+      header img {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+      }
+      h1 {
+        margin: 0;
+        font-size: 15px;
+      }
+      .sub {
+        margin: 2px 0 0;
+        color: #b5bac1;
+        font-size: 12px;
+      }
+      .status {
+        padding: 10px 12px;
+        border-radius: 10px;
+        background: #2b2d31;
+        margin-bottom: 10px;
+      }
+      .status strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+      .status[data-ok="yes"] strong {
+        color: #86efac;
+      }
+      .status[data-ok="maybe"] strong {
+        color: #e2b422;
+      }
+      .status[data-ok="no"] strong {
+        color: #e05a5a;
+      }
+      button {
+        width: 100%;
+        padding: 8px 12px;
+        border: 0;
+        border-radius: 8px;
+        background: #5865f2;
+        color: #fff;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      #self-test {
+        margin-top: 10px;
+        color: #b5bac1;
+        min-height: 1.3em;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <img src="icons/icon48.png" alt="" />
+      <div>
+        <h1>Scam Smell</h1>
+        <p class="sub">Offline check · nothing is sent away</p>
+      </div>
+    </header>
+    <div class="status" id="status" data-ok="maybe">
+      <strong id="status-title">Checking this tab…</strong>
+      <span id="status-detail">See if the highlighter is injected here.</span>
+    </div>
+    <button type="button" id="test-btn">Run a local self-test</button>
+    <p id="self-test"></p>
+    <script src="scorer.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>

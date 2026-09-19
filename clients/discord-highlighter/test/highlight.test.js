@@ -9,6 +9,7 @@ const {
   clickWarning,
   popupPosition,
   showPop,
+  pingStatus,
 } = require("../content.js");
 
 function fixture() {
@@ -94,6 +95,11 @@ const unmeasured = popupPosition(
 );
 assert.ok(unmeasured.top + 140 <= 800 - 8);
 assert.ok(unmeasured.top < 700);
+
+const ping = pingStatus(document);
+assert.equal(ping.ok, true);
+assert.match(String(ping.site), /discord/);
+assert.ok(ping.marks >= 1);
 
 showPop(document, scamMark);
 const pop = document.getElementById("discord-hl-pop");

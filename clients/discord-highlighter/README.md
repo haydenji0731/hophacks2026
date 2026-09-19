@@ -13,6 +13,15 @@ Nothing is sent off your machine. This is a warning, not a verdict.
 
 If it is already loaded, click **Reload** after pulling changes.
 
+## Check that it works
+
+1. Pin **Scam Smell** from the Chrome puzzle-piece menu so the toolbar icon stays visible.
+2. Open Discord, Instagram, or Reddit.
+3. Click the icon. It should say **Working on this tab**.
+4. Click **Run a local self-test** — that scores a safe shipping note and a gift-card IRS line offline. You do not need those sites for the self-test.
+
+If it says it is not injected, reload the tab or reload the unpacked extension.
+
 ## What it flags
 
 Offline cue matching + a small association graph + cross-family combos (urgency + payment, authority + credentials, and similar). See [`scam-smell/README.md`](scam-smell/README.md) to add cues in JSON only.
@@ -48,5 +57,6 @@ npm run build
 | `manifest.json` | Manifest V3 |
 | `scorer.js` | Bundled offline analyzer |
 | `content.js` | Site adapters, MutationObserver, highlights, popup |
+| `popup.html` / `popup.js` | Toolbar icon: ping this tab + local self-test |
 | `content.css` | Yellow / red highlighter + popup |
 | `scam-smell/` | Source, data, and fixtures |

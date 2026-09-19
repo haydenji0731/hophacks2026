@@ -543,6 +543,24 @@
     return observer;
   }
 
+  function pingStatus(doc = document) {
+    const host = hostnameOf(doc);
+    const adapters = adaptersFor(doc);
+    return {
+      ok: true,
+      host,
+      site: adapters.length === 1 ? adapters[0].name : adapters.map((a) => a.name).join(","),
+      marks: doc.querySelectorAll ? doc.querySelectorAll("." + HIGHLIGHT_CLASS).length : 0,
+    };
+  }
+
+  if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage) {
+    chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+      if (!msg || msg.type !== "scam-smell-ping") return;
+      sendResponse(pingStatus(document));
+    });
+  }
+
   const api = {
     HIGHLIGHT_CLASS,
     isUserMessage,
@@ -555,6 +573,7 @@
     popupPosition,
     showPop,
     adaptersFor,
+    pingStatus,
   };
 
   if (typeof document !== "undefined" && document.documentElement) {
