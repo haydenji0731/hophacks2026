@@ -27,8 +27,8 @@
   --radius-sm: 6px;
   --header-h: 64px;
   --shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
-  --font: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
-  --display: Syne, ui-sans-serif, system-ui, sans-serif;
+  --font: "JetBrainsMono Nerd Font Mono", "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --display: "JetBrainsMono Nerd Font Mono", "JetBrainsMono Nerd Font", "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --ease: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -971,6 +971,82 @@ textarea {
   color: var(--text);
 }
 
+.compat-marquee {
+  margin: 3.25rem 0 0;
+  margin-left: calc(50% - 50vw);
+  width: 100vw;
+  overflow: hidden;
+  text-align: center;
+}
+
+.compat-reels {
+  mask-image: linear-gradient(90deg, transparent 0%, #000 7%, #000 93%, transparent 100%);
+}
+
+.compat-track {
+  display: flex;
+  width: max-content;
+  margin: 0.12rem 0;
+  animation: compat-left var(--compat-dur, 40s) linear infinite;
+}
+
+.compat-track.is-right {
+  animation-name: compat-right;
+}
+
+.compat-marquee:hover .compat-track {
+  animation-play-state: paused;
+}
+
+.compat-loop {
+  display: flex;
+  align-items: baseline;
+  white-space: nowrap;
+  font-family: var(--display);
+  font-size: clamp(1.85rem, 4.8vw, 3.35rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.18;
+}
+
+.compat-item {
+  display: inline-flex;
+  align-items: baseline;
+}
+
+.compat-name {
+  color: transparent;
+  -webkit-text-stroke: 1.35px color-mix(in srgb, var(--text) 32%, transparent);
+}
+
+.compat-name.is-solid {
+  color: var(--text);
+  -webkit-text-stroke: 0;
+}
+
+.compat-sep {
+  margin: 0 0.55em;
+  color: color-mix(in srgb, var(--text) 28%, transparent);
+  font-weight: 500;
+}
+
+@keyframes compat-left {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@keyframes compat-right {
+  from { transform: translateX(-50%); }
+  to { transform: translateX(0); }
+}
+
+.home-goal {
+  margin-top: 3.25rem;
+  padding-top: 3.25rem;
+  border-top: 1px solid var(--border);
+  text-align: left;
+}
+
 /* ---------- Our Goal page ---------- */
 
 .goal-page {
@@ -1128,61 +1204,6 @@ textarea {
   letter-spacing: -0.03em;
   font-size: 1.7rem;
   margin: 0 0 0.75rem;
-}
-
-.compat--goal {
-  margin: 1rem auto 0;
-  padding: 2rem 1.5rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--panel);
-}
-
-.compat-logo-row {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 1.5rem 1.75rem;
-  margin-top: 0.5rem;
-}
-
-.compat-logo {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.55rem;
-  color: var(--muted);
-  transition: color 0.18s var(--ease), transform 0.18s var(--ease);
-}
-
-.compat-logo:hover {
-  color: var(--accent);
-  transform: translateY(-2px);
-}
-
-.compat-logo-icon {
-  width: 44px;
-  height: 44px;
-  display: grid;
-  place-items: center;
-  border: 1px solid var(--border);
-  border-radius: 50%;
-  transition: border-color 0.18s var(--ease);
-}
-
-.compat-logo-icon svg {
-  width: 24px;
-  height: 24px;
-}
-
-.compat-logo:hover .compat-logo-icon {
-  border-color: var(--accent);
-}
-
-.compat-logo-name {
-  font-size: 0.68rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 @media (max-width: 640px) {
@@ -1877,9 +1898,21 @@ textarea:focus,
   .product-stage::before,
   .step-swap,
   .step-scan,
-  .news-track {
+  .news-track,
+  .compat-track {
     animation: none !important;
     transition: none !important;
+  }
+
+  .compat-track {
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    transform: none;
+  }
+
+  .compat-track .compat-loop:last-child {
+    display: none;
   }
 
   .band-wipe {

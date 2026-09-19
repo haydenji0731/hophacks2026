@@ -42,7 +42,7 @@ export default function BandWipe() {
 
       const hit = event.target.closest("button, a");
       if (!hit) return;
-      // Only the top bar and the two home-page buttons (Run check / Open intel) trigger the wipe.
+      // Only the top bar and the home-page Run check button trigger the wipe.
       if (!hit.closest(".site-header, .hero .cta-row")) return;
       if (hit.closest(".theme-toggle")) return;
       if (hit.matches("[disabled]") || hit.getAttribute("aria-disabled") === "true") return;
