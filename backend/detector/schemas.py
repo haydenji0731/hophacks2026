@@ -162,3 +162,20 @@ class PhraseBookResponse(BaseModel):
     phrases: list[PhraseEntry] = Field(default_factory=list)
     source_count: int | None = None
     warnings: list[str] = Field(default_factory=list)
+
+class IntelPattern(BaseModel):
+    id: str
+    name: str
+    title: str
+    description: str
+    platforms: list[str] = Field(default_factory=list)
+    demands: list[str] = Field(default_factory=list)
+    victim_roles: list[str] = Field(default_factory=list)
+    frequency: int = 0
+    score: float | None = None
+
+
+class IntelSearchResponse(BaseModel):
+    query: str = ""
+    count: int
+    patterns: list[IntelPattern]
