@@ -16,6 +16,7 @@ dependencies = [
   "numpy>=1.26.0",
   "pydub>=0.25.1",
   "openwakeword>=0.6.0",
+  "onnxruntime>=1.30.0",
 ]
 
 [project.optional-dependencies]
