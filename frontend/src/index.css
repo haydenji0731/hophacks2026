@@ -29,6 +29,7 @@
   --shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
   --font: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   --display: Syne, ui-sans-serif, system-ui, sans-serif;
+  --ease: cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 html[data-theme="light"] {
@@ -356,6 +357,7 @@ textarea {
   min-height: 40px;
   display: inline-flex;
   align-items: center;
+  transition: color 0.18s var(--ease), background 0.18s var(--ease);
 }
 
 .site-nav a.active,
@@ -370,10 +372,12 @@ textarea {
   color: var(--accent-ink) !important;
   font-weight: 600 !important;
   padding: 0.45rem 0.9rem !important;
+  transition: filter 0.18s var(--ease), transform 0.18s var(--ease);
 }
 
 .nav-cta:hover {
   filter: brightness(1.05);
+  transform: translateY(-1px);
 }
 
 .theme-toggle {
@@ -390,10 +394,12 @@ textarea {
   letter-spacing: 0.1em;
   text-transform: uppercase;
   cursor: pointer;
+  transition: background 0.18s var(--ease), border-color 0.18s var(--ease);
 }
 
 .theme-toggle:hover {
   background: rgb(255 92 92 / 0.08);
+  border-color: var(--accent);
 }
 
 .site-main {
@@ -490,8 +496,8 @@ textarea {
   border: 1px solid transparent;
   cursor: pointer;
   clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
-  transition: background 0.15s ease, border-color 0.15s ease, filter 0.15s ease,
-    transform 0.15s ease, box-shadow 0.15s ease;
+  transition: background 0.18s var(--ease), border-color 0.18s var(--ease), filter 0.18s var(--ease),
+    transform 0.18s var(--ease), box-shadow 0.18s var(--ease);
 }
 
 .btn-primary {
@@ -672,6 +678,7 @@ textarea {
   text-transform: uppercase;
   cursor: pointer;
   z-index: 3;
+  transition: border-color 0.18s var(--ease), background 0.18s var(--ease);
 }
 
 .news-expand:hover {
@@ -705,6 +712,7 @@ textarea {
   letter-spacing: -0.03em;
   line-height: 1.2;
   margin: 0.35rem 0 0.55rem;
+  transition: color 0.18s var(--ease);
 }
 
 .news-card strong {
@@ -754,6 +762,7 @@ textarea {
   border: 1px solid var(--border-strong);
   background: transparent;
   cursor: pointer;
+  transition: background 0.18s var(--ease), border-color 0.18s var(--ease), box-shadow 0.18s var(--ease);
 }
 
 .news-dots button.is-on {
@@ -782,6 +791,7 @@ textarea {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   background: var(--panel);
+  transition: border-color 0.18s var(--ease);
 }
 
 .news-card:hover {
@@ -808,7 +818,7 @@ textarea {
 }
 
 .chip {
-  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+  transition: border-color 0.15s var(--ease), background 0.15s var(--ease), transform 0.15s var(--ease);
 }
 
 .chip:hover {
@@ -835,7 +845,7 @@ textarea {
   padding: 1.1rem 1.15rem;
   background: var(--panel);
   text-align: left;
-  transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+  transition: border-color 0.2s var(--ease), transform 0.2s var(--ease), background 0.2s var(--ease);
 }
 
 .stat:hover {
@@ -857,6 +867,45 @@ textarea {
   color: var(--muted);
   font-size: 0.82rem;
   line-height: 1.4;
+}
+
+.compat {
+  margin: 2.5rem auto 0;
+  max-width: 760px;
+  text-align: center;
+}
+
+.compat-label {
+  display: block;
+  color: var(--faint);
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.compat-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.55rem;
+}
+
+.compat-badge {
+  padding: 0.4rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 500;
+  transition: border-color 0.18s var(--ease), color 0.18s var(--ease);
+}
+
+.compat-badge:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
 }
 
 .page {
@@ -919,7 +968,7 @@ textarea {
 }
 
 .option {
-  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+  transition: border-color 0.15s var(--ease), background 0.15s var(--ease), transform 0.15s var(--ease);
 }
 
 .option:hover {
@@ -940,6 +989,7 @@ textarea {
   cursor: pointer;
   min-height: 44px;
   padding: 0.4rem 0;
+  transition: color 0.18s var(--ease);
 }
 
 .ghost-link:hover {
@@ -1030,7 +1080,7 @@ textarea:focus,
   border-radius: var(--radius-sm);
   padding: 0.9rem 0.9rem 0.85rem;
   background: var(--panel);
-  transition: border-color 0.2s ease, transform 0.2s ease;
+  transition: border-color 0.2s var(--ease), transform 0.2s var(--ease);
 }
 
 .metric:hover {
@@ -1106,7 +1156,7 @@ textarea:focus,
   align-items: center;
   min-height: 44px;
   margin-top: 0.35rem;
-  transition: gap 0.15s ease;
+  transition: gap 0.15s var(--ease);
   gap: 0.3rem;
 }
 
@@ -1131,7 +1181,7 @@ textarea:focus,
   padding: 1.1rem 1.15rem;
   margin-bottom: 0.7rem;
   background: var(--surface-solid);
-  transition: border-color 0.15s ease, transform 0.2s ease;
+  transition: border-color 0.15s var(--ease), transform 0.2s var(--ease);
 }
 
 .scam-card:hover {

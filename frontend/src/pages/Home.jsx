@@ -4,7 +4,7 @@ import NewsWidget from "../components/NewsWidget.jsx";
 export default function Home() {
   return (
     <section className="hero">
-      <p className="eyebrow reveal delay-1">Threat check · inbound</p>
+      <p className="eyebrow reveal delay-1"></p>
       <h1 className="reveal delay-2">
         You think you&apos;re
         <br />
@@ -37,6 +37,19 @@ export default function Home() {
         <div className="stat">
           <strong>Discord node</strong>
           <span>Run /scamcheck without leaving the chat.</span>
+        </div>
+      </div>
+
+      <div className="compat reveal delay-6">
+        <span className="compat-label">Compatible with</span>
+        <div className="compat-row">
+          <span className="compat-badge">Discord</span>
+          <span className="compat-badge">Windows</span>
+          <span className="compat-badge">macOS</span>
+          <span className="compat-badge">Chrome</span>
+          <span className="compat-badge">iOS</span>
+          <span className="compat-badge">Android</span>
+          <span className="compat-badge">Instagram</span>
         </div>
       </div>
     </section>
