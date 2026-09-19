@@ -4,15 +4,8 @@ import NewsWidget from "../components/NewsWidget.jsx";
 export default function Home() {
   return (
     <section className="hero">
-      <h1 className="reveal delay-1">
-        You think you&apos;re
-        <br />
-        being scammed?
-      </h1>
-      <p className="lede reveal delay-2">
-        Six questions. A live verdict. Built like a SOC console — usable if you
-        just got a weird call, text, or DM.
-      </p>
+      <h1 className="reveal delay-1">Being scammed?</h1>
+      <p className="lede reveal delay-2">Six questions. A live Verdict</p>
       <div className="cta-row reveal delay-3">
         <Link className="btn btn-primary" to="/questionnaire">
           Run check

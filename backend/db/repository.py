@@ -126,12 +126,12 @@ def list_recent_scams(
     days: int = 14,
     limit: int = 20,
 ) -> list[Scam]:
-    """Patterns touched in the lookback window, hottest first."""
+    """Patterns touched in the lookback window, newest first."""
     cutoff = datetime.now(timezone.utc) - timedelta(days=max(1, days))
     stmt = (
         select(Scam)
         .where(Scam.updated_at >= cutoff)
-        .order_by(Scam.frequency.desc(), Scam.updated_at.desc())
+        .order_by(Scam.updated_at.desc(), Scam.frequency.desc())
         .limit(limit)
     )
     return list(session.scalars(stmt))

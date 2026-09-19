@@ -310,23 +310,10 @@ textarea {
 .brand {
   display: inline-flex;
   align-items: center;
-  gap: 0.65rem;
   font-family: var(--display);
   font-weight: 700;
-  letter-spacing: -0.03em;
-}
-
-.brand-mark {
-  width: 22px;
-  height: 22px;
-  border-radius: 3px;
-  background: var(--accent);
-  color: var(--accent-ink);
-  display: grid;
-  place-items: center;
-  font-size: 13px;
-  font-weight: 700;
-  box-shadow: 0 0 18px var(--glow);
+  letter-spacing: 0.08em;
+  font-size: 1.15rem;
 }
 
 .brand span {
@@ -464,7 +451,7 @@ textarea {
 .hero h1 {
   font-size: clamp(2.5rem, 7vw, 4.6rem);
   margin: 0.7rem auto 0.9rem;
-  max-width: 13ch;
+  max-width: 16ch;
 }
 
 .lede {
@@ -1710,10 +1697,6 @@ textarea:focus,
   pointer-events: none;
   overflow: hidden;
   isolation: isolate;
-}
-
-.band-wipe[data-phase] {
-  pointer-events: auto;
 }
 
 .band-wipe-strip {
