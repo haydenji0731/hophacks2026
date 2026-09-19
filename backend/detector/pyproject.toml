@@ -21,7 +21,9 @@ dependencies = [
 # Linux backend only — onnx/tflite wheels are unreliable on macOS 12.
 kws = [
   "openwakeword>=0.6.0",
+  "onnxruntime>=1.16.0",
 ]
+
 
 [dependency-groups]
 dev = [
