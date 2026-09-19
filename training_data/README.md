@@ -84,3 +84,7 @@ From dialogue IDs 0–99, the mirror contained **83 dialogues (775 turns)**, all
   year      = {2023}
 }
 ```
+
+## Related (not this folder)
+
+The Reddit **scam pattern corpus** that seeds Postgres lives under [`backend/db/seeds/`](../backend/db/seeds/) — encyclopedia rows for the site DB, separate from this audio/transcript training pipeline.
