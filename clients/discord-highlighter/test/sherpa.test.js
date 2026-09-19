@@ -66,7 +66,7 @@ assert.equal(document.documentElement.style.getPropertyValue("--sherpa-bg"), "#0
 assert.equal(api.linkMismatch(mismatchLink, "https://discord.com/"), true);
 assert.equal(api.linkMismatch(safeLink, "https://discord.com/"), false);
 
-assert.equal(api.shouldActivate("warn", { inHighlight: true, band: "high", mismatch: true }), false);
+assert.equal(api.shouldIntercept("warn", { inHighlight: true, band: "high", mismatch: true }), false);
 assert.equal(api.shouldIntercept("warn", { inHighlight: true, band: "caution", mismatch: false }), false);
 assert.equal(api.shouldIntercept("block", { inHighlight: true, band: "caution", mismatch: false }), true);
 assert.equal(api.shouldIntercept("block", { inHighlight: false, band: "ok", mismatch: true }), false);
