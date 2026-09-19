@@ -127,9 +127,10 @@ overlay.dispatchEvent(
 );
 mark.dispatchEvent(new document.defaultView.MouseEvent("pointerenter", { bubbles: true }));
 assert.equal(api.showPop(document, mark), null);
-assert.equal(document.getElementById("sherpa-hl-pop").hidden, true, "descriptions off must hide the hover box");
-assert.equal(document.documentElement.dataset.sherpaHl, "off");
+assert.equal(document.getElementById("sherpa-hl-pop").hidden, true, "hover comments off must hide the hover box");
+assert.equal(document.documentElement.dataset.sherpaHl, "on");
 assert.equal(document.documentElement.dataset.sherpaDesc, "0");
+assert.ok(irs.querySelector("." + api.HIGHLIGHT_CLASS), "unchecking hover comments must leave highlights");
 
 console.log("ok");
 process.exit(0);

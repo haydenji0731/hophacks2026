@@ -111,6 +111,7 @@ assert.equal(showPop(document, scamMsg.querySelector("." + HIGHLIGHT_CLASS)), nu
 const hidden = document.getElementById("sherpa-hl-pop");
 assert.ok(hidden);
 assert.equal(hidden.hidden, true);
+assert.ok(scamMsg.querySelector("." + HIGHLIGHT_CLASS), "hover comments off must leave the highlight");
 
 setTimeout(() => {
   const incomingMark = incoming.querySelector("." + HIGHLIGHT_CLASS);
