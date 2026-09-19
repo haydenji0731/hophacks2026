@@ -1,0 +1,124 @@
+[
+  {
+    "id": "amazon_shipped",
+    "text": "Your Amazon order has shipped. Tracking number 1Z999 is on the way.",
+    "expectedBand": "ok"
+  },
+  {
+    "id": "click_verify",
+    "text": "Click to verify your account",
+    "expectedBand": "high",
+    "mustIncludeReason": "verify"
+  },
+  {
+    "id": "irs_gift_cards",
+    "text": "IRS: pay overdue tax with Apple gift cards today, don't tell anyone",
+    "expectedBand": "high",
+    "mustIncludeReason": "payment"
+  },
+  {
+    "id": "nigerian_prince",
+    "text": "I am the son of the late Nigerian prince. You are named as next of kin to transfer $21,000,000. Pay a processing fee via Western Union and keep this confidential.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "nitro_giveaway",
+    "text": "FREE Discord Nitro giveaway! First 10 people click here: https://discord.gift/abc123",
+    "expectedBand": "high"
+  },
+  {
+    "id": "customs_itunes",
+    "text": "Your package is held by customs. Please purchase iTunes cards to clear a customs fee and send a screenshot of the codes.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "tech_support",
+    "text": "Microsoft support: we detected a virus. Download AnyDesk and call this number immediately so we can unlock your account.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "romance_gift",
+    "text": "I'm deployed overseas and can't video call. I love you, please send iTunes gift cards so I can come home. Don't tell anyone.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "job_mule",
+    "text": "Work from home easy money. I just need you to receive a package and keep a percentage. No experience needed.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "hello",
+    "text": "hey are we still on for pizza later?",
+    "expectedBand": "ok"
+  },
+  {
+    "id": "password_reset",
+    "text": "You requested a password reset. Use this link we emailed only if you asked for it.",
+    "expectedBand": "ok"
+  },
+  {
+    "id": "r_scams_fake_check",
+    "text": "You've been selected as a mystery shopper. Deposit this check, buy Walmart gift cards with the extra, and wire the rest. Keep this confidential.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "r_scams_crypto_recovery",
+    "text": "FBI asset recovery: we can retrieve your bitcoin. Pay a release fee in USDT to this wallet address today.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "short_link_phish",
+    "text": "Your Steam account will be terminated. Login here http://bit.ly/steam-auth to verify your account.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "ceo_gift_cards",
+    "text": "Ok, I have a presentation in a few, I need you to physically go to any nearby store and purchase me a gift card. I need the card's back codes for a presentation. I would reimburse you when am through.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "usps_warehouse",
+    "text": "The USPS package arrived at the warehouse but could not be delivered due to incomplete address information. Please confirm your address in the link. (Please reply Y, then exit the text message and open it again to activate the link, or copy the link and open it in your Safari browser).",
+    "expectedBand": "high"
+  },
+  {
+    "id": "ezpass_toll",
+    "text": "E-ZPass Lane: We have noticed an outstanding toll amount of $2.99 on your record. To avoid a late fee of $50.00, visit this link.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "wrong_number_open",
+    "text": "hey is this Alice? I'm Mandy, it's been a while.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "off_app_whatsapp",
+    "text": "This app's messaging is terrible — add me on WhatsApp so we can talk properly.",
+    "expectedBand": "caution"
+  },
+  {
+    "id": "mystery_shopper_cards",
+    "text": "Deposit it on my account & get 2 Gift Cards $500 each. This is supposedly to be used for a future Shopper job. Send a picture of front/back too.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "otp_readback",
+    "text": "This is your bank's fraud department — please read back the one-time passcode we just texted you to confirm your identity.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "grandparent_cards",
+    "text": "Grandma it's me — I was in a car accident and I'm at the police station. Please buy $1,000 in Google Play cards and don't call Mom yet.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "seed_phrase_ask",
+    "text": "Support: your wallet is out of sync. Reply with your 12-word recovery phrase so we can restore access and credit the bonus.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "benign_informed_delivery",
+    "text": "USPS Informed Delivery: You have mail and packages scheduled. View today's digest in your Informed Delivery dashboard. No action required.",
+    "expectedBand": "ok"
+  }
+]
