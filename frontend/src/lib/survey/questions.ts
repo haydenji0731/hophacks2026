@@ -185,3 +185,43 @@ function themeOf(answers: Record<string, string>): string {
   if (answers.notify_about && answers.notify_about !== "skip") return answers.notify_about;
   return answers.theme ?? "";
 }
+
+const CHANNEL_TAGS: Record<string, Parameters<typeof tagMatch>[1]> = {
+  phone: { channels: ["phone", "robocall"] },
+  sms: { channels: ["sms"] },
+  chat: { channels: ["messaging_app"] },
+  social: { channels: ["social_dm", "comments"] },
+  dating: { channels: ["dating_app"] },
+  marketplace: { channels: ["marketplace"] },
+  web: { channels: ["email", "search", "popup", "ads", "search_ad"] },
+  qr: { channels: ["qr_code"] },
+  in_person: { channels: ["in_person", "mail", "door_to_door", "qr_code"] },
+};
+
+function channelFallback(scam: Scam, value: string): boolean | null {
+  const text = blob(scam);
+  switch (value) {
+    case "phone":
+      return scam.platforms.includes("phone");
+    case "sms":
+      return scam.platforms.includes("sms");
+    case "discord":
+      return scam.platforms.includes("discord") || text.includes("discord");
+    case "web":
+      return scam.platforms.includes("web");
+    case "chat":
+    case "social":
+    case "dating":
+      return (
+        hasAny(text, ["whatsapp", "telegram", "tiktok", "wrong number", "dating", "instagram"]) ||
+        (scam.platforms.includes("other") && !scam.platforms.includes("phone") && !scam.platforms.includes("web"))
+      );
+    case "marketplace":
+      return hasAny(text, ["marketplace", "rental", "ebay", "craigslist"]);
+    case "qr":
+    case "in_person":
+      return hasAny(text, ["atm", "bus stop", "meetup", "courier", "parking", "skimmer", "in store", "retail", "windshield", "qr"]);
+    default:
+      return null;
+  }
+}
