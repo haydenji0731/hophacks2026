@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Sherpa",
-  "version": "1.3.0",
-  "description": "Offline highlighter for suspicious Discord, Instagram, and Reddit messages. Point, Warn, or Block before a bad link opens.",
+  "version": "1.4.0",
+  "description": "Offline highlighter for suspicious Discord, Instagram, Reddit, Google Docs, and Google Slides text. Point, Warn, or Block before a bad link opens.",
   "action": {
     "default_title": "Sherpa",
     "default_popup": "popup.html"
@@ -20,7 +20,9 @@
         "https://old.reddit.com/*",
         "https://new.reddit.com/*",
         "https://sh.reddit.com/*",
-        "https://reddit.com/*"
+        "https://reddit.com/*",
+        "https://docs.google.com/*",
+        "https://slides.google.com/*"
       ],
       "css": ["content.css"],
       "js": ["scorer.js", "settings.js", "content.js"],

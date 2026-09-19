@@ -45,7 +45,7 @@
 
   async function checkTab() {
     if (typeof chrome === "undefined" || !chrome.tabs || !chrome.tabs.query) {
-      setStatus("maybe", "Toolbar popup is loaded", "Open this from the Chrome toolbar on Discord, Instagram, or Reddit.");
+      setStatus("maybe", "Toolbar popup is loaded", "Open this from the Chrome toolbar on Discord, Instagram, Reddit, Docs, or Slides.");
       return;
     }
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -54,7 +54,7 @@
       return;
     }
     const url = tab.url || "";
-    const supported = /discord\.com|instagram\.com|reddit\.com|redd\.it/.test(url);
+    const supported = /discord\.com|instagram\.com|reddit\.com|redd\.it|docs\.google\.com|slides\.google\.com/.test(url);
     try {
       const res = await chrome.tabs.sendMessage(tab.id, { type: "sherpa-ping" });
       if (res && res.ok) {
@@ -81,7 +81,7 @@
     setStatus(
       "maybe",
       "Extension is loaded",
-      "This page is not Discord, Instagram, or Reddit. Open one of those to see highlights.",
+      "This page is not Discord, Instagram, Reddit, Docs, or Slides. Open one of those to see highlights.",
     );
   }
 
