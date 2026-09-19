@@ -1,10 +1,10 @@
 # Sherpa
 
-Chrome extension that watches **Discord**, **Instagram**, **Reddit**, **Google Docs**, and **Google Slides** locally and highlights **suspicious** user text. Normal chat stays untouched. Caution is a muted yellow, high risk is a muted red, both translucent so the message stays readable.
+Chrome extension that watches **Discord**, **Instagram**, **Reddit**, **Google Docs**, **Google Drive**, and **Google Slides** locally and highlights **suspicious** user text. Normal chat stays untouched. Caution is a muted yellow, high risk is a muted red, both translucent so the message stays readable.
 
 Yellow highlights say **SUSPICIOUS**. Red highlights say **SCAM LIKELY: AVOID LINKS**.
 
-Nothing is sent off your machine. This is a warning, not a verdict.
+This is a warning, not a verdict. Scoring stays on the device.
 
 ## Aggressiveness
 
@@ -15,7 +15,7 @@ Open the toolbar popup and use the Warn / Block switch.
 | **Warn** (default) | Highlight the text. Hover a highlight for the reason when descriptions are on. Links open normally. |
 | **Block** | Same highlights, and a click on a **highlighted** link always asks **Continue / Go back** and shows the real destination. Ordinary links are left alone. |
 
-**Show descriptions** is a checkbox in the same menu. When it is on, a floating reason box appears on hover. When it is off, you only get the highlight.
+**Show highlights** is a checkbox in the same menu. Unchecking it hides the colored marks, hover reasons, and live Docs/Drive bar immediately — no reload.
 
 ## Load it in Chrome
 
@@ -52,8 +52,9 @@ Avatars, nav chrome, and composers are never painted.
 | Discord | User messages (stable, PTB, Canary), including ones you just sent. Survives DM / channel switches. |
 | Instagram | Direct messages, captions, and comments. Rebuilds word-split bubbles inside the DM form and paints only the text. |
 | Reddit | Post bodies/titles and comments (new and old Reddit). |
-| Google Docs | Comments, chat, and text as you type (including the canvas editor). Select a passage to rescore it. |
-| Google Slides | Comments, speaker notes, and on-slide text boxes. Select canvas text to score it. |
+| Google Docs | Comments, chat, canvas typing (including the hidden editor iframe), and a live ink bar on the page. |
+| Google Drive | Comments and activity on `drive.google.com`, plus Docs opened from Drive. |
+| Google Slides | Comments, speaker notes, on-slide text boxes, and typed notes. |
 
 ## Develop
 

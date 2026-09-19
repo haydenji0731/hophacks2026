@@ -34,6 +34,18 @@
       "id": "muted_pin",
       "patterns": ["pinned a message", "unpinned a message", "changed the channel name"],
       "weight": 8
+    },
+    {
+      "id": "never_ask_codes",
+      "patterns": [
+        "will never ask for your password",
+        "will never ask you for this code",
+        "will never ask you to pay with gift card",
+        "where's my refund",
+        "informed delivery",
+        "no action required"
+      ],
+      "weight": 12
     }
   ]
 }

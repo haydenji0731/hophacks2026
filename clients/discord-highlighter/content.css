@@ -14,6 +14,18 @@
   font-display: swap;
 }
 
+html[data-sherpa-hl="off"] .discord-hl-mark {
+  background-image: none !important;
+  animation: none !important;
+  cursor: inherit;
+}
+html[data-sherpa-hl="off"] .discord-hl-pop,
+html[data-sherpa-hl="off"] .sherpa-why-panel,
+html[data-sherpa-hl="off"] .sherpa-select-bar,
+html[data-sherpa-hl="off"] .sherpa-docs-ink {
+  display: none !important;
+}
+
 /* Ink sits only on flagged text, not the avatar or message row. */
 .discord-hl-mark {
   --hl-h: 1.3em;
@@ -219,6 +231,33 @@
 
 .sherpa-select-bar p:not(.discord-hl-warn) {
   margin: 0;
+}
+
+.sherpa-docs-ink {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 2147483646;
+  max-width: min(560px, calc(100vw - 24px));
+  padding: 8px 14px;
+  border-radius: 999px;
+  font: 12px/1.4 "JetBrains Mono", ui-monospace, monospace;
+  color: #f2f3f5;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
+.sherpa-docs-ink[hidden] {
+  display: none;
+}
+
+.sherpa-docs-ink.discord-hl-mark--caution {
+  background: rgba(196, 146, 28, 0.92);
+}
+
+.sherpa-docs-ink.discord-hl-mark--high {
+  background: rgba(176, 56, 56, 0.92);
 }
 
 @media (prefers-reduced-motion: reduce) {
