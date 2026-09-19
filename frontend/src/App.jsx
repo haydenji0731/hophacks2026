@@ -3,6 +3,7 @@ import { Routes, Route, useNavigate } from "react-router-dom";
 import BootScreen from "./components/BootScreen.jsx";
 import Layout from "./components/Layout.jsx";
 import Home from "./pages/Home.jsx";
+import OurGoal from "./pages/OurGoal.jsx";
 import Questionnaire from "./pages/Questionnaire.jsx";
 import Results from "./pages/Results.jsx";
 import Repository from "./pages/Repository.jsx";
@@ -25,6 +26,7 @@ export default function App() {
         <Routes>
           <Route element={<Layout />}>
             <Route index element={<Home />} />
+            <Route path="our-goal" element={<OurGoal />} />
             <Route path="questionnaire" element={<Questionnaire />} />
             <Route path="results" element={<Results />} />
             <Route path="scams" element={<Repository />} />
