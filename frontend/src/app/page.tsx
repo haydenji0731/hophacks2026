@@ -13,13 +13,8 @@ export default function HomePage() {
           And If You&apos;re Here, You Probably Do Too
         </h1>
         <p className="mx-auto max-w-2xl text-base text-muted-foreground sm:text-lg">
-          Hang-up text from a flagged call, prompt from a chat, or you just have
-          a bad feeling — this is the one-stop check. We match what happened to
-          a known pattern, show examples, and tell you what to do next.
-        </p>
-        <p className="mx-auto max-w-2xl text-sm text-muted-foreground">
-          The check uses r/Scams reports plus a 60-method catalog researched by
-          Grok Bot (thank you) — overlapping methods are merged, not copied twice.
+          Answer a few questions. We rank the scam patterns that fit what just
+          happened.
         </p>
         <div className="flex flex-wrap justify-center gap-3">
           <Button size="lg" render={<Link href="#survey" />}>
