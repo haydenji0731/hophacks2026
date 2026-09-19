@@ -1,4 +1,4 @@
-"""Cheap screen: ElevenLabs AI voice + openWakeWord → alarm / sensitivity."""
+"""Cheap screen: ElevenLabs AI voice + CLAP phrase similarity → alarm / sensitivity."""
 
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ def compute_alarm(
     """
     Dumb v1 heuristic (replaceable later with a statistical model):
       escalate if ai_score >= AI_ESCALATE_THRESHOLD (default 0.5)
-      OR keyword_hits >= MIN_KEYWORD_HITS_TO_ESCALATE (default 1)
+      OR phrase hits >= MIN_KEYWORD_HITS_TO_ESCALATE (default 1)
     """
     ai_at = settings.ai_escalate_threshold if ai_escalate_at is None else ai_escalate_at
     kw_at = settings.min_keyword_hits_to_escalate if min_keyword_hits is None else min_keyword_hits
