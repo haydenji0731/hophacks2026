@@ -53,23 +53,28 @@
     isHost(el) {
       if (!el || el.nodeType !== 1) return false;
       const id = el.id || "";
+      if (id.startsWith("message-content-")) return true;
       if (!id.startsWith("chat-messages-")) return false;
       return Boolean(el.querySelector('[id^="message-content-"]'));
     },
     closestHost(el) {
-      const host = el && el.closest ? el.closest('[id^="chat-messages-"]') : null;
-      return host && this.isHost(host) ? host : null;
+      if (!el || !el.closest) return null;
+      const row = el.closest('[id^="chat-messages-"]');
+      if (row && this.isHost(row)) return row;
+      const content = el.closest('[id^="message-content-"]');
+      return content && this.isHost(content) ? content : null;
     },
     hostsIn(root) {
       if (!root || !root.querySelectorAll) return [];
       const found = [];
       if (this.isHost(root)) found.push(root);
-      root.querySelectorAll('[id^="chat-messages-"]').forEach((el) => {
+      root.querySelectorAll('[id^="chat-messages-"], [id^="message-content-"]').forEach((el) => {
         if (this.isHost(el)) found.push(el);
       });
       return unique(found);
     },
     contentOf(host) {
+      if ((host.id || "").startsWith("message-content-")) return host;
       return host.querySelector('[id^="message-content-"]');
     },
   };
@@ -191,21 +196,18 @@
       const scopes = [];
       const scopeSel =
         '[data-pagelet="IGDMessagesList"], [aria-label^="Conversation" i], [aria-label^="conversation"], article';
-      if (root.matches && root.matches(scopeSel + ", main, form")) scopes.push(root);
-      root.querySelectorAll(scopeSel).forEach((el) => scopes.push(el));
-      root.querySelectorAll("form").forEach((el) => {
-        if (el.querySelector && el.querySelector(scopeSel)) scopes.push(el);
-      });
+      if (root.matches && root.matches(scopeSel)) scopes.push(root);
+      if (root.querySelectorAll) root.querySelectorAll(scopeSel).forEach((el) => scopes.push(el));
       const search = unique(scopes.length ? scopes : [root]);
       const found = [];
       for (const scope of search) {
         if (this.isHost(scope)) found.push(scope);
         if (!scope.querySelectorAll) continue;
         const parents = new Set();
-        scope.querySelectorAll('[dir="auto"], span, p').forEach((el) => {
+        scope.querySelectorAll('[dir="auto"]').forEach((el) => {
           if (this.isHost(el)) found.push(el);
           let parent = el.parentElement;
-          for (let i = 0; i < 4 && parent && parent !== scope; i += 1) {
+          for (let i = 0; i < 4 && parent && parent !== scope && !this.isThread(parent); i += 1) {
             parents.add(parent);
             parent = parent.parentElement;
           }
@@ -400,7 +402,43 @@
     flush();
   }
 
+  function wrapTextLeaves(contentEl, result) {
+    const doc = contentEl.ownerDocument;
+    const showText = (typeof NodeFilter !== "undefined" && NodeFilter.SHOW_TEXT) || 4;
+    const walker = doc.createTreeWalker(contentEl, showText);
+    const texts = [];
+    while (walker.nextNode()) {
+      const node = walker.currentNode;
+      if (!node.nodeValue || !String(node.nodeValue).trim()) continue;
+      if (node.parentElement && node.parentElement.closest("." + HIGHLIGHT_CLASS)) continue;
+      texts.push(node);
+    }
+    const tight = texts.length > 1;
+    for (const text of texts) {
+      const mark = doc.createElement("span");
+      mark.className = tight ? HIGHLIGHT_CLASS + " discord-hl-mark--tight" : HIGHLIGHT_CLASS;
+      applyResult(mark, result);
+      text.parentNode.insertBefore(mark, text);
+      mark.appendChild(text);
+    }
+  }
+
+  function hasWordChips(contentEl) {
+    const kids = Array.from(contentEl.children || []);
+    if (kids.length < 2) return false;
+    return kids.every(
+      (kid) =>
+        kid.nodeType === 1 &&
+        !BLOCK_TAGS.test(kid.tagName) &&
+        String(kid.textContent || "").trim().length <= 80,
+    );
+  }
+
   function wrapInlineDeep(contentEl, result) {
+    if (hasWordChips(contentEl)) {
+      wrapTextLeaves(contentEl, result);
+      if (contentEl.querySelector && contentEl.querySelector("." + HIGHLIGHT_CLASS)) return;
+    }
     wrapInlineRuns(contentEl, result);
     if (contentEl.querySelector && contentEl.querySelector("." + HIGHLIGHT_CLASS)) return;
     Array.from(contentEl.children || []).forEach((child) => {
@@ -539,8 +577,12 @@
   function paintContent(content, text) {
     if (!content || content.nodeType !== 1) return;
     const key = text;
-    if (content.dataset.scamKey === key) return;
     const result = analyze(text);
+    const hasMark = Boolean(content.querySelector && content.querySelector("." + HIGHLIGHT_CLASS));
+    if (content.dataset.scamKey === key) {
+      if (result.band === "ok") return;
+      if (hasMark) return;
+    }
     unwrap(content);
     content.dataset.scamKey = key;
     if (result.band === "ok") return;
@@ -559,6 +601,8 @@
     const content = contents[0];
     if (!content) return;
     paintContent(content, messageText(content, adapter));
+    const view = (el.ownerDocument && el.ownerDocument.defaultView) || (host.ownerDocument && host.ownerDocument.defaultView);
+    scheduleDiscordRepaint(host, view);
   }
 
   function scan(root = document) {
@@ -572,7 +616,18 @@
     });
   }
 
+  function isOurPaint(node) {
+    if (!node) return false;
+    if (node.nodeType === 3) {
+      return Boolean(node.parentElement && node.parentElement.closest("." + HIGHLIGHT_CLASS));
+    }
+    if (node.nodeType !== 1) return false;
+    if (node.classList && node.classList.contains(HIGHLIGHT_CLASS)) return true;
+    return Boolean(node.closest && node.closest("." + HIGHLIGHT_CLASS));
+  }
+
   function processAddedNode(node) {
+    if (isOurPaint(node)) return;
     if (node.nodeType === 3) {
       mark(node);
       return;
@@ -580,6 +635,28 @@
     if (node.nodeType !== 1) return;
     mark(node);
     scan(node);
+  }
+
+  function scheduleDiscordRepaint(host, view) {
+    if (!host || !view || typeof view.setTimeout !== "function") return;
+    const ua = (view.navigator && view.navigator.userAgent) || "";
+    if (/jsdom/i.test(ua)) return;
+    const found = hostFor(host);
+    if (!found || found.adapter.name !== "discord") return;
+    const content = contentsFor(found.host, found.adapter)[0];
+    const text = content ? messageText(content, found.adapter) : "";
+    if (text && content && content.querySelector("." + HIGHLIGHT_CLASS)) return;
+    if (found.host.dataset.scamRetry === "1") return;
+    found.host.dataset.scamRetry = "1";
+    const delays = [80, 280, 900];
+    delays.forEach((ms, index) => {
+      view.setTimeout(() => {
+        const again = hostFor(found.host) || found;
+        const next = contentsFor(again.host, again.adapter)[0];
+        if (next) paintContent(next, messageText(next, again.adapter));
+        if (index === delays.length - 1) delete found.host.dataset.scamRetry;
+      }, ms);
+    });
   }
 
   function start(doc = document) {
@@ -599,9 +676,10 @@
       batch.forEach((node) => processAddedNode(node));
     };
     const queue = (node) => {
+      if (!node || isOurPaint(node)) return;
       pending.add(node);
       if (timer) return;
-      timer = (view && view.setTimeout ? view.setTimeout : setTimeout)(flush, 16);
+      timer = (view && view.setTimeout ? view.setTimeout : setTimeout)(flush, 32);
     };
     const observer = new Observer((mutations) => {
       for (const mutation of mutations) {
@@ -615,6 +693,16 @@
         }
         for (const added of mutation.addedNodes) {
           queue(added);
+        }
+        if (mutation.removedNodes && mutation.removedNodes.length) {
+          let wiped = false;
+          for (const removed of mutation.removedNodes) {
+            if (isOurPaint(removed)) {
+              wiped = true;
+              break;
+            }
+          }
+          if (wiped) queue(mutation.target);
         }
       }
     });
