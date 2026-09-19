@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Lighthouse desktop: one button starts the capture → POST loop."""
+"""Outpost desktop: one button starts the capture → POST loop."""
 
 from __future__ import annotations
 
@@ -19,17 +19,27 @@ from tkinter import filedialog, messagebox, ttk
 from listen import post_chunk, record_wav
 
 DEFAULT_URL = "http://127.0.0.1:8000/v1/process"
-SUPPORT = Path.home() / "Library" / "Application Support" / "Lighthouse"
+APP_NAME = "Outpost"
+SUPPORT = Path.home() / "Library" / "Application Support" / APP_NAME
 CONFIG = SUPPORT / "listen.json"
+LEGACY_CONFIG = Path.home() / "Library" / "Application Support" / "Lighthouse" / "listen.json"
 
-WHITE = "#FFFFFF"
-BLACK = "#111111"
-GREY = "#8A8A8A"
-PANEL = "#F6F6F6"
-LINE = "#E2E2E2"
-DIM = "#D0D0D0"
-SCAM = "#E03A3A"
-NORMAL = "#3F8F6E"
+# coolors.co/386641-6a994e-a7c957-f2e8cf-bc4749 — accents only
+HUNTER = "#386641"
+BRICK = "#BC4749"
+
+BG = "#FAFAF8"
+INK = "#1C1C1C"
+MUTE = "#8A8A8A"
+PANEL = "#F4F4F2"
+LINE = "#E4E4E2"
+DIM = "#D8D8D6"
+PAPER = "#FFFFFF"
+SCAM = BRICK
+NORMAL = HUNTER
+PRIMARY = HUNTER
+PRIMARY_FG = PAPER
+PRIMARY_HOVER = "#2E5536"
 UI = "JetBrainsMono Nerd Font Mono"
 ASSETS = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent)) / "assets"
 
@@ -52,21 +62,18 @@ def _font(size: int, weight: str = "normal") -> tuple:
     return (UI, size, weight)
 
 
-def load_asset(root: tk.Misc, name: str, height: int = 40) -> tk.PhotoImage | None:
+def load_icon(root: tk.Misc, name: str = "icon.png", size: int = 64) -> tk.PhotoImage | None:
     path = ASSETS / name
     if not path.is_file():
         return None
     try:
-        from PIL import Image, ImageTk
-
-        src = Image.open(path).convert("RGBA")
-        ratio = max(1.0, float(root.winfo_fpixels("1i")) / 72.0)
-        px_h = max(height, int(round(height * ratio)))
-        px_w = max(1, int(round(px_h * src.width / src.height)))
-        im = src.resize((px_w, px_h), Image.Resampling.LANCZOS)
-        return ImageTk.PhotoImage(im, master=root)
-    except Exception:
+        img = tk.PhotoImage(file=str(path), master=root)
+    except tk.TclError:
         return None
+    factor = max(1, int(img.width() / max(size, 1)))
+    if factor > 1:
+        img = img.subsample(factor, factor)
+    return img
 
 
 def _pct(value: object) -> str | None:
@@ -215,14 +222,16 @@ class Pill(tk.Label):
         if on:
             self.configure(bg=self._bg, fg=self._fg, cursor="hand2")
         else:
-            self.configure(bg=DIM, fg=GREY, cursor="arrow")
+            self.configure(bg=DIM, fg=MUTE, cursor="arrow")
 
 
 def _load_config() -> dict:
-    try:
-        return json.loads(CONFIG.read_text())
-    except (OSError, json.JSONDecodeError):
-        return {}
+    for path in (CONFIG, LEGACY_CONFIG):
+        try:
+            return json.loads(path.read_text())
+        except (OSError, json.JSONDecodeError):
+            continue
+    return {}
 
 
 def _save_config(data: dict) -> None:
@@ -235,12 +244,12 @@ class ListenApp(tk.Tk):
         super().__init__()
         global UI
         UI = _pick_ui_font(self)
-        self.title("Lighthouse")
+        self.title(APP_NAME)
         self.minsize(680, 500)
-        self.configure(bg=WHITE)
+        self.configure(bg=BG)
 
         cfg = _load_config()
-        default_dir = cfg.get("recordings_dir") or str(Path.home() / "Documents" / "Lighthouse")
+        default_dir = cfg.get("recordings_dir") or str(Path.home() / "Documents" / APP_NAME)
         self.recordings_dir = tk.StringVar(value=default_dir)
         self.url = tk.StringVar(value=cfg.get("url") or DEFAULT_URL)
         self.seconds = tk.StringVar(value=str(cfg.get("seconds") or 30))
@@ -275,17 +284,17 @@ class ListenApp(tk.Tk):
             style.theme_use("clam")
         except tk.TclError:
             pass
-        style.configure(".", background=WHITE, foreground=BLACK, font=_font(13))
-        style.configure("TFrame", background=WHITE)
+        style.configure(".", background=BG, foreground=INK, font=_font(13))
+        style.configure("TFrame", background=BG)
         style.configure("Panel.TFrame", background=PANEL)
-        style.configure("TLabel", background=WHITE, foreground=BLACK, font=_font(13))
-        style.configure("Mute.TLabel", background=WHITE, foreground=GREY, font=_font(10))
-        style.configure("Brand.TLabel", background=WHITE, foreground=GREY, font=_font(11))
-        style.configure("Phase.TLabel", background=WHITE, foreground=BLACK, font=_font(22, "bold"))
+        style.configure("TLabel", background=BG, foreground=INK, font=_font(13))
+        style.configure("Mute.TLabel", background=BG, foreground=MUTE, font=_font(10))
+        style.configure("Brand.TLabel", background=BG, foreground=HUNTER, font=_font(16, "bold"))
+        style.configure("Phase.TLabel", background=BG, foreground=INK, font=_font(22, "bold"))
         style.configure(
             "TEntry",
-            fieldbackground=WHITE,
-            foreground=BLACK,
+            fieldbackground=PAPER,
+            foreground=INK,
             bordercolor=LINE,
             lightcolor=LINE,
             darkcolor=LINE,
@@ -295,31 +304,39 @@ class ListenApp(tk.Tk):
         root = ttk.Frame(self, padding=(24, 18))
         root.pack(fill=tk.BOTH, expand=True)
 
-        top = ttk.Frame(root)
-        top.pack(fill=tk.X, pady=(0, 14))
-        self.phase_label = tk.Label(
-            top, textvariable=self.phase, bg=WHITE, fg=BLACK, font=_font(22, "bold")
-        )
-        self.phase_label.pack(side=tk.LEFT, anchor="n")
-        self.phase.trace_add("write", lambda *_a: self._paint_phase())
-        self._mark = load_asset(self, "mono.png", 44)
-        self._app_icon = load_asset(self, "icon.png", 64)
-        if self._mark is not None:
-            tk.Label(top, image=self._mark, bg=WHITE, bd=0).pack(side=tk.RIGHT, anchor="n")
-        icon = self._app_icon or self._mark
-        if icon is not None:
+        head = ttk.Frame(root)
+        head.pack(fill=tk.X, pady=(0, 10))
+        self._mark = load_icon(self, "icon.png", 40)
+        self._app_icon = load_icon(self, "icon.png", 128)
+        if self._app_icon is not None:
             try:
-                self.iconphoto(True, icon)
+                self.iconphoto(True, self._app_icon)
             except tk.TclError:
                 pass
+        if self._mark is not None:
+            tk.Label(head, image=self._mark, bg=BG, bd=0).pack(side=tk.LEFT, anchor="w", padx=(0, 10))
+        tk.Label(head, text=APP_NAME, bg=BG, fg=HUNTER, font=_font(28, "bold"), anchor="w").pack(
+            side=tk.LEFT, anchor="w"
+        )
+        self.phase_label = tk.Label(
+            head,
+            text="",
+            bg=BG,
+            fg=INK,
+            font=_font(14, "bold"),
+            anchor="e",
+            width=8,
+        )
+        self.phase_label.pack(side=tk.RIGHT, anchor="s")
+        self.phase.trace_add("write", lambda *_a: self._paint_phase())
 
         self.start_btn = Pill(
             root,
             text="Start listening",
             command=self.on_start_click,
-            bg=BLACK,
-            fg=WHITE,
-            hover="#333333",
+            bg=PRIMARY,
+            fg=PRIMARY_FG,
+            hover=PRIMARY_HOVER,
             font=_font(14, "bold"),
             pady=12,
         )
@@ -329,7 +346,7 @@ class ListenApp(tk.Tk):
             text="Stop",
             command=self.stop,
             bg=PANEL,
-            fg=BLACK,
+            fg=INK,
             hover=LINE,
             font=_font(13),
             pady=9,
@@ -345,11 +362,9 @@ class ListenApp(tk.Tk):
             path_row,
             text="  Choose  ",
             command=self.choose_folder,
-            bg=BLACK,
-            fg=WHITE,
-            hover="#333333",
-            font=_font(11),
-            pady=7,
+            bg=PANEL,
+            fg=INK,
+            hover=LINE,
         ).pack(side=tk.LEFT, padx=(8, 0))
 
         ttk.Label(root, text="DETECTOR URL", style="Mute.TLabel").pack(anchor="w")
@@ -373,7 +388,7 @@ class ListenApp(tk.Tk):
             text="  Default  ",
             command=lambda: self._set_sensitivity("default"),
             bg=PANEL,
-            fg=BLACK,
+            fg=INK,
             hover=LINE,
             font=_font(11),
             pady=5,
@@ -384,7 +399,7 @@ class ListenApp(tk.Tk):
             text="  High  ",
             command=lambda: self._set_sensitivity("high"),
             bg=PANEL,
-            fg=BLACK,
+            fg=INK,
             hover=LINE,
             font=_font(11),
             pady=5,
@@ -400,7 +415,7 @@ class ListenApp(tk.Tk):
             text="  Off  ",
             command=lambda: self._set_loop(False),
             bg=PANEL,
-            fg=BLACK,
+            fg=INK,
             hover=LINE,
             font=_font(11),
             pady=5,
@@ -411,7 +426,7 @@ class ListenApp(tk.Tk):
             text="  On  ",
             command=lambda: self._set_loop(True),
             bg=PANEL,
-            fg=BLACK,
+            fg=INK,
             hover=LINE,
             font=_font(11),
             pady=5,
@@ -436,7 +451,7 @@ class ListenApp(tk.Tk):
         for widget in (self._progress_canvas, inner):
             widget.bind("<MouseWheel>", self._on_progress_wheel)
 
-        tk.Label(inner, text="PROGRESS", fg=GREY, bg=PANEL, font=_font(10), anchor="w").pack(
+        tk.Label(inner, text="PROGRESS", fg=MUTE, bg=PANEL, font=_font(10), anchor="w").pack(
             fill=tk.X, pady=(12, 8), padx=16
         )
 
@@ -452,13 +467,13 @@ class ListenApp(tk.Tk):
             row.pack(fill=tk.X, pady=3, padx=16)
             box = tk.Canvas(row, width=12, height=12, bg=PANEL, highlightthickness=0, bd=0)
             box.pack(side=tk.LEFT, padx=(0, 8))
-            box.create_rectangle(1, 1, 11, 11, outline=GREY, fill="", width=1, tags="sq")
+            box.create_rectangle(1, 1, 11, 11, outline=MUTE, fill="", width=1, tags="sq")
             self._mark_boxes[key] = box
-            tk.Label(row, text=title, fg=GREY, bg=PANEL, font=_font(11), width=12, anchor="w").pack(side=tk.LEFT)
+            tk.Label(row, text=title, fg=MUTE, bg=PANEL, font=_font(11), width=12, anchor="w").pack(side=tk.LEFT)
             value = tk.Label(
                 row,
                 textvariable=var,
-                fg=BLACK,
+                fg=INK,
                 bg=PANEL,
                 font=_font(12),
                 anchor="w",
@@ -472,7 +487,7 @@ class ListenApp(tk.Tk):
         self.reason_label = tk.Label(
             inner,
             textvariable=self.reason,
-            fg=BLACK,
+            fg=INK,
             bg=PANEL,
             font=_font(12),
             anchor="nw",
@@ -513,18 +528,18 @@ class ListenApp(tk.Tk):
 
     def _paint_loop(self) -> None:
         on, off = (self.loop_on, self.loop_off) if self.loop.get() else (self.loop_off, self.loop_on)
-        on.configure(bg=BLACK, fg=WHITE)
-        on._bg, on._fg, on._hover = BLACK, WHITE, "#333333"
-        off.configure(bg=PANEL, fg=BLACK)
-        off._bg, off._fg, off._hover = PANEL, BLACK, LINE
+        on.configure(bg=PRIMARY, fg=PRIMARY_FG)
+        on._bg, on._fg, on._hover = PRIMARY, PRIMARY_FG, PRIMARY_HOVER
+        off.configure(bg=PANEL, fg=INK)
+        off._bg, off._fg, off._hover = PANEL, INK, LINE
 
     def _paint_sensitivity(self) -> None:
         high = self.sensitivity.get() == "high"
         on, off = (self.sens_high, self.sens_default) if high else (self.sens_default, self.sens_high)
-        on.configure(bg=BLACK, fg=WHITE)
-        on._bg, on._fg, on._hover = BLACK, WHITE, "#333333"
-        off.configure(bg=PANEL, fg=BLACK)
-        off._bg, off._fg, off._hover = PANEL, BLACK, LINE
+        on.configure(bg=PRIMARY, fg=PRIMARY_FG)
+        on._bg, on._fg, on._hover = PRIMARY, PRIMARY_FG, PRIMARY_HOVER
+        off.configure(bg=PANEL, fg=INK)
+        off._bg, off._fg, off._hover = PANEL, INK, LINE
 
     def _fit_screen(self) -> None:
         self.update_idletasks()
@@ -550,14 +565,18 @@ class ListenApp(tk.Tk):
         self._progress_canvas.yview_scroll(steps, "units")
 
     def _paint_phase(self) -> None:
-        fg = {
-            "Scam": SCAM,
-            "Normal": NORMAL,
-            "Stopping": GREY,
-            "Error": SCAM,
-        }.get(self.phase.get(), BLACK)
+        raw = self.phase.get()
+        if raw in {"Scam", "Normal", "Error"}:
+            shown = raw
+        elif raw == "Standby":
+            shown = ""
+        else:
+            shown = self.phase_label.cget("text") if hasattr(self, "phase_label") else ""
+        fg = {"Scam": SCAM, "Normal": NORMAL, "Error": SCAM}.get(shown, INK)
         if hasattr(self, "phase_label"):
-            self.phase_label.configure(fg=fg)
+            self.phase_label.configure(text=shown, fg=fg)
+        if hasattr(self, "_mark_boxes"):
+            self._paint_marks()
 
     def _sms_autofill(self, *_args) -> None:
         if self._sms_lock:
@@ -600,9 +619,10 @@ class ListenApp(tk.Tk):
         self._http_client = client
 
     def _paint_marks(self) -> None:
+        fill = INK
         for key, box in self._mark_boxes.items():
             done = self._done.get(key, False)
-            box.itemconfigure("sq", outline=BLACK if done else GREY, fill=BLACK if done else "")
+            box.itemconfigure("sq", outline=fill if done else MUTE, fill=fill if done else "")
 
     def _set_pipeline(
         self,
@@ -829,7 +849,7 @@ class ListenApp(tk.Tk):
                 return
             box["keep"] = bool(
                 messagebox.askyesno(
-                    "Lighthouse",
+                    APP_NAME,
                     "This clip looks normal.\nKeep listening?",
                     parent=self,
                 )

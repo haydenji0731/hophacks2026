@@ -3,7 +3,6 @@ from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs
 
 datas = collect_data_files("sounddevice") + collect_data_files("soundfile") + [
     ("assets/icon.png", "assets"),
-    ("assets/mono.png", "assets"),
 ]
 binaries = collect_dynamic_libs("sounddevice") + collect_dynamic_libs("soundfile")
 
@@ -21,7 +20,6 @@ a = Analysis(
         "httpx",
         "cffi",
         "tkinter",
-        "PIL",
     ],
     hookspath=[],
     hooksconfig={},
@@ -36,7 +34,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name="Lighthouse",
+    name="Outpost",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -50,20 +48,20 @@ coll = COLLECT(
     a.datas,
     strip=False,
     upx=False,
-    name="Lighthouse",
+    name="Outpost",
 )
 app = BUNDLE(
     coll,
-    name="Lighthouse.app",
-    icon="assets/lighthouse.icns",
-    bundle_identifier="club.wehatescammers.lighthouse",
+    name="Outpost.app",
+    icon="assets/outpost.icns",
+    bundle_identifier="club.wehatescammers.outpost",
     info_plist={
-        "CFBundleName": "Lighthouse",
-        "CFBundleDisplayName": "Lighthouse",
+        "CFBundleName": "Outpost",
+        "CFBundleDisplayName": "Outpost",
         "CFBundleShortVersionString": "0.1.0",
         "NSHighResolutionCapable": True,
         "NSMicrophoneUsageDescription": (
-            "Lighthouse records a short call clip on this Mac, saves it in the folder you choose, "
+            "Outpost records a short call clip on this Mac, saves it in the folder you choose, "
             "and sends it to the detector. Audio is not processed on this laptop."
         ),
     },
