@@ -66,6 +66,22 @@ curl -s -F "file=@chunk.wav" -F "to=+14105551234" \
 
 Escalate gate (env): `AI_ESCALATE_THRESHOLD` (default `0.5`), `MIN_KEYWORD_HITS_TO_ESCALATE` (default `1`).
 
+### News wire (home-page cards)
+
+Cards are JSON on ravens (`news_wire.json`), not a CMS table. Grok writes deks from `scams` rows updated in the last 7–14 days. The website only **GETs**.
+
+```bash
+# on ravens, detector cwd, DATABASE_URL + XAI_API_KEY in .env
+uv run python refresh_news.py
+uv run python refresh_news.py --days 7 --dry-run
+```
+
+`GET /v1/news` — current cards (no Grok).
+
+`POST /v1/news/refresh?days=14` — same job as the script. Cursor Grok Bot should HTTP this (public HTTPS), not SSH. If `NEWS_REFRESH_SECRET` is set, send `X-News-Refresh-Secret` or `Authorization: Bearer …`. Empty secret is allowed for hackathon.
+
+Env: `NEWS_LOOKBACK_DAYS` (default `14`), `NEWS_REFRESH_SECRET`, `NEWS_WIRE_PATH`, `XAI_GROK_MODEL`.
+
 ### Analyze / ingest / report
 
 `POST /v1/analyze` — multipart `transcript` and/or `file`. Need at least one.

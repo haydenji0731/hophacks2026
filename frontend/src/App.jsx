@@ -9,6 +9,7 @@ import Results from "./pages/Results.jsx";
 import Repository from "./pages/Repository.jsx";
 import ScamDetail from "./pages/ScamDetail.jsx";
 import NotFound from "./pages/NotFound.jsx";
+import BandWipe from "./components/BandWipe.jsx";
 
 export default function App() {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ export default function App() {
   return (
     <>
       {booting ? <BootScreen onDone={finishBoot} /> : null}
+      <BandWipe />
       <div className={booting ? "app-shell" : "app-shell is-ready"}>
         <Routes>
           <Route element={<Layout />}>

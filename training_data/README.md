@@ -1,8 +1,22 @@
 # Data Pipeline
 
-This project trains on two-speaker conversational audio built from **DailyTalk**, a dataset of scripted English dialogues recorded by two speakers. We rebuild full conversations from individual turns and pack them into ~20-second chunks that keep turn boundaries intact.
+This folder holds **audio / transcript eval** for the mid-call detector (DailyTalk chunks, voicemail clips, Grok STT + scam classifier eval).
 
-## Source
+The Postgres **scam encyclopedia seed** (Reddit / multi-source patterns) lives under [`backend/db/seeds/`](../backend/db/seeds/) — see that README for curation and load steps.
+
+| Track | Job | Primary artifacts |
+| --- | --- | --- |
+| DailyTalk chunks | Benign two-speaker audio (~20 s) | `save_dialogues.py`, `make_chunks.py` → `dailytalk_*` (gitignored) |
+| STT + language eval | Grok transcripts + scam classifier FPR/FNR | `transcribe_wavs.py`, `detect_scam.py`, `eval_fpr.py`, `hard_*_voicemails.jsonl` |
+| Hand voicemail clips | Cold-call / voicemail audio + text | `(No Scam) …`, `(Scam) …` pairs |
+
+---
+
+## DailyTalk audio pipeline
+
+Two-speaker conversational audio from **DailyTalk**, rebuilt from per-turn clips into ~20-second chunks that keep turn boundaries intact. Useful as a **soft** benign set (casual dialogue), not as cold-call / voicemail language.
+
+### Source
 
 | | |
 |---|---|
@@ -13,36 +27,34 @@ This project trains on two-speaker conversational audio built from **DailyTalk**
 
 We used the Hugging Face copy because it can be streamed, which let us keep only the dialogues we needed instead of downloading and unpacking the full release.
 
-## Pipeline
+### Pipeline
 
 ```
 Hugging Face mirror ──► save_dialogues.py ──► dailytalk_slice/ ──► make_chunks.py ──► dailytalk_chunks/
-   (one clip per turn)    recover structure,      per-turn WAVs +       pack whole                          keep chosen dialogues   metadata.jsonl        into ~20s chunks      chunks.jsonl
+   (one clip per turn)    recover structure,      per-turn WAVs +       pack whole
+                          keep chosen dialogues   metadata.jsonl        into ~20s chunks
+                                                                      chunks.jsonl
 ```
 
-### Step 1: `save_dialogues.py`: recover conversations
+#### Step 1: `save_dialogues.py`
 
-The mirror was prepared for dialogue-act classification, so each row contains a single turn and its label (`question`, `inform`, `directive`, or `commissive`). The rows carry **no dialogue ID, turn order, speaker, or transcript**, and they appear to be **sorted by label**, so neighboring rows come from unrelated conversations.
+The mirror was prepared for dialogue-act classification, so each row is a single turn and its label (`question`, `inform`, `directive`, or `commissive`). Rows carry **no dialogue ID, turn order, speaker, or transcript**, and appear sorted by label.
 
-The original filenames are still stored in the audio field, though, and they encode the structure:
+Original filenames still encode structure:
 
 ```
 10_0_d1080.wav  →  turn 10, speaker 0, dialogue 1080
 ```
 
-The script streams both the `train` and `validation` splits once (a dialogue's turns can be split across them), parses each filename, and saves only the turns belonging to the dialogue IDs in `WANTED`. It writes one WAV per turn plus `metadata.jsonl` with `dialogue`, `turn`, `speaker`, `label`, and `split`.
+The script streams `train` and `validation`, keeps dialogue IDs in `WANTED`, and writes one WAV per turn plus `metadata.jsonl`.
 
-### Step 2: `make_chunks.py`: build ~20 s trainingnits
+#### Step 2: `make_chunks.py`
 
-For each dialogue, turns are sorted and packed in order until the next turn would push the chunk past 20 s, and then a new chunk begins.
+For each dialogue, turns are packed in order until the next turn would exceed 20 s.
 
-- **Turns are never split**; every chunk contains whole turns.
-- **Chunks never cross dialogues.**
-- **Dialogues with missing turns are skipped**, so no chunk silently jumps over part of a conversation.
-- A 0.3 s silence is inserted between turns.
-- A single turn longer than 20 s becomes its own chunk, and leftover chunks under 5 s are dropped.
-
-Each chunk gets a WAV file and a line in `chunks.jsonl` with a speaker timeline:
+- Turns are never split; chunks never cross dialogues.
+- Dialogues with missing turns are skipped.
+- 0.3 s silence between turns; leftover chunks under 5 s are dropped.
 
 ```json
 {"file": "audio/d42_c000.wav", "dialogue": 42, "duration": 18.7, "num_turns": 5,
@@ -50,7 +62,7 @@ Each chunk gets a WAV file and a line in `chunks.jsonl` with a speaker timeline:
               {"start": 3.5, "end": 7.1, "turn": 1, "speaker": 1, ...}]}
 ```
 
-## Reproducing
+### Reproducing
 
 Requires [uv](https://docs.astral.sh/uv/).
 
@@ -60,21 +72,14 @@ uv run python save_dialogues.py   # streams ~5 GB once; saves only chosen dialog
 uv run python make_chunks.py
 ```
 
-Setting `HF_TOKEN` is optional but gives faster downloads. The generated `dailytalk_slice/` and `dailytalk_chunks/` folders are git-ignored; the scripts regenerate them.
+`HF_TOKEN` is optional but speeds downloads. Generated `dailytalk_slice/` and `dailytalk_chunks/` are git-ignored.
 
-## Resulting data
+### Results & limits
 
-From dialogue IDs 0–99, the mirror contained **83 dialogues (775 turns)**, all with complete turn sequences. Full numbers for each step are in [statistics.md](statistics.md).
+From dialogue IDs 0–99: **83 dialogues (775 turns)** with complete turn sequences. Numbers: [STATS.md](STATS.md).
 
-## Known limitations
-
-- **No transcripts.** The mirror dropped the text. Chunks have audio, speaker timelines, and dialogue-act labels only. The official DailyTalk release includes transcripts if they're needed.
-- **Artificial pauses.** Turns were recorded as separate files, so the real gaps between speakers are not preserved. The fixed 0.3 s pause means this data can't teach natural turn-taking timing.
-- **Scripted speech.** DailyTalk is read by voice actors from written dialogues, so it's cleaner and more regular than spontaneous conversation (few interruptions, overlaps, or backchannels).
-- **Two speakers only.** All dialogues use the same pair of speakers,  models trained on it won't generalize well across voices.
-- **Incomplete coverage.** The mirror has fewer clips than the original release, so some dialogues have missing turns and are excluded.
-
-## Citation
+- The HF mirror dropped transcripts (STT via `transcribe_wavs.py` if needed).
+- Fixed 0.3 s pauses; scripted two-speaker speech only; incomplete mirror coverage.
 
 ```bibtex
 @inproceedings{lee2023dailytalk,
@@ -85,6 +90,23 @@ From dialogue IDs 0–99, the mirror contained **83 dialogues (775 turns)**, all
 }
 ```
 
-## Related (not this folder)
+---
 
-The Reddit **scam pattern corpus** that seeds Postgres lives under [`backend/db/seeds/`](../backend/db/seeds/) — encyclopedia rows for the site DB, separate from this audio/transcript training pipeline.
+## Voicemail / cold-call language eval
+
+Hand-labeled outbound voicemails (AI and human) live as paired text + `.mp3` files, named `(No Scam) …` / `(Scam) …`. Harder synthetic text sets:
+
+| File | Role |
+| --- | --- |
+| `hard_fp_voicemails.jsonl` | Benign institutional voicemails (FPR stress) |
+| `hard_tp_voicemails.jsonl` | Scam twins paired by `pair` / domain (FNR sanity) |
+
+Classifier and helpers (need `XAI_API_KEY`):
+
+```bash
+uv run --with requests python detect_scam.py
+uv run --with requests python transcribe_wavs.py /path/to/wavs /path/to/transcripts.jsonl
+uv run --with requests python eval_fpr.py /path/to/transcripts.jsonl /path/to/fpr_results.jsonl
+```
+
+DailyTalk transcripts measure **soft** FPR (casual chat). Voicemail sets measure **product-like** FPR/FNR (outbound monologue with money/urgency cues).

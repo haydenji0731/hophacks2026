@@ -28,15 +28,16 @@ uv run alembic upgrade head
 
 `repository.upsert_scam_from_detection(...)` creates or enriches a row from Grok detection fields (`scam_type`, `method`, `target`, `reasoning`). Never stores a raw transcript. Same `name` bumps `frequency`.
 
-## Seed (Reddit patterns)
+## Seed (Reddit / multi-source patterns)
 
-~96 scam types live in [`seeds/reddit_scam_patterns.tsv`](seeds/reddit_scam_patterns.tsv) (corpus for the site DB — **not** under `training_data/`, which is audio/transcript ML).
+Pattern TSVs live in [`seeds/`](seeds/). Load with the general seeder (same schema for Reddit and multi-source):
 
 ```bash
-uv run python seed_reddit_patterns.py
-# or from the T7 export:
-uv run python seed_reddit_patterns.py --path /Volumes/T7/reddit_scam_patterns.062126_091926.tsv
+uv run python seed_scam_patterns.py --path seeds/reddit_scam_patterns.062126_091926.tsv
+uv run python seed_scam_patterns.py --path seeds/scams_patterns_multisource.091926.tsv
 ```
+
+Collection methodology: [`seeds/README.md`](seeds/README.md).
 
 ## Useful commands
 
