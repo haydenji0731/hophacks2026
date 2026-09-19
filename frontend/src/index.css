@@ -234,6 +234,29 @@ a {
   text-decoration: none;
 }
 
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: 6px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
+}
+
 button,
 input,
 textarea {
@@ -467,7 +490,8 @@ textarea {
   border: 1px solid transparent;
   cursor: pointer;
   clip-path: polygon(8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%, 0 8px);
-  transition: background 0.15s ease, border-color 0.15s ease, filter 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease, filter 0.15s ease,
+    transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .btn-primary {
@@ -477,7 +501,13 @@ textarea {
 }
 
 .btn-primary:hover {
-  filter: brightness(1.06);
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 28px var(--glow);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
 }
 
 .btn-secondary {
@@ -488,6 +518,12 @@ textarea {
 
 .btn-secondary:hover {
   background: var(--surface-hover);
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.btn-secondary:active {
+  transform: translateY(0);
 }
 
 .btn:disabled {
@@ -617,9 +653,18 @@ textarea {
   font-size: 0.85rem;
 }
 
+.chip {
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
 .chip:hover {
   border-color: var(--accent);
   background: rgba(255, 92, 92, 0.08);
+  transform: translateY(-1px);
+}
+
+.chip:active {
+  transform: translateY(0);
 }
 
 .stats {
@@ -636,6 +681,13 @@ textarea {
   padding: 1.1rem 1.15rem;
   background: var(--panel);
   text-align: left;
+  transition: border-color 0.2s ease, transform 0.2s ease, background 0.2s ease;
+}
+
+.stat:hover {
+  border-color: var(--border-strong);
+  background: var(--surface-hover);
+  transform: translateY(-2px);
 }
 
 .stat strong {
@@ -643,12 +695,14 @@ textarea {
   font-family: var(--display);
   font-size: 1.15rem;
   letter-spacing: -0.03em;
-  margin-bottom: 0.2rem;
+  margin-bottom: 0.3rem;
+  color: var(--accent);
 }
 
 .stat span {
   color: var(--muted);
   font-size: 0.82rem;
+  line-height: 1.4;
 }
 
 .page {
@@ -710,9 +764,14 @@ textarea {
   font-weight: 500;
 }
 
+.option {
+  transition: border-color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+}
+
 .option:hover {
   border-color: var(--border-strong);
   background: var(--surface-hover);
+  transform: translateX(2px);
 }
 
 .option-picked {
@@ -768,12 +827,16 @@ textarea:focus,
 .verdict {
   display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
-  font-size: 0.75rem;
+  gap: 0.5rem;
+  font-size: 0.72rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
+  padding: 0.4rem 0.8rem 0.4rem 0.65rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--panel);
 }
 
 .verdict-dot {
@@ -781,11 +844,24 @@ textarea:focus,
   height: 8px;
   border-radius: 50%;
   background: var(--muted);
+  flex-shrink: 0;
 }
 
-.verdict.danger { color: var(--danger); }
-.verdict.danger .verdict-dot { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
-.verdict.safe { color: var(--safe); }
+.verdict.danger {
+  color: var(--danger);
+  border-color: rgb(255 92 92 / 0.4);
+  background: rgba(255, 92, 92, 0.1);
+}
+.verdict.danger .verdict-dot {
+  background: var(--danger);
+  box-shadow: 0 0 10px var(--danger);
+  animation: pulse 1.4s ease-in-out infinite;
+}
+.verdict.safe {
+  color: var(--safe);
+  border-color: rgb(74 222 128 / 0.35);
+  background: rgba(74, 222, 128, 0.08);
+}
 .verdict.safe .verdict-dot { background: var(--safe); box-shadow: 0 0 10px var(--safe); }
 
 .metric-row {
@@ -798,15 +874,23 @@ textarea:focus,
 .metric {
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 0.85rem 0.9rem;
+  padding: 0.9rem 0.9rem 0.85rem;
   background: var(--panel);
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.metric:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
 }
 
 .metric b {
   display: block;
   font-family: var(--display);
-  font-size: 1.35rem;
+  font-size: 1.6rem;
   letter-spacing: -0.03em;
+  color: var(--accent);
+  margin-bottom: 0.1rem;
 }
 
 .metric span {
@@ -824,6 +908,7 @@ textarea:focus,
   background: var(--surface-solid);
   padding: 1.15rem 1.2rem;
   margin: 0.75rem 0;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 .result-primary h2 {
@@ -833,6 +918,33 @@ textarea:focus,
   letter-spacing: -0.03em;
 }
 
+.result-primary ul {
+  list-style: none;
+  margin: 0.4rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.result-primary li {
+  position: relative;
+  padding-left: 1.15rem;
+  line-height: 1.45;
+}
+
+.result-primary li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.5em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--glow);
+}
+
 .result-primary a {
   color: var(--accent);
   font-weight: 500;
@@ -840,6 +952,12 @@ textarea:focus,
   align-items: center;
   min-height: 44px;
   margin-top: 0.35rem;
+  transition: gap 0.15s ease;
+  gap: 0.3rem;
+}
+
+.result-primary a:hover {
+  gap: 0.5rem;
 }
 
 .result-alt p {
@@ -865,6 +983,7 @@ textarea:focus,
 .scam-card:hover {
   border-color: var(--accent);
   transform: translateX(4px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16);
 }
 
 .scam-card strong {
