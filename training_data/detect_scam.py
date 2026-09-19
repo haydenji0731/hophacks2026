@@ -17,12 +17,13 @@ of a phone call or conversation. Analyze it for common scam patterns, including:
 Respond with ONLY a valid JSON object, no markdown formatting, no extra text.
 The JSON must have exactly these fields:
 {
-  "is_scam": true or false,
-  "scam_type": "string describing the type, or 'none' if not a scam",
-  "confidence": a number from 0.0 to 1.0,
-  "reasoning": "one to two sentence explanation",
-  "method": "how the scammer is executing the scam (e.g. 'phone impersonation', 'gift card payment request', 'phishing link', 'wire transfer request'), or 'none' if not a scam",
-  "target": "who the scam appears to be targeting based on context clues in the language used (e.g. 'elderly individual', 'general consumer', 'small business owner', 'employee'), or 'unclear' if not determinable"
+    "is_scam": true or false,
+    "scam_type": "string describing the type, or 'none' if not a scam",
+    "confidence": a number from 0.0 to 1.0,
+    "reasoning": "one to two sentence explanation",
+    "method": "how the scammer is executing the scam (e.g. 'phone impersonation', 'gift card payment request', 'phishing link', 'wire transfer request'), or 'none' if not a scam",
+    "target": "who the scam appears to be targeting based on context clues in the language used (e.g. 'elderly individual', 'general consumer', 'small business owner', 'employee'), or 'unclear' if not determinable",
+    "ai_generated": true, false, or "unknown" — whether the speech/message appears AI-generated (synthetic voice or clearly LLM-written script). Use "unknown" if you cannot tell from the transcript alone.
 }
 """
 

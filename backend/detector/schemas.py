@@ -19,6 +19,10 @@ class GrokFlags(BaseModel):
         default="unclear",
         description="Who the scam appears to target (role/demographic), from detect_scam.",
     )
+    ai_generated: bool | None = Field(
+        default=None,
+        description="Whether Grok judges the speech/message AI-generated; None = unknown.",
+    )
 
 
 class AnalyzeResponse(BaseModel):
