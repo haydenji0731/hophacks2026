@@ -87,6 +87,14 @@ const tight = popupPosition(
 assert.ok(tight.top >= 8);
 assert.ok(tight.top + 200 <= 800 - 8 || tight.top === 8);
 
+const unmeasured = popupPosition(
+  { top: 700, bottom: 740, left: 20 },
+  { width: 268, height: 0 },
+  { width: 1280, height: 800 },
+);
+assert.ok(unmeasured.top + 140 <= 800 - 8);
+assert.ok(unmeasured.top < 700);
+
 showPop(document, scamMark);
 const pop = document.getElementById("discord-hl-pop");
 assert.ok(pop);

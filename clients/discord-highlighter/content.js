@@ -117,7 +117,7 @@
   function popupPosition(markRect, popSize, viewport, gap = 8, margin = 8) {
     const maxWidth = Math.max(0, viewport.width - margin * 2);
     const width = Math.min(popSize.width || 268, maxWidth);
-    const height = popSize.height || 0;
+    const height = popSize.height > 1 ? popSize.height : 140;
     let left = markRect.left;
     left = Math.min(Math.max(margin, left), viewport.width - width - margin);
     if (!Number.isFinite(left) || left < margin) left = margin;
@@ -155,6 +155,7 @@
     pop.hidden = false;
     pop.style.top = "0px";
     pop.style.left = "0px";
+    void pop.offsetHeight;
     const view = doc.defaultView;
     const pos = popupPosition(
       mark.getBoundingClientRect(),
@@ -163,6 +164,17 @@
     );
     pop.style.top = `${pos.top}px`;
     pop.style.left = `${pos.left}px`;
+    const r = pop.getBoundingClientRect();
+    const margin = 8;
+    if (r.bottom > view.innerHeight - margin || r.top < margin || r.right > view.innerWidth - margin) {
+      const fixed = popupPosition(
+        mark.getBoundingClientRect(),
+        { width: r.width, height: r.height },
+        { width: view.innerWidth, height: view.innerHeight },
+      );
+      pop.style.top = `${fixed.top}px`;
+      pop.style.left = `${fixed.left}px`;
+    }
   }
 
   function hidePop(doc) {
