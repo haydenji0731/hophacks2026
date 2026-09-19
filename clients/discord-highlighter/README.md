@@ -2,7 +2,7 @@
 
 Chrome extension that watches **Discord**, **Instagram**, **Reddit**, **Google Docs**, and **Google Slides** locally and highlights **suspicious** user text. Normal chat stays untouched. Caution is a muted yellow, high risk is a muted red, both translucent so the message stays readable.
 
-Yellow highlights say **BE MINDFUL OF LINKS**. Red highlights say **DO NOT CLICK ANY LINKS.**
+Yellow highlights say **SUSPICIOUS**. Red highlights say **SCAM LIKELY: AVOID LINKS**.
 
 Nothing is sent off your machine. This is a warning, not a verdict.
 
@@ -10,15 +10,12 @@ Nothing is sent off your machine. This is a warning, not a verdict.
 
 Open the toolbar popup and use the slider.
 
-| Level | Also called | What it does |
-| --- | --- | --- |
-| **Point** (default) | Guide | Mark the text. Click a highlight to open the reason. No popups, no floating chips, no “are you sure?” on links. |
-| **Warn** | Guard | Everything Point does. High-risk highlights and mismatched links ask **Continue / Go back** before they open. |
-| **Block** | — | Links inside highlighted text always stop first and show the real destination. |
+| Level | What it does |
+| --- | --- |
+| **Warn** (default) | Highlight the text. Hover a highlight for the reason when descriptions are on. Links open normally. |
+| **Block** | Same highlights, and a click on a **highlighted** link always asks **Continue / Go back** and shows the real destination. Ordinary links are left alone. |
 
-A mismatched link is one whose visible words do not match the site it actually opens (for example “paypal.com” pointing at `evil.example`).
-
-**Show descriptions** is a checkbox in the same menu. Turn it off if you only want the highlight, with no reason panel.
+**Show descriptions** is a checkbox in the same menu. When it is on, a floating reason box appears on hover. When it is off, you only get the highlight.
 
 ## Load it in Chrome
 
@@ -34,8 +31,7 @@ If it is already loaded, click **Reload** after pulling changes.
 1. Pin **Sherpa** from the Chrome puzzle-piece menu so the toolbar button stays visible.
 2. Open Discord, Instagram, Reddit, Docs, or Slides.
 3. Click the icon. It should say **Working on this tab**.
-4. Set Point / Warn / Block and the descriptions checkbox. Those apply to the current tab immediately.
-5. Click **Run a local self-test** — that scores a safe shipping note and a gift-card IRS line offline.
+4. Set Warn / Block and the descriptions checkbox. Those apply to the current tab immediately.
 
 If it says it is not injected, reload the tab or reload the unpacked extension.
 
@@ -46,8 +42,8 @@ Offline cue matching + a small association graph + cross-family combos (urgency 
 | Band | Score | Highlight |
 | --- | --- | --- |
 | ok | 0–24 | none |
-| caution | 25–54 | yellow · BE MINDFUL OF LINKS |
-| high | 55–100 | red · DO NOT CLICK ANY LINKS. |
+| caution | 25–54 | yellow · SUSPICIOUS |
+| high | 55–100 | red · SCAM LIKELY: AVOID LINKS |
 
 Avatars, nav chrome, and composers are never painted.
 
@@ -75,8 +71,8 @@ npm run build
 | --- | --- |
 | `manifest.json` | Manifest V3 |
 | `scorer.js` | Bundled offline analyzer |
-| `settings.js` | Point / Warn / Block + descriptions prefs |
-| `content.js` | Site adapters, highlights, why panel, link gate |
-| `popup.html` / `popup.js` | Toolbar: slider, descriptions, ping, self-test |
-| `content.css` | Highlighter, why panel, confirm gate |
+| `settings.js` | Warn / Block + descriptions prefs |
+| `content.js` | Site adapters, highlights, hover popup, link gate |
+| `popup.html` / `popup.js` | Toolbar: slider, descriptions, ping |
+| `content.css` | Highlighter, floating reason box, confirm gate |
 | `scam-smell/` | Source, data, and fixtures |

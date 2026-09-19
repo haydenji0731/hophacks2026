@@ -4,13 +4,14 @@ require("../scorer.js");
 require("../settings.js");
 const {
   HIGHLIGHT_CLASS,
-  WHY_CLASS,
   isUserMessage,
   scan,
   start,
   clickWarning,
   applySettings,
-  toggleWhy,
+  showPop,
+  hidePop,
+  popupPosition,
   pingStatus,
 } = require("../content.js");
 
@@ -82,38 +83,45 @@ setTimeout(() => {
   document.getElementById("message-content-666").textContent = "Click to verify your account";
 }, 5);
 
-assert.equal(clickWarning("high"), "DO NOT CLICK ANY LINKS.");
-assert.equal(clickWarning("caution"), "BE MINDFUL OF LINKS");
+assert.equal(clickWarning("high"), "SCAM LIKELY: AVOID LINKS");
+assert.equal(clickWarning("caution"), "SUSPICIOUS");
+
+const below = popupPosition(
+  { top: 40, bottom: 64, left: 20 },
+  { width: 268, height: 120 },
+  { width: 1280, height: 800 },
+);
+assert.equal(below.top, 72);
 
 const ping = pingStatus(document);
 assert.equal(ping.ok, true);
 assert.match(String(ping.site), /discord/);
 assert.ok(ping.marks >= 1);
 
-applySettings({ aggression: "point", descriptions: true });
-const why = toggleWhy(scamMsg.querySelector("." + HIGHLIGHT_CLASS), true);
-assert.ok(why);
-assert.equal(why.hidden, false);
-assert.match(why.textContent, /DO NOT CLICK ANY LINKS/);
-assert.match(why.textContent, /High risk signals/);
-assert.equal(document.querySelector(".discord-hl-pop"), null);
+applySettings({ aggression: "warn", descriptions: true });
+const pop = showPop(document, scamMsg.querySelector("." + HIGHLIGHT_CLASS));
+assert.ok(pop);
+assert.equal(pop.hidden, false);
+assert.match(pop.textContent, /SCAM LIKELY: AVOID LINKS/);
+assert.match(pop.textContent, /High risk signals/);
 
-applySettings({ aggression: "point", descriptions: false });
-const closed = toggleWhy(scamMsg.querySelector("." + HIGHLIGHT_CLASS), true);
-assert.ok(closed);
-assert.equal(closed.hidden, true);
+applySettings({ aggression: "warn", descriptions: false });
+assert.equal(showPop(document, scamMsg.querySelector("." + HIGHLIGHT_CLASS)), null);
+const hidden = document.getElementById("sherpa-hl-pop");
+assert.ok(hidden);
+assert.equal(hidden.hidden, true);
 
 setTimeout(() => {
   const incomingMark = incoming.querySelector("." + HIGHLIGHT_CLASS);
   assert.ok(incomingMark);
   assert.equal(incomingMark.classList.contains("discord-hl-mark--caution"), true);
-  applySettings({ aggression: "point", descriptions: true });
-  const incomingWhy = toggleWhy(incomingMark, true);
-  assert.match(incomingWhy.textContent, /BE MINDFUL OF LINKS/);
+  applySettings({ aggression: "warn", descriptions: true });
+  const incomingPop = showPop(document, incomingMark);
+  assert.match(incomingPop.textContent, /SUSPICIOUS/);
+  hidePop(document);
   const pendingMark = pending.querySelector("." + HIGHLIGHT_CLASS);
   assert.ok(pendingMark, "outgoing message should highlight after Discord fills the node");
   assert.equal(pendingMark.classList.contains("discord-hl-mark--caution"), true);
-  assert.equal(document.querySelector("." + WHY_CLASS + "[hidden=false], ." + WHY_CLASS + ":not([hidden])") != null || incomingWhy.hidden === false, true);
   console.log("ok");
   process.exit(0);
 }, 40);

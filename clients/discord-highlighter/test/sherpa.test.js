@@ -41,51 +41,49 @@ assert.ok(verify.querySelector("." + api.HIGHLIGHT_CLASS));
 assert.ok(irs.querySelector("." + api.HIGHLIGHT_CLASS));
 assert.equal(amazon.querySelector("." + api.HIGHLIGHT_CLASS), null);
 
-assert.deepEqual(prefs.normalize({}), { aggression: "point", descriptions: true });
+assert.deepEqual(prefs.normalize({}), { aggression: "warn", descriptions: true });
+assert.equal(prefs.normalize({ aggression: "point" }).aggression, "warn");
 assert.equal(prefs.normalize({ aggression: "block", descriptions: false }).aggression, "block");
-assert.equal(prefs.normalize({ aggression: "nope" }).aggression, "point");
-assert.equal(prefs.indexOf("warn"), 1);
+assert.equal(prefs.normalize({ aggression: "nope" }).aggression, "warn");
+assert.equal(prefs.indexOf("warn"), 0);
+assert.equal(prefs.indexOf("block"), 1);
 
 assert.equal(api.linkMismatch(mismatchLink, "https://discord.com/"), true);
 assert.equal(api.linkMismatch(safeLink, "https://discord.com/"), false);
-assert.equal(api.linkMismatch(highLink, "https://discord.com/"), false);
 
-assert.equal(api.shouldIntercept("point", { inHighlight: true, band: "high", mismatch: true }), false);
-assert.equal(api.shouldIntercept("warn", { inHighlight: true, band: "high", mismatch: false }), true);
-assert.equal(api.shouldIntercept("warn", { inHighlight: false, band: "ok", mismatch: true }), true);
+assert.equal(api.shouldIntercept("warn", { inHighlight: true, band: "high", mismatch: true }), false);
 assert.equal(api.shouldIntercept("warn", { inHighlight: true, band: "caution", mismatch: false }), false);
 assert.equal(api.shouldIntercept("block", { inHighlight: true, band: "caution", mismatch: false }), true);
 assert.equal(api.shouldIntercept("block", { inHighlight: false, band: "ok", mismatch: true }), false);
 
-api.applySettings({ aggression: "point", descriptions: true });
-mismatchLink.dispatchEvent(new document.defaultView.MouseEvent("click", { bubbles: true, cancelable: true }));
-assert.equal(document.querySelector("." + api.GATE_CLASS), null, "Point never interrupts a click");
-
 api.applySettings({ aggression: "warn", descriptions: true });
 mismatchLink.dispatchEvent(new document.defaultView.MouseEvent("click", { bubbles: true, cancelable: true }));
-const warnGate = document.querySelector("." + api.GATE_CLASS);
-assert.ok(warnGate, "Warn stops a mismatched link");
-assert.match(warnGate.textContent, /does not match/i);
-assert.match(warnGate.textContent, /evil\.example/);
-assert.match(warnGate.textContent, /Continue/);
-assert.match(warnGate.textContent, /Go back/);
-warnGate.querySelector('[data-act="back"]').click();
-assert.equal(document.querySelector("." + api.GATE_CLASS), null);
+assert.equal(document.querySelector("." + api.GATE_CLASS), null, "Warn never interrupts a click");
+
+safeLink.dispatchEvent(new document.defaultView.MouseEvent("click", { bubbles: true, cancelable: true }));
+assert.equal(document.querySelector("." + api.GATE_CLASS), null, "ordinary links stay free");
 
 api.applySettings({ aggression: "block", descriptions: true });
+safeLink.dispatchEvent(new document.defaultView.MouseEvent("click", { bubbles: true, cancelable: true }));
+assert.equal(document.querySelector("." + api.GATE_CLASS), null, "Block ignores links outside highlights");
+
 highLink.dispatchEvent(new document.defaultView.MouseEvent("click", { bubbles: true, cancelable: true }));
 const blockGate = document.querySelector("." + api.GATE_CLASS);
 assert.ok(blockGate, "Block stops a link inside highlighted text");
-assert.match(blockGate.textContent, /DO NOT CLICK ANY LINKS|highlighted text/);
+assert.match(blockGate.textContent, /SCAM LIKELY: AVOID LINKS|highlighted text/);
 assert.match(blockGate.textContent, /not-irs\.example/);
+assert.match(blockGate.textContent, /Continue/);
+assert.match(blockGate.textContent, /Go back/);
 blockGate.querySelector('[data-act="back"]').click();
 
-api.applySettings({ aggression: "point", descriptions: true });
-const why = api.toggleWhy(irs.querySelector("." + api.HIGHLIGHT_CLASS), true);
-assert.ok(why);
-assert.match(why.textContent, /DO NOT CLICK ANY LINKS/);
-api.applySettings({ aggression: "point", descriptions: false });
-assert.equal(why.hidden, true);
+api.applySettings({ aggression: "warn", descriptions: true });
+const pop = api.showPop(document, irs.querySelector("." + api.HIGHLIGHT_CLASS));
+assert.ok(pop);
+assert.equal(pop.hidden, false);
+assert.match(pop.textContent, /SCAM LIKELY: AVOID LINKS/);
+api.applySettings({ aggression: "warn", descriptions: false });
+assert.equal(api.showPop(document, irs.querySelector("." + api.HIGHLIGHT_CLASS)), null);
+assert.equal(document.getElementById("sherpa-hl-pop").hidden, true);
 
 console.log("ok");
 process.exit(0);
