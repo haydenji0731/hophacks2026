@@ -6,6 +6,7 @@ import io
 import json
 import logging
 import re
+import time
 import wave
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -49,10 +50,20 @@ TARGET_LABELS = {label for label, _ in SCAM_WAKE_PHRASES}
 _CLAP_SR = 48000
 _WIN_S = 5.0
 _HOP_S = 2.5
+_PHRASE_TTL_S = 60.0
 _MAX_DB_ROWS = 48
 _MAX_VARIANTS = 64
 _VARIANT_RE = re.compile(r"[a-z0-9]+")
+_CLAUSE_SPLIT = re.compile(r"[|;,]")
+_SKIP_DEMANDS = {"cash", "other", "check"}
+_DEMAND_SPOKEN = {
+    "gift_card": ("gift card", "gift cards"),
+    "wire": ("wire transfer",),
+    "crypto": ("bitcoin",),
+}
 PHRASE_PATH = Path(__file__).resolve().parent / "clap_phrases.json"
+
+_phrase_cache: tuple[float, tuple[tuple[str, tuple[str, ...]], ...]] | None = None
 
 
 @dataclass
@@ -73,16 +84,27 @@ def _norm_variant(text: str) -> str:
     return " ".join(_VARIANT_RE.findall((text or "").lower()))
 
 
-def _demand_text(demand: object) -> str:
+def _demand_key(demand: object) -> str:
     if demand is None:
         return ""
     value = getattr(demand, "value", None)
     if isinstance(value, str) and value.strip():
-        return value.replace("_", " ")
-    return str(demand).replace("_", " ").strip()
+        return value.strip().lower()
+    return str(demand).strip().lower()
+
+
+def _description_clauses(description: str) -> list[str]:
+    clauses: list[str] = []
+    for part in _CLAUSE_SPLIT.split(description or ""):
+        spoken = " ".join(part.replace("_", " ").split())
+        words = spoken.split()
+        if 2 <= len(words) <= 6 and len(spoken) <= 48:
+            clauses.append(spoken)
+    return clauses
 
 
 def variants_for_scam(scam: object) -> tuple[str, ...]:
+    """Spoken CLAP queries from a DB row — not the catalog slug or generic enums."""
     seen: set[str] = set()
     variants: list[str] = []
 
@@ -94,12 +116,14 @@ def variants_for_scam(scam: object) -> tuple[str, ...]:
         seen.add(key)
         variants.append(spoken)
 
-    add(str(getattr(scam, "name", "") or ""))
     for demand in getattr(scam, "demands", None) or []:
-        add(_demand_text(demand))
-    description = str(getattr(scam, "description", "") or "")
-    method = description.split("|")[0].strip() if description else ""
-    add(method)
+        key = _demand_key(demand)
+        if key in _SKIP_DEMANDS:
+            continue
+        for spoken in _DEMAND_SPOKEN.get(key, (key.replace("_", " "),)):
+            add(spoken)
+    for clause in _description_clauses(str(getattr(scam, "description", "") or "")):
+        add(clause)
     return tuple(variants)
 
 
@@ -212,13 +236,17 @@ def load_phrase_file() -> dict[str, Any]:
 def save_phrase_file(payload: dict[str, Any]) -> None:
     path = _phrase_path()
     path.write_text(json.dumps(payload, indent=2) + "\n")
+    global _phrase_cache
+    _phrase_cache = None
 
 
 def live_phrases() -> dict[str, Any]:
-    """What CLAP actually compares against (built-in seed, not the DB freeze)."""
-    payload = book_to_payload(load_wake_phrases(), source_count=0, warnings=[])
-    payload["updated_at"] = None
-    return payload
+    stored = load_phrase_file()
+    if stored.get("phrases"):
+        return stored
+    seed = book_to_payload(SCAM_WAKE_PHRASES, source_count=0, warnings=["Using built-in seed; run phrases refresh."])
+    seed["updated_at"] = None
+    return seed
 
 
 def refresh_phrases(*, dry_run: bool = False) -> dict[str, Any]:
@@ -226,7 +254,8 @@ def refresh_phrases(*, dry_run: bool = False) -> dict[str, Any]:
     db_book = _fetch_db_phrase_book()
     if not db_book:
         warnings.append("Database empty or unavailable; merged seed only.")
-    merged = merge_phrase_books(db_book, SCAM_WAKE_PHRASES)
+    # Seed first so gift card / IRS stay; DB only adds unused spoken strings.
+    merged = merge_phrase_books(SCAM_WAKE_PHRASES, db_book)
     if not merged:
         merged = SCAM_WAKE_PHRASES
         warnings.append("Fell back to built-in seed phrases.")
@@ -237,9 +266,18 @@ def refresh_phrases(*, dry_run: bool = False) -> dict[str, Any]:
 
 
 def load_wake_phrases(*, force: bool = False) -> tuple[tuple[str, tuple[str, ...]], ...]:
-    """Built-in seed only. clap_phrases.json is a DB catalog dump, not the matcher."""
-    del force
-    return SCAM_WAKE_PHRASES
+    """Frozen clap_phrases.json if present, else hardcoded seed. No DB on the hot path."""
+    global _phrase_cache
+    now = time.monotonic()
+    if not force and _phrase_cache is not None:
+        cached_at, cached = _phrase_cache
+        if now - cached_at < _PHRASE_TTL_S:
+            return cached
+    book = payload_to_book(load_phrase_file())
+    if not book:
+        book = SCAM_WAKE_PHRASES
+    _phrase_cache = (now, book)
+    return book
 
 
 def current_labels(phrases: tuple[tuple[str, tuple[str, ...]], ...] | None = None) -> set[str]:
