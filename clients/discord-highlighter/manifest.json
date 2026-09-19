@@ -1,13 +1,13 @@
 {
   "manifest_version": 3,
-  "name": "Scam Smell",
-  "version": "1.2.5",
-  "description": "Offline highlighter for suspicious Discord, Instagram, and Reddit messages. Caution is yellow, high risk is red.",
+  "name": "Sherpa",
+  "version": "1.3.0",
+  "description": "Offline highlighter for suspicious Discord, Instagram, and Reddit messages. Point, Warn, or Block before a bad link opens.",
   "action": {
-    "default_title": "Scam Smell",
+    "default_title": "Sherpa",
     "default_popup": "popup.html"
   },
-  "permissions": ["activeTab"],
+  "permissions": ["activeTab", "storage"],
   "content_scripts": [
     {
       "matches": [
@@ -23,7 +23,7 @@
         "https://reddit.com/*"
       ],
       "css": ["content.css"],
-      "js": ["scorer.js", "content.js"],
+      "js": ["scorer.js", "settings.js", "content.js"],
       "run_at": "document_idle"
     }
   ]
