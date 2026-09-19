@@ -1,14 +1,37 @@
 (() => {
-  const DEFAULTS = { aggression: "warn", descriptions: true };
+  // Set this to the live report form when you have it. Empty uses the built-in report page.
+  const REPORT_URL = "";
+
+  const THEMES = {
+    light: {
+      bg: "#F2E8CF",
+      highlight: "#BC4749",
+      h1: "#386641",
+      h2: "#6A994E",
+      h3: "#A7C957",
+    },
+    dark: {
+      bg: "#0F1020",
+      highlight: "#EFC3F5",
+      h1: "#2F195F",
+      h2: "#7353BA",
+      h3: "#FAA6FF",
+    },
+  };
+
+  const DEFAULTS = { aggression: "warn", descriptions: true, theme: "dark" };
   const LEVELS = ["warn", "block"];
+  const THEME_NAMES = ["dark", "light"];
 
   function normalize(raw) {
     let aggression = raw && raw.aggression;
     if (aggression === "point") aggression = "warn";
     if (!LEVELS.includes(aggression)) aggression = DEFAULTS.aggression;
+    const theme = raw && raw.theme === "light" ? "light" : "dark";
     return {
       aggression,
       descriptions: raw && raw.descriptions === false ? false : true,
+      theme,
     };
   }
 
@@ -41,6 +64,7 @@
           const next = { ...current };
           if (changes.aggression) next.aggression = changes.aggression.newValue;
           if (changes.descriptions) next.descriptions = changes.descriptions.newValue;
+          if (changes.theme) next.theme = changes.theme.newValue;
           listener(normalize(next));
         });
       });
@@ -52,7 +76,53 @@
     return i < 0 ? 0 : i;
   }
 
-  const api = { DEFAULTS, LEVELS, normalize, load, save, subscribe, indexOf };
+  function applyTheme(doc, theme) {
+    if (!doc || !doc.documentElement) return THEMES.dark;
+    const name = theme === "light" ? "light" : "dark";
+    const t = THEMES[name];
+    const root = doc.documentElement;
+    root.dataset.sherpaTheme = name;
+    root.style.setProperty("--sherpa-bg", t.bg);
+    root.style.setProperty("--sherpa-hl", t.highlight);
+    root.style.setProperty("--sherpa-h1", t.h1);
+    root.style.setProperty("--sherpa-h2", t.h2);
+    root.style.setProperty("--sherpa-h3", t.h3);
+    return t;
+  }
+
+  function reportHref(details) {
+    const params = new URLSearchParams();
+    const text = details && details.text ? String(details.text) : "";
+    const site = details && details.site ? String(details.site) : "";
+    const band = details && details.band ? String(details.band) : "";
+    if (text) params.set("text", text.slice(0, 2000));
+    if (site) params.set("site", site);
+    if (band) params.set("band", band);
+    const qs = params.toString();
+    if (REPORT_URL) {
+      return REPORT_URL + (REPORT_URL.includes("?") ? "&" : "?") + qs;
+    }
+    const page =
+      typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.getURL
+        ? chrome.runtime.getURL("report.html")
+        : "report.html";
+    return qs ? `${page}?${qs}` : page;
+  }
+
+  const api = {
+    DEFAULTS,
+    LEVELS,
+    THEMES,
+    THEME_NAMES,
+    REPORT_URL,
+    normalize,
+    load,
+    save,
+    subscribe,
+    indexOf,
+    applyTheme,
+    reportHref,
+  };
   globalThis.SherpaPrefs = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })();

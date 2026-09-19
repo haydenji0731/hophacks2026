@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en" data-sherpa-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Report a scam · Sherpa</title>
+    <style>
+      @font-face {
+        font-family: "JetBrains Mono";
+        src: url("fonts/JetBrainsMono-Regular.woff2") format("woff2");
+        font-weight: 400;
+        font-style: normal;
+        font-display: swap;
+      }
+      :root,
+      html[data-sherpa-theme="dark"] {
+        --sherpa-bg: #0f1020;
+        --sherpa-hl: #efc3f5;
+        --sherpa-h1: #2f195f;
+        --sherpa-h2: #7353ba;
+        --sherpa-h3: #faa6ff;
+      }
+      html[data-sherpa-theme="light"] {
+        --sherpa-bg: #f2e8cf;
+        --sherpa-hl: #bc4749;
+        --sherpa-h1: #386641;
+        --sherpa-h2: #6a994e;
+        --sherpa-h3: #a7c957;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background: var(--sherpa-bg);
+        color: var(--sherpa-hl);
+        font: 15px/1.5 "JetBrains Mono", ui-monospace, monospace;
+      }
+      html[data-sherpa-theme="light"] body {
+        color: var(--sherpa-h1);
+      }
+      .page {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 36px 20px 60px;
+      }
+      h1 {
+        margin: 0 0 10px;
+        font-size: 2.4rem;
+        letter-spacing: -0.05em;
+        color: var(--sherpa-h3);
+      }
+      html[data-sherpa-theme="light"] h1 {
+        color: var(--sherpa-h1);
+      }
+      h2 {
+        margin: 24px 0 8px;
+        font-size: 1rem;
+        color: var(--sherpa-h2);
+      }
+      h3 {
+        margin: 0 0 8px;
+        color: var(--sherpa-h3);
+      }
+      .lede {
+        color: var(--sherpa-h2);
+      }
+      .card {
+        margin-top: 18px;
+        padding: 14px 16px;
+        border-radius: 12px;
+        background: var(--sherpa-h1);
+        color: var(--sherpa-hl);
+      }
+      html[data-sherpa-theme="light"] .card {
+        background: #e4d6b0;
+        color: var(--sherpa-h1);
+      }
+      pre {
+        white-space: pre-wrap;
+        word-break: break-word;
+        margin: 0;
+        font: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <h1>Report a scam</h1>
+      <p class="lede" id="lede">
+        The public report form is not connected yet. When it is, this button will open that site
+        with the flagged text attached.
+      </p>
+      <h2>What you flagged</h2>
+      <div class="card">
+        <h3 id="meta"></h3>
+        <pre id="snippet">No message text was attached.</pre>
+      </div>
+    </div>
+    <script src="settings.js"></script>
+    <script>
+      const prefs = globalThis.SherpaPrefs;
+      prefs.load((value) => prefs.applyTheme(document, value.theme));
+      const params = new URLSearchParams(location.search);
+      const text = params.get("text") || "";
+      const site = params.get("site") || "";
+      const band = params.get("band") || "";
+      const bits = [site, band].filter(Boolean).join(" · ");
+      document.getElementById("meta").textContent = bits || "Sherpa report";
+      if (text) document.getElementById("snippet").textContent = text;
+      if (prefs.REPORT_URL) {
+        location.replace(prefs.reportHref({ text, site, band }));
+      }
+    </script>
+  </body>
+</html>
