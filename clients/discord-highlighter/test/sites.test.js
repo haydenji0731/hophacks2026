@@ -136,6 +136,10 @@ function markFor(document, api, needle) {
   assert.equal(verifyMark.tagName, "SPAN");
   assert.notEqual(verifyMark.parentElement.getAttribute("role"), "row");
   assert.notEqual(irsMark.parentElement.getAttribute("role"), "row");
+  const verifyRow = verifyMark.closest('[role="row"]');
+  const chips = verifyRow.querySelectorAll('[dir="auto"]');
+  assert.ok(chips.length >= 5, "word chips should stay separate so the bubble does not reflow");
+  assert.equal(verifyRow.querySelectorAll(":scope > ." + api.HIGHLIGHT_CLASS).length, 0);
 }
 
 {

@@ -53,6 +53,17 @@ const scamMark = scamMsg.querySelector("." + HIGHLIGHT_CLASS);
 assert.ok(scamMark);
 assert.equal(scamMark.classList.contains("discord-hl-mark--high"), true);
 
+const outgoingContent = document.getElementById("message-content-444");
+const outgoingText = outgoingContent.textContent;
+outgoingContent.innerHTML = outgoingText;
+assert.equal(outgoingContent.querySelector("." + HIGHLIGHT_CLASS), null);
+scan(outgoingContent);
+assert.ok(outgoingContent.querySelector("." + HIGHLIGHT_CLASS));
+assert.equal(
+  outgoingContent.querySelector("." + HIGHLIGHT_CLASS).classList.contains("discord-hl-mark--high"),
+  true,
+);
+
 start(document);
 
 const incoming = document.createElement("li");
@@ -60,6 +71,14 @@ incoming.id = "chat-messages-1-333";
 incoming.innerHTML =
   '<img class="avatar" alt="ava" /><div id="message-content-333">Click to verify your account</div>';
 document.querySelector("ol").appendChild(incoming);
+
+const pending = document.createElement("li");
+pending.id = "chat-messages-1-666";
+pending.innerHTML = '<img class="avatar" alt="ava" /><div id="message-content-666"></div>';
+document.querySelector("ol").appendChild(pending);
+setTimeout(() => {
+  document.getElementById("message-content-666").textContent = "Click to verify your account";
+}, 5);
 
 assert.equal(clickWarning("high"), "DO NOT CLICK");
 assert.equal(clickWarning("caution"), "BE CAREFUL BEFORE CLICKING THIS");
@@ -114,6 +133,9 @@ setTimeout(() => {
   assert.equal(incomingMark.classList.contains("discord-hl-mark--caution"), true);
   showPop(document, incomingMark);
   assert.match(document.getElementById("discord-hl-pop").textContent, /BE CAREFUL BEFORE CLICKING THIS/);
+  const pendingMark = pending.querySelector("." + HIGHLIGHT_CLASS);
+  assert.ok(pendingMark, "outgoing message should highlight after Discord fills the node");
+  assert.equal(pendingMark.classList.contains("discord-hl-mark--caution"), true);
   console.log("ok");
   process.exit(0);
-}, 20);
+}, 40);
