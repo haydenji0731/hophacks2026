@@ -30,12 +30,7 @@ export function percent(confidence: number): string {
 }
 
 export function frequencyLabel(scam: Scam): string {
-  if (scam.origin === "grok") {
-    return scam.questionnairePriority === "high"
-      ? "High-priority catalog pattern"
-      : "Catalog pattern";
-  }
   if (scam.frequency >= 40) return `${scam.frequency} recent reports`;
-  if (scam.frequency === 1) return "1 report in the seed window";
-  return `${scam.frequency} reports in the seed window`;
+  if (scam.frequency <= 1) return scam.frequency === 1 ? "1 report" : "Listed pattern";
+  return `${scam.frequency} reports`;
 }

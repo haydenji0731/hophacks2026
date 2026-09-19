@@ -1,15 +1,12 @@
-# We Hate Scammers (frontend)
+# We Hate Scammers
 
-Next.js Akinator-style check for We Hate Scammers. This directory lives on `cursor/akinator-frontend-b8f7` only. **Backend, clients, and training data are unchanged.**
-
-Answer a few questions; we rank the scam patterns that fit what just happened.
+Front end for [wehatescammers.com](https://wehatescammers.com). Answer a few questions; we rank the scam patterns that fit what just happened.
 
 ## Run locally
 
 ```bash
-cd frontend
 npm install
-npm run dev -- --port 43127
+npm run dev
 ```
 
 Open [http://127.0.0.1:43127](http://127.0.0.1:43127).
@@ -19,9 +16,7 @@ npm test            # ranking fixtures
 npm run data:scams  # rebuild src/data/scams.json from data/*
 ```
 
-The check runs entirely in the browser. Confirming a match tries `POST /api/v1/report` (proxied to a local detector on port 8000 when one is running) and also keeps a copy in `sessionStorage`. If the detector is down, the UI keeps an on-device save and shows an error — it does not change any backend code.
-
-Optional: `DETECTOR_URL` overrides the proxy target (default `http://127.0.0.1:8000`).
+The check runs entirely in the browser. Confirming a match tries `POST /api/v1/report` (proxied to a local detector on port 8000 when one is running) and also keeps a copy in `sessionStorage`.
 
 ## How ranking works
 
