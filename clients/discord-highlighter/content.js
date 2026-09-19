@@ -5,7 +5,9 @@
   const SELECT_BAR = "sherpa-select-bar";
   const POP_ID = "sherpa-hl-pop";
   const prefsApi = globalThis.SherpaPrefs;
-  let settings = prefsApi ? prefsApi.normalize(prefsApi.DEFAULTS) : { aggression: "warn", descriptions: true };
+  let settings = prefsApi
+    ? prefsApi.normalize(prefsApi.DEFAULTS)
+    : { aggression: "warn", descriptions: true, theme: "dark" };
   const BLOCK_TAGS = /^(PRE|UL|OL|BLOCKQUOTE|DIV|TABLE|H[1-6]|HR)$/;
   const SKIP_CHROME = "nav, header, footer, aside, [role='navigation'], [role='banner'], [role='tablist'], button, [role='button'], time, textarea, [contenteditable='true'], form";
   const IG_UI =
@@ -551,11 +553,14 @@
   }
 
   function applySettings(next, origin) {
-    settings = prefsApi ? prefsApi.normalize(next) : { aggression: "warn", descriptions: true };
+    settings = prefsApi
+      ? prefsApi.normalize(next)
+      : { aggression: "warn", descriptions: true, theme: "dark" };
     if (typeof document !== "undefined") {
       if (document.documentElement) {
         document.documentElement.dataset.sherpaDesc = settings.descriptions ? "1" : "0";
         document.documentElement.dataset.sherpaHl = settings.descriptions ? "on" : "off";
+        if (prefsApi && prefsApi.applyTheme) prefsApi.applyTheme(document, settings.theme);
       }
       if (!settings.descriptions) {
         hidePop(document);
@@ -710,12 +715,14 @@
     const reasons = parseReasons(mark);
     const title = band === "high" ? "High risk signals" : "Caution";
     pop.dataset.band = band;
+    const snippet = String((mark && mark.textContent) || "").replace(/\s+/g, " ").trim();
     pop.innerHTML =
       `<p class="discord-hl-warn">${clickWarning(band)}</p>` +
       `<strong>${title} · ${category}</strong>` +
       (reasons.length
         ? `<ul>${reasons.map((reason) => `<li>${escapeHtml(reason)}</li>`).join("")}</ul>`
-        : `<p>This wording matches common scam pressure tactics. It is a warning, not a verdict.</p>`);
+        : `<p>This wording matches common scam pressure tactics. It is a warning, not a verdict.</p>`) +
+      `<button type="button" class="sherpa-report" data-band="${escapeHtml(band)}" data-text="${escapeHtml(snippet)}">Report a scam</button>`;
     pop.hidden = false;
     if (typeof pop.showPopover === "function") {
       try {
@@ -801,6 +808,15 @@
         showPop(doc, mark);
         return;
       }
+      const overChrome =
+        event &&
+        event.target &&
+        event.target.closest &&
+        event.target.closest(".discord-hl-pop, .sherpa-report, .sherpa-select-bar, .sherpa-gate");
+      if (overChrome) {
+        clearHide();
+        return;
+      }
       if (!hideTimer) {
         hideTimer = (view && view.setTimeout ? view.setTimeout : setTimeout)(() => hidePop(doc), 180);
       }
@@ -869,6 +885,8 @@
       `<div class="sherpa-gate-actions">` +
       `<button type="button" data-act="back">Go back</button>` +
       `<button type="button" data-act="go">Continue</button>` +
+      `</div>` +
+      `<button type="button" class="sherpa-report" data-band="${escapeHtml((info && info.band) || "")}" data-text="${escapeHtml(href)}">Report a scam</button>` +
       `</div></div>`;
     const finish = (go) => {
       hideGate(doc);
@@ -1024,18 +1042,20 @@
     return bar;
   }
 
-  function fillSelectBar(bar, result, source) {
+  function fillSelectBar(bar, result, source, text) {
     const band = result.band || "caution";
     const title = band === "high" ? "High risk signals" : "Caution";
     const reasons = (result.reasons || []).slice(0, 3);
     bar.dataset.band = band;
     bar.dataset.source = source || "selected text";
+    const snippet = String(text || "").replace(/\s+/g, " ").trim();
     bar.innerHTML =
       `<p class="discord-hl-warn">${clickWarning(band)}</p>` +
       `<strong>${title} · ${escapeHtml(source || "selected text")}</strong>` +
       (settings.descriptions && reasons.length
         ? `<ul>${reasons.map((reason) => `<li>${escapeHtml(reason)}</li>`).join("")}</ul>`
-        : "");
+        : "") +
+      `<button type="button" class="sherpa-report" data-band="${escapeHtml(band)}" data-text="${escapeHtml(snippet)}">Report a scam</button>`;
   }
 
   function topSameOriginDoc(doc) {
@@ -1103,7 +1123,7 @@
       ink.hidden = true;
       return result;
     }
-    fillSelectBar(bar, result, source || "typed text");
+    fillSelectBar(bar, result, source || "typed text", cleaned);
     bar.hidden = false;
     ink.className =
       "sherpa-docs-ink " + (result.band === "high" ? "discord-hl-mark--high" : "discord-hl-mark--caution");
@@ -1272,7 +1292,7 @@
         bar.hidden = true;
         return;
       }
-      fillSelectBar(bar, result);
+      fillSelectBar(bar, result, "selected text", text);
       bar.hidden = false;
     };
     const schedule = () => {
@@ -1316,12 +1336,37 @@
     });
   }
 
+  function bindReport(doc) {
+    if (!doc || !doc.documentElement || doc.documentElement.dataset.sherpaReport === "1") return;
+    doc.documentElement.dataset.sherpaReport = "1";
+    doc.addEventListener(
+      "click",
+      (event) => {
+        const btn = event.target && event.target.closest && event.target.closest(".sherpa-report");
+        if (!btn) return;
+        event.preventDefault();
+        event.stopPropagation();
+        const href = prefsApi
+          ? prefsApi.reportHref({
+              text: btn.getAttribute("data-text") || "",
+              site: hostnameOf(doc),
+              band: btn.getAttribute("data-band") || "",
+            })
+          : "report.html";
+        const view = doc.defaultView;
+        if (view && typeof view.open === "function") view.open(href, "_blank", "noopener");
+      },
+      true,
+    );
+  }
+
   function start(doc = document) {
     if (prefsApi) {
       prefsApi.load(applySettings);
       prefsApi.subscribe(applySettings);
     }
     bindPop(doc);
+    bindReport(doc);
     bindIntercepts(doc);
     bindGoogleSelection(doc);
     bindGoogleTyping(doc);
