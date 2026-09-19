@@ -717,7 +717,7 @@
       `<strong>${title} · ${category}</strong>` +
       (reasons.length
         ? `<ul>${reasons.map((reason) => `<li>${escapeHtml(reason)}</li>`).join("")}</ul>`
-        : `<p>This wording matches common scam pressure tactics. It is a warning, not a verdict.</p>`)+
+        : `<p>This wording matches common scam pressure tactics. It is a warning, not a verdict.</p>`) +
       `<button type="button" class="sherpa-report" data-band="${escapeHtml(band)}" data-text="${escapeHtml(snippet)}">Report a scam</button>`;
     pop.hidden = false;
     if (typeof pop.showPopover === "function") {
