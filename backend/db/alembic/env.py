@@ -7,7 +7,7 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-from config import get_database_url
+from db_config import get_database_url
 from models import Base
 
 config = context.config

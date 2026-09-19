@@ -1,0 +1,25 @@
+[project]
+name = "detector"
+version = "0.1.0"
+description = "Scam detector: ElevenLabs audio + Grok language flags"
+requires-python = ">=3.11"
+dependencies = [
+  "fastapi>=0.115.0",
+  "uvicorn[standard]>=0.32.0",
+  "httpx>=0.27.0",
+  "pydantic-settings>=2.6.0",
+  "python-multipart>=0.0.12",
+  "python-dotenv>=1.0.0",
+  "requests>=2.32.0",
+  "sqlalchemy>=2.0.36",
+  "psycopg[binary]>=3.2.0",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

@@ -16,7 +16,7 @@ def client() -> TestClient:
 def test_health(client: TestClient) -> None:
     response = client.get("/health")
     assert response.status_code == 200
-    assert response.json()["service"] == "scam-confidence-scorer"
+    assert response.json()["service"] == "scam-detector"
 
 
 def test_analyze_requires_input(client: TestClient) -> None:
@@ -35,6 +35,8 @@ def test_analyze_transcript_and_audio(client: TestClient, monkeypatch: pytest.Mo
             scam_type="gift_card_bail",
             confidence=0.9,
             reasoning="Asked for gift cards and secrecy.",
+            method="gift card payment request",
+            target="elderly individual",
         )
 
     monkeypatch.setattr("pipeline.classify_call_audio", fake_audio)
@@ -51,6 +53,8 @@ def test_analyze_transcript_and_audio(client: TestClient, monkeypatch: pytest.Mo
     assert body["ai_voice_used"] == "yes"
     assert body["ai_generated"] is True
     assert body["grok"]["scam_type"] == "gift_card_bail"
+    assert body["grok"]["method"] == "gift card payment request"
+    assert body["grok"]["target"] == "elderly individual"
     assert body["notification_tier"] == "high"
     assert body["warnings"] == []
 

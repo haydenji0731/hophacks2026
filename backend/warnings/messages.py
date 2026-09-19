@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from config import Settings, settings
+from warn_config import Settings, settings
 from models import NotificationTier
 
 # Per-tier opener. Every warning still states a potential scam was flagged,

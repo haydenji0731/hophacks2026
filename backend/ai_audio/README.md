@@ -53,7 +53,7 @@ Example success body:
 
 `ai_voice_used`: `yes` if score ≥ 0.70, `no` if ≤ 0.30, otherwise `unknown`.
 
-If ElevenLabs is down or returns garbage, the endpoint responds **502/504** with `error: classifier_unavailable` so the confidence scorer can keep going on language/vector signals only.
+If ElevenLabs is down or returns garbage, the endpoint responds **502/504** with `error: classifier_unavailable` so the scam detector can keep going on language/vector signals only.
 
 ## How it talks to ElevenLabs
 

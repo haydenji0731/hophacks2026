@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import httpx
 
-from config import Settings, settings
+from warn_config import Settings, settings
 from messages import build_body, repeat_count
 from models import NotifyRequest, NotifyResponse, SentMessage
 

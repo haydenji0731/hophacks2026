@@ -6,7 +6,7 @@ NotificationTier = Literal["low", "medium", "high"]
 
 
 class NotifyRequest(BaseModel):
-    """Input mirrors the fields the confidence scorer already emits."""
+    """Input mirrors the fields the scam detector already emits."""
 
     to: str = Field(description="Destination phone number in E.164 form, e.g. +14105551234")
     notification_tier: NotificationTier

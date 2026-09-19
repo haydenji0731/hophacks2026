@@ -1,4 +1,4 @@
-from config import Settings
+from warn_config import Settings
 from messages import build_body, repeat_count
 
 

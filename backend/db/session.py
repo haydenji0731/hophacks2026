@@ -6,7 +6,7 @@ from functools import lru_cache
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
-from config import get_database_url
+from db_config import get_database_url
 
 
 @lru_cache(maxsize=1)

@@ -1,0 +1,20 @@
+[project]
+name = "scam-db"
+version = "0.1.0"
+description = "Postgres scam-pattern schema (SQLAlchemy + Alembic)"
+requires-python = ">=3.11"
+dependencies = [
+  "sqlalchemy>=2.0.36",
+  "alembic>=1.14.0",
+  "psycopg[binary]>=3.2.0",
+  "python-dotenv>=1.0.0",
+]
+
+[dependency-groups]
+dev = [
+  "pytest>=8.3.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

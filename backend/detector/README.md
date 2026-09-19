@@ -1,19 +1,19 @@
-# Confidence scorer
+# Scam detector
 
 Combines **ElevenLabs** synthetic-voice scores with the team's **Grok** transcript classifier (`detect_scam.py`) into one incident payload: `scam_confidence`, `notification_tier`, and a Twilio-ready `reason`.
 
-Does not send SMS or write to Postgres. If one detector is down, the other still produces a score.
+`POST /v1/ingest` also upserts a scam-pattern row and sends a Twilio warning when Grok says `is_scam`. DB/notify failures are soft (returned in `warnings[]`).
 
 ## Run
 
 ```bash
-cd backend/scorer
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+cd backend/detector
+uv sync --group dev
 # language flags: XAI_API_KEY (same as detect_scam.py)
 # audio (optional): ELEVENLABS_API_KEY
-uvicorn app:app --reload --port 8000
+# ingest DB: DATABASE_URL (same as backend/db/.env)
+# ingest SMS: TWILIO_* vars (same as backend/warnings/.env) — missing → dry-run
+uv run uvicorn app:app --reload --port 8000
 ```
 
 ## API
@@ -33,27 +33,17 @@ curl -s -F "transcript=Hi grandma, buy \$500 in gift cards and don't tell mom." 
   http://127.0.0.1:8000/v1/analyze
 ```
 
-Example:
+`POST /v1/ingest` — same fields plus:
 
-```json
-{
-  "elevenlabs_ai_score": 0.91,
-  "ai_voice_used": "yes",
-  "ai_generated": true,
-  "grok": {
-    "is_scam": true,
-    "scam_type": "gift_card_bail",
-    "confidence": 0.9,
-    "reasoning": "Asked for gift cards and secrecy."
-  },
-  "scam_confidence": 0.904,
-  "notification_tier": "low | medium | high",
-  "reason": "gift_card_bail (language 0.90); ElevenLabs synthetic-voice score 0.91; Asked for gift cards and secrecy.",
-  "warnings": []
-}
+- `to` — E.164 phone for Twilio (optional; skipped with a warning if missing)
+
+```bash
+curl -s -F "transcript=Hi grandma, buy \$500 in gift cards and don't tell mom." \
+  -F "to=+14105551234" \
+  http://127.0.0.1:8000/v1/ingest
 ```
 
-`ai_generated` is the DB column mapping: `yes` → `true`, `no` → `false`, `unknown`/missing → `null`.
+When `is_scam`, response includes `db` (`created` / `updated` / `skipped`) and `notify` (SMS body / dry-run). Raw transcript is never written to Postgres.
 
 ## Scoring
 
@@ -70,8 +60,9 @@ Env: `AUDIO_WEIGHT`, `LANGUAGE_WEIGHT`, `HIGH_THRESHOLD`, `MEDIUM_THRESHOLD`.
 ## Tests
 
 ```bash
-cd backend/scorer
-pytest
+cd backend/detector
+uv sync --group dev
+uv run pytest -q
 ```
 
-No live Grok or ElevenLabs calls.
+No live Grok, ElevenLabs, Postgres, or Twilio calls in unit tests.

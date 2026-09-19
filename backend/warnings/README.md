@@ -1,9 +1,9 @@
 # Scam warning notifier (Twilio)
 
-Turns the confidence scorer's output into **severity-tiered SMS warnings** that always
+Turns the scam detector's output into **severity-tiered SMS warnings** that always
 deep-link to the site. This is the "Warnings (Twilio)" surface from the spec (§5).
 
-It takes the fields the [`scorer`](../scorer) already emits — `notification_tier`,
+It takes the fields the [`detector`](../detector) already emits — `notification_tier`,
 `reason`, `scam_confidence`, and an optional `scam_type` — plus a destination number,
 and sends the right number of messages with tier-appropriate copy.
 
@@ -67,6 +67,6 @@ python -m pytest -q
 
 ## Wiring note
 
-The scorer's `/v1/analyze` returns `notification_tier`, `reason`, `scam_confidence`, and
+The detector's `/v1/analyze` returns `notification_tier`, `reason`, `scam_confidence`, and
 `grok.scam_type`. Those map one-to-one onto this endpoint's request body, so the caller
 that owns the phone number just forwards them here.

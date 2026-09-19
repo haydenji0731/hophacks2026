@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from fastapi import FastAPI, HTTPException
 
-from config import settings
+from warn_config import settings
 from models import ErrorDetail, HealthResponse, NotifyRequest, NotifyResponse
 from notifier import NotifierError, notify, twilio_configured
 
 app = FastAPI(
     title="Scam warning notifier",
-    description="Turns the confidence scorer's tier + reason into severity-tiered Twilio SMS that always link to the site.",
+    description="Turns the scam detector's tier + reason into severity-tiered Twilio SMS that always link to the site.",
     version="0.1.0",
 )
 

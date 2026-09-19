@@ -28,6 +28,8 @@ def parse_grok_payload(payload: Any) -> GrokFlags:
         scam_type=str(payload.get("scam_type") or "none"),
         confidence=max(0.0, min(1.0, confidence)),
         reasoning=str(payload.get("reasoning") or ""),
+        method=str(payload.get("method") or "none"),
+        target=str(payload.get("target") or "unclear"),
     )
 
 

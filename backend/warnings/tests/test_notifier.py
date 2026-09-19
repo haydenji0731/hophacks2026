@@ -1,6 +1,6 @@
 import pytest
 
-from config import Settings
+from warn_config import Settings
 from models import NotifyRequest
 from notifier import notify, twilio_configured
 

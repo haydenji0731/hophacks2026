@@ -6,12 +6,10 @@ SQLAlchemy 2 + Alembic schema for known scam **types** (one row per pattern).
 
 ```bash
 cd backend/db
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+uv sync --group dev
 cp .env.example .env
 # edit DATABASE_URL (user, password, db name)
-alembic upgrade head
+uv run alembic upgrade head
 ```
 
 ## Schema (`scams`)
@@ -26,10 +24,15 @@ alembic upgrade head
 | `description` | Keywords/phrases (no personal info) |
 | `frequency` | How often this pattern has been seen |
 
+## Upsert helper
+
+`repository.upsert_scam_from_detection(...)` creates or enriches a row from Grok detection fields (`scam_type`, `method`, `target`, `reasoning`). Never stores a raw transcript. Same `name` bumps `frequency`.
+
 ## Useful commands
 
 ```bash
-alembic current
-alembic history
-alembic downgrade -1
+uv run alembic current
+uv run alembic history
+uv run alembic downgrade -1
+uv run pytest -q
 ```
