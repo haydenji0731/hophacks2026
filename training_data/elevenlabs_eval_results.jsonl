@@ -9,4 +9,4 @@
 {"file": "(Scam) AI Mom Voicemail.mp3", "label": "AI", "expect_ai": true, "score": 0.019999999552965164, "ai_voice_used": "no", "verdict": "FN"}
 {"file": "(Scam) Human Capital One.mp3", "label": "Human", "expect_ai": false, "score": 0.019999999552965164, "ai_voice_used": "no", "verdict": "TN"}
 {"file": "(Scam) Human Warrant.mp3", "label": "Human", "expect_ai": false, "score": 0.019999999552965164, "ai_voice_used": "no", "verdict": "TN"}
-{"summary": {"n": 11, "n_ai": 7, "n_human": 4, "tp": 3, "tn": 4, "fp": 0, "fn": 3, "unknown_on_ai": 1, "unknown_on_human": 0, "errors": 0, "precision": 1.0, "recall": 0.5, "f1": 0.6667, "recall_unknown_as_fn": 0.4286, "yes_threshold": 0.7, "no_threshold": 0.3, "note": "Positive class = AI. Unknown band excluded from precision/recall unless noted."}}
+{"summary": {"n": 11, "n_ai": 7, "n_human": 4, "tp": 3, "tn": 4, "fp": 0, "fn": 3, "unknown_on_ai": 1, "unknown_on_human": 0, "errors": 0, "precision": 1.0, "recall": 0.5, "f1": 0.6667, "recall_unknown_as_fn": 0.4286, "yes_threshold": 0.5, "no_threshold": 0.3, "note": "Positive class = AI. Unknown band excluded from precision/recall unless noted."}}

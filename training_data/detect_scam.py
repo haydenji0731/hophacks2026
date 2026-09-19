@@ -7,12 +7,14 @@ import requests
 try:
     from dotenv import load_dotenv
 
-    load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+    _root = Path(__file__).resolve().parents[1]
+    load_dotenv(_root / ".env")
+    load_dotenv(_root / "backend" / "detector" / ".env")
 except ImportError:
     pass
 
-API_KEY = os.environ.get("XAI_API_KEY")
 API_URL = "https://api.x.ai/v1/chat/completions"
+DEFAULT_MODEL = os.environ.get("XAI_GROK_MODEL", "grok-4")
 
 SYSTEM_PROMPT = """You are a scam detection classifier. You will be given a transcript
 of a phone call or conversation. Analyze it for common scam patterns, including:
@@ -35,9 +37,20 @@ The JSON must have exactly these fields:
 }
 """
 
-def detect_scam(transcript):
+
+def _resolve_api_key(api_key: str | None = None) -> str:
+    key = (api_key or os.environ.get("XAI_API_KEY") or "").strip()
+    if not key:
+        raise RuntimeError(
+            "XAI_API_KEY is not set. Put it in backend/detector/.env or the repo-root .env."
+        )
+    return key
+
+
+def detect_scam(transcript, api_key: str | None = None):
+    key = _resolve_api_key(api_key)
     payload = {
-        "model": "grok-4",
+        "model": DEFAULT_MODEL,
         "messages": [
             {"role": "system", "content": SYSTEM_PROMPT},
             {"role": "user", "content": transcript},
@@ -47,16 +60,15 @@ def detect_scam(transcript):
     }
 
     headers = {
-        "Authorization": f"Bearer {API_KEY}",
+        "Authorization": f"Bearer {key}",
         "Content-Type": "application/json",
     }
 
     response = requests.post(API_URL, headers=headers, json=payload, timeout=30)
 
     if response.status_code != 200:
-        print("ERROR RESPONSE FROM GROK:")
-        print(response.text)
-        response.raise_for_status()
+        body = (response.text or "").strip()[:500]
+        raise RuntimeError(f"Grok HTTP {response.status_code}: {body or response.reason}")
 
     data = response.json()
     raw_text = data["choices"][0]["message"]["content"]

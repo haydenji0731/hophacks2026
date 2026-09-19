@@ -6,32 +6,39 @@ Does NOT run openWakeWord or ElevenLabs locally (those live on the Linux backend
 
 Usage:
   uv run --with sounddevice --with soundfile --with httpx --with numpy \\
-    python clients/mac_capture.py --url http://LINUX_HOST:8000/v1/process
+    python clients/mac_capture.py --url http://127.0.0.1:8000/v1/process
 
-  # one-shot 30s clip (default)
-  python clients/mac_capture.py --url http://192.168.1.10:8000/v1/process --seconds 30
+  # verify mic only (no POST) — play with: afplay /tmp/hophacks-test.wav
+  python clients/mac_capture.py --dry-run --save /tmp/hophacks-test.wav --seconds 3
 
   # loop: capture → POST → repeat
-  python clients/mac_capture.py --url http://192.168.1.10:8000/v1/process --loop --to +14105551234
+  python clients/mac_capture.py --url http://127.0.0.1:8000/v1/process --loop
 """
 
 from __future__ import annotations
 
 import argparse
 import json
+import shutil
 import sys
 import tempfile
 import time
 from pathlib import Path
 
 
-def record_wav(path: Path, *, seconds: float, sample_rate: int, device: int | None) -> None:
+def record_wav(path: Path, *, seconds: float, sample_rate: int, device: int | None) -> dict:
     import numpy as np
     import sounddevice as sd
     import soundfile as sf
 
     frames = int(seconds * sample_rate)
     print(f"Recording {seconds:.1f}s @ {sample_rate} Hz …", file=sys.stderr)
+    if device is None:
+        default = sd.default.device
+        print(f"Input device: {default} → {sd.query_devices(kind='input')['name']}", file=sys.stderr)
+    else:
+        print(f"Input device: {device} → {sd.query_devices(device)['name']}", file=sys.stderr)
+
     audio = sd.rec(
         frames,
         samplerate=sample_rate,
@@ -41,7 +48,24 @@ def record_wav(path: Path, *, seconds: float, sample_rate: int, device: int | No
     )
     sd.wait()
     sf.write(str(path), audio, sample_rate, subtype="PCM_16")
-    print(f"Wrote {path} ({path.stat().st_size} bytes)", file=sys.stderr)
+
+    peak = float(np.max(np.abs(audio)))
+    rms = float(np.sqrt(np.mean(audio**2)))
+    print(
+        f"Wrote {path} ({path.stat().st_size} bytes)  peak={peak:.4f} rms={rms:.4f}",
+        file=sys.stderr,
+    )
+    if peak < 0.01:
+        print(
+            "WARNING: near-silence — wrong mic, muted input, or permission denied. "
+            "Try --list-devices and --device N, or check System Settings → Privacy → Microphone.",
+            file=sys.stderr,
+        )
+    elif peak < 0.05:
+        print("NOTE: very quiet — speak louder or move closer to the mic.", file=sys.stderr)
+    else:
+        print("Audio levels look OK.", file=sys.stderr)
+    return {"peak": peak, "rms": rms}
 
 
 def post_chunk(
@@ -73,7 +97,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--url",
         default="http://127.0.0.1:8000/v1/process",
-        help="Linux detector process endpoint",
+        help="Linux detector process endpoint (via SSH tunnel usually)",
     )
     parser.add_argument("--seconds", type=float, default=30.0, help="Chunk length")
     parser.add_argument("--sample-rate", type=int, default=16000)
@@ -91,12 +115,24 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Print sounddevice input devices and exit",
     )
+    parser.add_argument(
+        "--save",
+        type=Path,
+        default=None,
+        help="Copy each chunk to this path (e.g. /tmp/hophacks-test.wav) to listen with afplay",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Record only; do not POST (use with --save to verify mic)",
+    )
     args = parser.parse_args(argv)
 
     if args.list_devices:
         import sounddevice as sd
 
         print(sd.query_devices())
+        print("\nDefault input:", sd.default.device, file=sys.stderr)
         return 0
 
     while True:
@@ -112,6 +148,18 @@ def main(argv: list[str] | None = None) -> int:
             except Exception as exc:
                 print(f"Record failed: {exc}", file=sys.stderr)
                 return 1
+
+            if args.save:
+                args.save.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(wav_path, args.save)
+                print(f"Saved copy → {args.save}  (play: afplay {args.save})", file=sys.stderr)
+
+            if args.dry_run:
+                print("Dry-run: skipped POST.", file=sys.stderr)
+                if not args.loop:
+                    return 0
+                time.sleep(0.25)
+                continue
 
             try:
                 body = post_chunk(
