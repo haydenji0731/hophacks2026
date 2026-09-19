@@ -9,6 +9,7 @@ from news_wire import live_cards, refresh_wire
 from process import ProcessInputs, dump_process_event, process_audio, process_audio_events
 from pipeline import analyze_incident
 from screen import run_screen
+from keywords import live_phrases, refresh_phrases
 from schemas import (
     AnalyzeResponse,
     ErrorDetail,
@@ -18,6 +19,7 @@ from schemas import (
     IntelPattern,
     IntelSearchResponse,
     NewsFeedResponse,
+    PhraseBookResponse,
     ProcessResponse,
     ReportRequest,
     ReportResponse,
@@ -323,6 +325,35 @@ def post_news_refresh(
             ).model_dump(),
         )
     return NewsFeedResponse.model_validate(refresh_wire(days=days))
+
+
+@app.get("/v1/phrases", response_model=PhraseBookResponse)
+def get_phrases() -> PhraseBookResponse:
+    """CLAP wake phrases frozen in clap_phrases.json (seed fallback)."""
+    return PhraseBookResponse.model_validate(live_phrases())
+
+
+@app.post(
+    "/v1/phrases/refresh",
+    response_model=PhraseBookResponse,
+    responses={
+        401: {"model": ErrorDetail},
+    },
+)
+def post_phrases_refresh(
+    x_news_refresh_secret: str | None = Header(default=None),
+    authorization: str | None = Header(default=None),
+) -> PhraseBookResponse:
+    """DB scams → deduped spoken phrases → clap_phrases.json. Same secret as news refresh."""
+    if not _news_authorized(x_news_refresh_secret, authorization):
+        raise HTTPException(
+            status_code=401,
+            detail=ErrorDetail(
+                error="unauthorized",
+                detail="Invalid news refresh secret.",
+            ).model_dump(),
+        )
+    return PhraseBookResponse.model_validate(refresh_phrases())
 
 
 @app.get("/v1/intel", response_model=IntelSearchResponse)

@@ -152,7 +152,13 @@ class IntelPattern(BaseModel):
     score: float | None = None
 
 
-class IntelSearchResponse(BaseModel):
-    query: str = ""
-    count: int
-    patterns: list[IntelPattern]
+class PhraseEntry(BaseModel):
+    label: str
+    variants: list[str] = Field(default_factory=list)
+
+
+class PhraseBookResponse(BaseModel):
+    updated_at: str | None = None
+    phrases: list[PhraseEntry] = Field(default_factory=list)
+    source_count: int | None = None
+    warnings: list[str] = Field(default_factory=list)

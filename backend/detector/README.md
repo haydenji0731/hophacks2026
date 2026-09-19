@@ -82,6 +82,30 @@ uv run python refresh_news.py --days 7 --dry-run
 
 Env: `NEWS_LOOKBACK_DAYS` (default `14`), `NEWS_REFRESH_SECRET`, `NEWS_WIRE_PATH`, `XAI_GROK_MODEL`.
 
+### CLAP phrases (wake list)
+
+Spoken phrases are frozen in `clap_phrases.json` (same idea as the news wire). CLAP reads that file on each clip; it does **not** query Postgres on the hot path. Refresh pulls a non-redundant set from `scams` (name / demands / short method) and fills gaps from the built-in seed.
+
+```bash
+# on ravens, detector cwd, DATABASE_URL in .env
+uv run python refresh_phrases.py
+uv run python refresh_phrases.py --dry-run
+```
+
+Via the tunnel (same secret as news):
+
+```bash
+curl -sS -m 30 -X POST 'http://127.0.0.1:8000/v1/phrases/refresh'
+```
+
+Cron (every 6 hours):
+
+```cron
+0 */6 * * * cd /mnt/disk2/hji/hophacks2026/backend/detector && uv run python refresh_phrases.py
+```
+
+`GET /v1/phrases` — current frozen book. `POST /v1/phrases/refresh` — rewrite the JSON. Restart uvicorn is not required; the detector reloads the file within a minute.
+
 ### Intel catalog
 
 `GET /v1/intel?q=&limit=60` — TF-IDF search over seed pattern TSVs. Empty `q` returns the top patterns.

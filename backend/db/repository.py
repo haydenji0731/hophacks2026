@@ -136,3 +136,13 @@ def list_recent_scams(
     )
     return list(session.scalars(stmt))
 
+
+def list_scams_for_clap(session: Session, *, limit: int = 48) -> list[Scam]:
+    """Highest-frequency patterns first — used as CLAP spoken-phrase sources."""
+    stmt = (
+        select(Scam)
+        .order_by(Scam.frequency.desc(), Scam.updated_at.desc())
+        .limit(max(1, limit))
+    )
+    return list(session.scalars(stmt))
+
