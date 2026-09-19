@@ -2,14 +2,14 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <title>Scam Smell</title>
+    <title>Sherpa</title>
     <style>
       :root {
         color-scheme: dark;
       }
       body {
         margin: 0;
-        width: 280px;
+        width: 300px;
         padding: 14px;
         background: #1e1f22;
         color: #dbdee1;
@@ -40,7 +40,7 @@
         padding: 10px 12px;
         border-radius: 10px;
         background: #2b2d31;
-        margin-bottom: 10px;
+        margin-bottom: 12px;
       }
       .status strong {
         display: block;
@@ -54,6 +54,40 @@
       }
       .status[data-ok="no"] strong {
         color: #e05a5a;
+      }
+      .pref {
+        margin-bottom: 14px;
+      }
+      .pref-title {
+        margin: 0 0 8px;
+        font-weight: 700;
+      }
+      input[type="range"] {
+        width: 100%;
+        accent-color: #5865f2;
+      }
+      .ticks {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 4px;
+        color: #b5bac1;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      #agg-copy {
+        margin: 8px 0 0;
+        color: #b5bac1;
+        min-height: 3.6em;
+      }
+      .check {
+        display: flex;
+        gap: 8px;
+        align-items: flex-start;
+        margin-bottom: 12px;
+        cursor: pointer;
+      }
+      .check input {
+        margin-top: 2px;
       }
       button {
         width: 100%;
@@ -81,17 +115,28 @@
         <rect x="5" y="17" width="22" height="6" rx="2" fill="#e05a5a" />
       </svg>
       <div>
-        <h1>Scam Smell</h1>
+        <h1>Sherpa</h1>
         <p class="sub">Offline check · nothing is sent away</p>
       </div>
     </header>
     <div class="status" id="status" data-ok="maybe">
       <strong id="status-title">Checking this tab…</strong>
-      <span id="status-detail">See if the highlighter is injected here.</span>
+      <span id="status-detail">See if Sherpa is injected here.</span>
     </div>
+    <section class="pref">
+      <p class="pref-title">Aggressiveness</p>
+      <input id="aggression" type="range" min="0" max="2" step="1" value="0" />
+      <div class="ticks"><span>Point</span><span>Warn</span><span>Block</span></div>
+      <p id="agg-copy"></p>
+    </section>
+    <label class="check">
+      <input id="descriptions" type="checkbox" checked />
+      <span>Show descriptions — open a highlight to read why it was flagged</span>
+    </label>
     <button type="button" id="test-btn">Run a local self-test</button>
     <p id="self-test"></p>
     <script src="scorer.js"></script>
+    <script src="settings.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>

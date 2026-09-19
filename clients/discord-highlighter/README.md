@@ -1,8 +1,24 @@
-# Scam Smell
+# Sherpa
 
-Chrome extension that watches **Discord**, **Instagram**, and **Reddit** locally and highlights **suspicious** user text. Normal chat stays untouched. Caution is a muted yellow, high risk is a muted red, both translucent so the message stays readable. Hover a highlight for a short explanation. High-risk popups say **DO NOT CLICK**; caution says **BE CAREFUL BEFORE CLICKING THIS**. The popup flips above the text when it would clip off the bottom of the screen.
+Chrome extension that watches **Discord**, **Instagram**, and **Reddit** locally and highlights **suspicious** user text. Normal chat stays untouched. Credit is a muted yellow, high risk is a muted red, both translucent so the message stays readable.
+
+Yellow highlights say **BE MINDFUL OF LINKS**. Red highlights say **DO NOT CLICK ANY LINKS.**
 
 Nothing is sent off your machine. This is a warning, not a verdict.
+
+## Aggressiveness
+
+Open the toolbar popup and use the slider.
+
+| Level | Also called | What it does |
+| --- | --- | --- |
+| **Point** (default) | Guide | Mark the text. Click a highlight to open the reason. No popups, no floating chips, no “are you sure?” on links. |
+| **Warn** | Guard | Everything Point does. High-risk highlights and mismatched links ask **Continue / Go back** before they open. |
+| **Block** | — | Links inside highlighted text always stop first and show the real destination. |
+
+A mismatched link is one whose visible words do not match the site it actually opens (for example “paypal.com” pointing at `evil.example`).
+
+**Show descriptions** is a checkbox in the same menu. Turn it off if you only want the highlight, with no reason panel.
 
 ## Load it in Chrome
 
@@ -15,10 +31,11 @@ If it is already loaded, click **Reload** after pulling changes.
 
 ## Check that it works
 
-1. Pin **Scam Smell** from the Chrome puzzle-piece menu so the toolbar button stays visible. Chrome will use its default extension glyph; click it the same way.
+1. Pin **Sherpa** from the Chrome puzzle-piece menu so the toolbar button stays visible.
 2. Open Discord, Instagram, or Reddit.
 3. Click the icon. It should say **Working on this tab**.
-4. Click **Run a local self-test** — that scores a safe shipping note and a gift-card IRS line offline. You do not need those sites for the self-test.
+4. Set Point / Warn / Block and the descriptions checkbox. Those apply to the current tab immediately.
+5. Click **Run a local self-test** — that scores a safe shipping note and a gift-card IRS line offline.
 
 If it says it is not injected, reload the tab or reload the unpacked extension.
 
@@ -29,8 +46,8 @@ Offline cue matching + a small association graph + cross-family combos (urgency 
 | Band | Score | Highlight |
 | --- | --- | --- |
 | ok | 0–24 | none |
-| caution | 25–54 | yellow |
-| high | 55–100 | red |
+| caution | 25–54 | yellow · BE MINDFUL OF LINKS |
+| high | 55–100 | red · DO NOT CLICK ANY LINKS. |
 
 Avatars, nav chrome, and composers are never painted.
 
@@ -56,7 +73,8 @@ npm run build
 | --- | --- |
 | `manifest.json` | Manifest V3 |
 | `scorer.js` | Bundled offline analyzer |
-| `content.js` | Site adapters, MutationObserver, highlights, popup |
-| `popup.html` / `popup.js` | Toolbar icon: ping this tab + local self-test |
-| `content.css` | Yellow / red highlighter + popup |
+| `settings.js` | Point / Warn / Block + descriptions prefs |
+| `content.js` | Site adapters, highlights, why panel, link gate |
+| `popup.html` / `popup.js` | Toolbar: slider, descriptions, ping, self-test |
+| `content.css` | Highlighter, why panel, confirm gate |
 | `scam-smell/` | Source, data, and fixtures |

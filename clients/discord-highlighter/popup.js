@@ -3,11 +3,44 @@
   const detailEl = document.getElementById("status-detail");
   const box = document.getElementById("status");
   const testOut = document.getElementById("self-test");
+  const slider = document.getElementById("aggression");
+  const copyEl = document.getElementById("agg-copy");
+  const descBox = document.getElementById("descriptions");
+  const prefs = globalThis.SherpaPrefs;
+
+  const COPY = {
+    point:
+      "Point (Guide). Mark the text and stop there. Open a highlight for the reason. No click interrupts.",
+    warn:
+      "Warn (Guard). Same as Point, and high-risk or mismatched links ask Continue / Go back before they open.",
+    block:
+      "Block. Links inside highlighted text always stop first and show the real destination.",
+  };
 
   function setStatus(ok, title, detail) {
     box.dataset.ok = ok;
     titleEl.textContent = title;
     detailEl.textContent = detail;
+  }
+
+  function renderPrefs(value) {
+    slider.value = String(prefs.indexOf(value.aggression));
+    descBox.checked = value.descriptions;
+    copyEl.textContent = COPY[value.aggression] || COPY.point;
+  }
+
+  function persist() {
+    const aggression = prefs.LEVELS[Number(slider.value)] || "point";
+    prefs.save({ aggression, descriptions: descBox.checked }, renderPrefs);
+    if (typeof chrome !== "undefined" && chrome.tabs && chrome.tabs.query) {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const tab = tabs && tabs[0];
+        if (!tab || !tab.id) return;
+        chrome.tabs.sendMessage(tab.id, { type: "sherpa-prefs" }, () => {
+          void chrome.runtime.lastError;
+        });
+      });
+    }
   }
 
   async function checkTab() {
@@ -23,14 +56,14 @@
     const url = tab.url || "";
     const supported = /discord\.com|instagram\.com|reddit\.com|redd\.it/.test(url);
     try {
-      const res = await chrome.tabs.sendMessage(tab.id, { type: "scam-smell-ping" });
+      const res = await chrome.tabs.sendMessage(tab.id, { type: "sherpa-ping" });
       if (res && res.ok) {
         const site = res.site || "this page";
         const marks = typeof res.marks === "number" ? res.marks : 0;
         setStatus(
           "yes",
           "Working on this tab",
-          `Highlighter is injected (${site}). ${marks} highlighted ${marks === 1 ? "span" : "spans"} right now.`,
+          `Sherpa is injected (${site}). ${marks} highlighted ${marks === 1 ? "span" : "spans"} right now.`,
         );
         return;
       }
@@ -41,7 +74,7 @@
       setStatus(
         "no",
         "Not injected on this tab",
-        "Reload the page, or open chrome://extensions and click Reload on Scam Smell.",
+        "Reload the page, or open chrome://extensions and click Reload on Sherpa.",
       );
       return;
     }
@@ -67,6 +100,9 @@
     testOut.textContent = `Self-test failed. Safe=${safe.band} scam=${scam.band}.`;
   }
 
+  slider.addEventListener("input", persist);
+  descBox.addEventListener("change", persist);
   document.getElementById("test-btn").addEventListener("click", runSelfTest);
+  prefs.load(renderPrefs);
   checkTab();
 })();
