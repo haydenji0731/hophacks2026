@@ -1,0 +1,122 @@
+{
+  "description": "Hit/miss strings for the pure score engine. No browser required.",
+  "cases": [
+    {
+      "id": "birthday_gift_card",
+      "text": "I got you a gift card for your birthday dinner tonight.",
+      "expect": {
+        "maxScore": 3,
+        "underHard": true,
+        "underSoft": true
+      },
+      "note": "Benign gift-card line must stay under the hard threshold (and typically under soft)."
+    },
+    {
+      "id": "benign_support",
+      "text": "Thanks for the tech support writeup. The article on customer support was helpful.",
+      "expect": {
+        "maxScore": 2,
+        "underSoft": true
+      }
+    },
+    {
+      "id": "benign_irs_news",
+      "text": "The IRS published a new filing deadline reminder on its official site.",
+      "expect": {
+        "maxScore": 2,
+        "underSoft": true
+      }
+    },
+    {
+      "id": "benign_water_notice",
+      "text": "Hello, this is a courtesy voicemail from Metro Water. Hydrant flushing is planned tomorrow. No payment or account action is required.",
+      "expect": {
+        "maxScore": 3,
+        "underSoft": true
+      }
+    },
+    {
+      "id": "soft_only_urgency_gift",
+      "text": "This is urgent — can you grab a gift card for the office party?",
+      "expect": {
+        "minScore": 4,
+        "maxScore": 7,
+        "underHard": true
+      },
+      "note": "Soft badge territory, not a banner."
+    },
+    {
+      "id": "irs_gift_cards",
+      "text": "This is the IRS. Your refund is on hold. Buy gift cards and read the codes to us now.",
+      "expect": {
+        "minScore": 8,
+        "topScamId": "government_impersonation",
+        "mustMatch": ["ask_gift_cards_plural", "hook_irs"]
+      }
+    },
+    {
+      "id": "grandparent_bail",
+      "text": "Hey grandma, it's me. I need bail. Please don't tell mom and dad. Go to Western Union and wire the cash bond.",
+      "expect": {
+        "minScore": 8,
+        "topScamId": "grandparent_bail",
+        "mustMatch": ["western_union", "hook_bail"]
+      }
+    },
+    {
+      "id": "tech_support_remote",
+      "text": "Your computer is infected. Open TeamViewer so we can take remote access and fix it after you buy a gift card.",
+      "expect": {
+        "minScore": 8,
+        "topScamId": "tech_support",
+        "mustMatch": ["tool_teamviewer", "remote_access"]
+      }
+    },
+    {
+      "id": "bank_otp",
+      "text": "This is the Lakeside Credit Union Fraud Department. Read us the verification code we just texted you or your funds will be released.",
+      "expect": {
+        "minScore": 8,
+        "topScamId": "bank_utility"
+      }
+    },
+    {
+      "id": "utility_bitcoin",
+      "text": "Urgent alert. A technician will shut off your power unless you transfer Bitcoin to Dispatch Ops right now.",
+      "expect": {
+        "minScore": 8,
+        "topScamId": "bank_utility"
+      }
+    },
+    {
+      "id": "warrant_prepaid",
+      "text": "A judge issued an arrest warrant. Confirm your identity and pay with a prepaid card plus your social security number.",
+      "expect": {
+        "minScore": 8,
+        "topScamId": "government_impersonation"
+      }
+    },
+    {
+      "id": "prize_crypto",
+      "text": "You have won a refund. Send it to our crypto wallet to claim your prize.",
+      "expect": {
+        "minScore": 4
+      }
+    },
+    {
+      "id": "empty",
+      "text": "",
+      "expect": {
+        "maxScore": 0
+      }
+    },
+    {
+      "id": "punctuation_teamviewer",
+      "text": "Please install TeamViewer!!!",
+      "expect": {
+        "minScore": 5,
+        "mustMatch": ["tool_teamviewer"]
+      }
+    }
+  ]
+}

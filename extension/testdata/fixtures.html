@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>We Hate Scammers — fixtures</title>
+    <style>
+      :root {
+        --bg: #0c0708;
+        --card: #1a0f12;
+        --text: #f6ecec;
+        --muted: #b39a9a;
+        --accent: #ff5c5c;
+        --safe: #4ade80;
+        --border: rgb(255 92 92 / 0.22);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 16px/1.5 ui-sans-serif, system-ui, sans-serif;
+        padding: 24px 16px 64px;
+      }
+      main { max-width: 720px; margin: 0 auto; }
+      h1 { letter-spacing: -0.03em; }
+      .lede { color: var(--muted); }
+      section { margin: 28px 0; }
+      article {
+        border: 1px solid var(--border);
+        background: var(--card);
+        border-radius: 8px;
+        padding: 14px 16px;
+        margin: 12px 0;
+      }
+      article[data-expect="hit"] { border-color: rgb(255 92 92 / 0.5); }
+      article[data-expect="miss"] { border-color: rgb(74 222 128 / 0.35); }
+      .tag {
+        display: inline-block;
+        font-size: 11px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--accent);
+        margin: 0 0 8px;
+      }
+      article[data-expect="miss"] .tag { color: var(--safe); }
+      .score {
+        margin-top: 10px;
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .score.hard { color: var(--accent); }
+      .score.soft { color: #e4c15a; }
+      a.bad { color: #ffb4b4; }
+    </style>
+  </head>
+  <body>
+    <main data-whs-root>
+      <p class="tag">testdata / fixtures</p>
+      <h1>Should-flag / should-not-flag</h1>
+      <p class="lede">
+        Load the unpacked extension, then open this page from the popup or serve
+        <code>extension/</code> and visit this file. The engine scores each card
+        here without storing the text.
+      </p>
+
+      <section>
+        <h2>Should flag (hard)</h2>
+        <article data-expect="hit" data-min="8">
+          <p class="tag">should flag</p>
+          <p>This is the IRS. Buy gift cards and read the codes before we issue a warrant.</p>
+        </article>
+        <article data-expect="hit" data-min="8">
+          <p class="tag">should flag</p>
+          <p>Hey grandma, I need bail. Don't tell mom. Western Union, cash bond, now.</p>
+        </article>
+        <article data-expect="hit" data-min="8">
+          <p class="tag">should flag</p>
+          <p>Your PC is hacked. Install TeamViewer so we can take remote access after a gift card payment.</p>
+        </article>
+        <article data-expect="hit" data-min="8">
+          <p class="tag">should flag</p>
+          <p>Fraud Department: read the verification code we texted or your funds will be released.</p>
+        </article>
+        <article data-expect="hit" data-min="8">
+          <p class="tag">should flag · suspicious link</p>
+          <p>Verify your refund here: <a class="bad" href="https://irs-refund-secure.com/pay">irs-refund-secure.com</a></p>
+        </article>
+      </section>
+
+      <section>
+        <h2>Should not flag (stay under hard)</h2>
+        <article data-expect="miss" data-max="3">
+          <p class="tag">should not flag</p>
+          <p>I got you a gift card for your birthday dinner tonight.</p>
+        </article>
+        <article data-expect="miss" data-max="2">
+          <p class="tag">should not flag</p>
+          <p>The IRS published a new filing deadline reminder on its official site.</p>
+        </article>
+        <article data-expect="miss" data-max="2">
+          <p class="tag">should not flag</p>
+          <p>Thanks for the tech support writeup. Customer support was helpful.</p>
+        </article>
+        <article data-expect="miss" data-max="3">
+          <p class="tag">should not flag</p>
+          <p>Hydrant flushing tomorrow. No payment or account action is required.</p>
+        </article>
+      </section>
+    </main>
+    <script type="module">
+      import { compileRules } from "../src/shared/compileRules.js";
+      import { score } from "../src/shared/score.js";
+
+      const catalog = await fetch(new URL("../rules/rules.json", import.meta.url)).then((r) => r.json());
+      const compiled = compileRules(catalog);
+
+      for (const card of document.querySelectorAll("article[data-expect]")) {
+        const text = card.querySelector("p:not(.tag)")?.textContent || "";
+        const result = score(text, compiled);
+        const el = document.createElement("p");
+        el.className = "score";
+        const level =
+          result.score >= compiled.thresholdHard ? "hard" : result.score >= compiled.thresholdSoft ? "soft" : "none";
+        el.classList.add(level);
+        el.textContent = `score ${result.score} · ${level} · ${result.topScamId || "no scam id"} · ${result.reasons.join(", ") || "no rules"}`;
+        card.appendChild(el);
+      }
+    </script>
+  </body>
+</html>

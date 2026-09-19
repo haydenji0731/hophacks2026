@@ -1,0 +1,511 @@
+{
+  "version": 1,
+  "thresholdSoft": 4,
+  "thresholdHard": 8,
+  "rules": [
+    {
+      "id": "ask_gift_cards",
+      "pattern": "gift card",
+      "type": "phrase",
+      "weight": 3,
+      "label": "gift-card payment ask",
+      "scamIds": ["grandparent_bail", "government_impersonation", "tech_support"]
+    },
+    {
+      "id": "ask_gift_cards_plural",
+      "pattern": "gift cards",
+      "type": "phrase",
+      "weight": 3,
+      "label": "gift-card payment ask",
+      "scamIds": ["grandparent_bail", "government_impersonation", "tech_support"]
+    },
+    {
+      "id": "google_play",
+      "pattern": "google play",
+      "type": "phrase",
+      "weight": 4,
+      "label": "Google Play card",
+      "scamIds": ["grandparent_bail", "government_impersonation"]
+    },
+    {
+      "id": "apple_gift",
+      "pattern": "apple gift",
+      "type": "phrase",
+      "weight": 4,
+      "label": "Apple gift card",
+      "scamIds": ["grandparent_bail", "government_impersonation"]
+    },
+    {
+      "id": "steam_card",
+      "pattern": "steam card",
+      "type": "phrase",
+      "weight": 4,
+      "label": "Steam card",
+      "scamIds": ["government_impersonation"]
+    },
+    {
+      "id": "prepaid_card",
+      "pattern": "prepaid card",
+      "type": "phrase",
+      "weight": 4,
+      "label": "prepaid card",
+      "scamIds": ["government_impersonation", "bank_utility"]
+    },
+    {
+      "id": "tool_teamviewer",
+      "pattern": "teamviewer",
+      "type": "token",
+      "weight": 5,
+      "label": "TeamViewer remote tool",
+      "scamIds": ["tech_support"]
+    },
+    {
+      "id": "tool_anydesk",
+      "pattern": "anydesk",
+      "type": "token",
+      "weight": 5,
+      "label": "AnyDesk remote tool",
+      "scamIds": ["tech_support"]
+    },
+    {
+      "id": "remote_access",
+      "pattern": "remote access",
+      "type": "phrase",
+      "weight": 4,
+      "label": "remote access request",
+      "scamIds": ["tech_support"]
+    },
+    {
+      "id": "read_the_codes",
+      "pattern": "read the codes",
+      "type": "phrase",
+      "weight": 5,
+      "label": "read card codes",
+      "scamIds": ["grandparent_bail", "government_impersonation"]
+    },
+    {
+      "id": "wire_transfer",
+      "pattern": "wire transfer",
+      "type": "phrase",
+      "weight": 4,
+      "label": "wire transfer",
+      "scamIds": ["grandparent_bail", "bank_utility"]
+    },
+    {
+      "id": "western_union",
+      "pattern": "western union",
+      "type": "phrase",
+      "weight": 5,
+      "label": "Western Union",
+      "scamIds": ["grandparent_bail"]
+    },
+    {
+      "id": "moneygram",
+      "pattern": "moneygram",
+      "type": "token",
+      "weight": 5,
+      "label": "MoneyGram",
+      "scamIds": ["grandparent_bail", "bank_utility"]
+    },
+    {
+      "id": "bitcoin",
+      "pattern": "bitcoin",
+      "type": "token",
+      "weight": 4,
+      "label": "Bitcoin payment",
+      "scamIds": ["bank_utility", "prize_refund"]
+    },
+    {
+      "id": "crypto_wallet",
+      "pattern": "crypto wallet",
+      "type": "phrase",
+      "weight": 4,
+      "label": "crypto wallet",
+      "scamIds": ["prize_refund", "romance"]
+    },
+    {
+      "id": "verification_code",
+      "pattern": "verification code",
+      "type": "phrase",
+      "weight": 4,
+      "label": "verification code ask",
+      "scamIds": ["phishing_link", "bank_utility"]
+    },
+    {
+      "id": "one_time_code",
+      "pattern": "one time code",
+      "type": "phrase",
+      "weight": 4,
+      "label": "one-time code ask",
+      "scamIds": ["phishing_link", "bank_utility"]
+    },
+    {
+      "id": "one_time_passcode",
+      "pattern": "one-time passcode",
+      "type": "phrase",
+      "weight": 4,
+      "label": "OTP ask",
+      "scamIds": ["phishing_link", "bank_utility"]
+    },
+    {
+      "id": "social_security",
+      "pattern": "social security",
+      "type": "phrase",
+      "weight": 3,
+      "label": "Social Security mention",
+      "scamIds": ["government_impersonation"]
+    },
+    {
+      "id": "ssn_ask",
+      "pattern": "social security number",
+      "type": "phrase",
+      "weight": 5,
+      "label": "SSN request",
+      "scamIds": ["government_impersonation", "phishing_link"]
+    },
+    {
+      "id": "hook_irs",
+      "pattern": "irs",
+      "type": "token",
+      "weight": 2,
+      "label": "IRS mention",
+      "scamIds": ["government_impersonation"]
+    },
+    {
+      "id": "arrest_warrant",
+      "pattern": "arrest warrant",
+      "type": "phrase",
+      "weight": 5,
+      "label": "arrest warrant threat",
+      "scamIds": ["government_impersonation"]
+    },
+    {
+      "id": "bench_warrant",
+      "pattern": "bench warrant",
+      "type": "phrase",
+      "weight": 5,
+      "label": "bench warrant threat",
+      "scamIds": ["government_impersonation"]
+    },
+    {
+      "id": "hook_bail",
+      "pattern": "bail",
+      "type": "token",
+      "weight": 4,
+      "label": "bail demand",
+      "scamIds": ["grandparent_bail"]
+    },
+    {
+      "id": "cash_bond",
+      "pattern": "cash bond",
+      "type": "phrase",
+      "weight": 4,
+      "label": "cash bond",
+      "scamIds": ["grandparent_bail"]
+    },
+    {
+      "id": "your_grandson",
+      "pattern": "your grandson",
+      "type": "phrase",
+      "weight": 5,
+      "label": "grandson emergency hook",
+      "scamIds": ["grandparent_bail"]
+    },
+    {
+      "id": "dont_tell",
+      "pattern": "dont tell",
+      "type": "phrase",
+      "weight": 3,
+      "label": "secrecy demand",
+      "scamIds": ["grandparent_bail", "government_impersonation"]
+    },
+    {
+      "id": "do_not_tell",
+      "pattern": "do not tell",
+      "type": "phrase",
+      "weight": 3,
+      "label": "secrecy demand",
+      "scamIds": ["grandparent_bail"]
+    },
+    {
+      "id": "dont_tell_mom",
+      "pattern": "dont tell mom",
+      "type": "phrase",
+      "weight": 5,
+      "label": "don't tell mom",
+      "scamIds": ["grandparent_bail"]
+    },
+    {
+      "id": "dont_tell_dad",
+      "pattern": "dont tell dad",
+      "type": "phrase",
+      "weight": 5,
+      "label": "don't tell dad",
+      "scamIds": ["grandparent_bail"]
+    },
+    {
+      "id": "keep_secret",
+      "pattern": "keep this secret",
+      "type": "phrase",
+      "weight": 3,
+      "label": "keep secret",
+      "scamIds": ["grandparent_bail"]
+    },
+    {
+      "id": "account_closed",
+      "pattern": "account will be closed",
+      "type": "phrase",
+      "weight": 3,
+      "label": "account-closure threat",
+      "scamIds": ["bank_utility"]
+    },
+    {
+      "id": "funds_released",
+      "pattern": "funds will be released",
+      "type": "phrase",
+      "weight": 4,
+      "label": "funds-release threat",
+      "scamIds": ["bank_utility"]
+    },
+    {
+      "id": "service_shutoff",
+      "pattern": "shut off",
+      "type": "phrase",
+      "weight": 3,
+      "label": "utility shutoff threat",
+      "scamIds": ["bank_utility"]
+    },
+    {
+      "id": "service_terminated",
+      "pattern": "service will be terminated",
+      "type": "phrase",
+      "weight": 4,
+      "label": "service termination threat",
+      "scamIds": ["bank_utility"]
+    },
+    {
+      "id": "fraud_department",
+      "pattern": "fraud department",
+      "type": "phrase",
+      "weight": 2,
+      "label": "fraud-department impersonation",
+      "scamIds": ["bank_utility"]
+    },
+    {
+      "id": "unauthorized_purchase",
+      "pattern": "unauthorized",
+      "type": "token",
+      "weight": 2,
+      "label": "unauthorized-charge claim",
+      "scamIds": ["bank_utility"]
+    },
+    {
+      "id": "click_this_link",
+      "pattern": "click this link",
+      "type": "phrase",
+      "weight": 3,
+      "label": "click-this-link push",
+      "scamIds": ["phishing_link"]
+    },
+    {
+      "id": "confirm_identity",
+      "pattern": "confirm your identity",
+      "type": "phrase",
+      "weight": 2,
+      "label": "identity confirm ask",
+      "scamIds": ["phishing_link", "bank_utility"]
+    },
+    {
+      "id": "pay_fee_now",
+      "pattern": "pay a fee",
+      "type": "phrase",
+      "weight": 3,
+      "label": "upfront fee",
+      "scamIds": ["job_offer", "prize_refund"]
+    },
+    {
+      "id": "training_equipment",
+      "pattern": "training equipment",
+      "type": "phrase",
+      "weight": 3,
+      "label": "job equipment fee",
+      "scamIds": ["job_offer"]
+    },
+    {
+      "id": "too_good",
+      "pattern": "too good to be true",
+      "type": "phrase",
+      "weight": 2,
+      "label": "too-good-to-be-true offer",
+      "scamIds": ["prize_refund"]
+    },
+    {
+      "id": "you_won",
+      "pattern": "you have won",
+      "type": "phrase",
+      "weight": 3,
+      "label": "prize claim",
+      "scamIds": ["prize_refund"]
+    },
+    {
+      "id": "claim_refund",
+      "pattern": "claim your refund",
+      "type": "phrase",
+      "weight": 3,
+      "label": "refund lure",
+      "scamIds": ["prize_refund", "government_impersonation"]
+    },
+    {
+      "id": "owed_money",
+      "pattern": "owed money",
+      "type": "phrase",
+      "weight": 3,
+      "label": "romance owed-money hook",
+      "scamIds": ["romance"]
+    },
+    {
+      "id": "send_more",
+      "pattern": "send more money",
+      "type": "phrase",
+      "weight": 4,
+      "label": "send-more-money ask",
+      "scamIds": ["romance"]
+    },
+    {
+      "id": "marketplace_off_platform",
+      "pattern": "pay outside",
+      "type": "phrase",
+      "weight": 3,
+      "label": "off-platform payment",
+      "scamIds": ["marketplace"]
+    },
+    {
+      "id": "zelle_wrong_person",
+      "pattern": "wrong person",
+      "type": "phrase",
+      "weight": 1,
+      "label": "wrong-person refund hook",
+      "scamIds": ["marketplace"]
+    },
+    {
+      "id": "weak_urgent",
+      "pattern": "urgent",
+      "type": "token",
+      "weight": 1,
+      "label": "urgency language",
+      "scamIds": ["government_impersonation", "bank_utility"]
+    },
+    {
+      "id": "weak_act_now",
+      "pattern": "act now",
+      "type": "phrase",
+      "weight": 1,
+      "label": "act-now pressure",
+      "scamIds": ["government_impersonation"]
+    },
+    {
+      "id": "weak_support",
+      "pattern": "support",
+      "type": "token",
+      "weight": 1,
+      "label": "support mention",
+      "scamIds": ["tech_support"]
+    },
+    {
+      "id": "weak_gift",
+      "pattern": "gift",
+      "type": "token",
+      "weight": 1,
+      "label": "gift mention",
+      "scamIds": ["grandparent_bail"]
+    },
+    {
+      "id": "weak_prize",
+      "pattern": "prize",
+      "type": "token",
+      "weight": 1,
+      "label": "prize mention",
+      "scamIds": ["prize_refund"]
+    },
+    {
+      "id": "weak_refund",
+      "pattern": "refund",
+      "type": "token",
+      "weight": 1,
+      "label": "refund mention",
+      "scamIds": ["prize_refund"]
+    }
+  ],
+  "combos": [
+    {
+      "id": "combo_gift_irs",
+      "allOf": ["ask_gift_cards", "hook_irs"],
+      "bonus": 5,
+      "label": "IRS + gift cards",
+      "scamIds": ["government_impersonation"]
+    },
+    {
+      "id": "combo_gift_cards_irs",
+      "allOf": ["ask_gift_cards_plural", "hook_irs"],
+      "bonus": 5,
+      "label": "IRS + gift cards",
+      "scamIds": ["government_impersonation"]
+    },
+    {
+      "id": "combo_gift_secrecy",
+      "allOf": ["ask_gift_cards", "dont_tell"],
+      "bonus": 4,
+      "label": "gift cards + secrecy",
+      "scamIds": ["grandparent_bail"]
+    },
+    {
+      "id": "combo_wu_bail",
+      "allOf": ["western_union", "hook_bail"],
+      "bonus": 5,
+      "label": "Western Union + bail",
+      "scamIds": ["grandparent_bail"]
+    },
+    {
+      "id": "combo_family_secrecy",
+      "allOf": ["dont_tell_mom", "hook_bail"],
+      "bonus": 4,
+      "label": "family secrecy + bail",
+      "scamIds": ["grandparent_bail"]
+    },
+    {
+      "id": "combo_remote_tool",
+      "allOf": ["tool_teamviewer", "remote_access"],
+      "bonus": 4,
+      "label": "remote tool + access ask",
+      "scamIds": ["tech_support"]
+    },
+    {
+      "id": "combo_otp_bank",
+      "allOf": ["verification_code", "fraud_department"],
+      "bonus": 4,
+      "label": "bank + verification code",
+      "scamIds": ["bank_utility"]
+    },
+    {
+      "id": "combo_warrant_pay",
+      "allOf": ["arrest_warrant", "ask_gift_cards"],
+      "bonus": 5,
+      "label": "warrant + gift cards",
+      "scamIds": ["government_impersonation"]
+    },
+    {
+      "id": "combo_shutoff_crypto",
+      "allOf": ["service_shutoff", "bitcoin"],
+      "bonus": 5,
+      "label": "shutoff + Bitcoin",
+      "scamIds": ["bank_utility"]
+    },
+    {
+      "id": "combo_ssn_gift",
+      "allOf": ["ssn_ask", "prepaid_card"],
+      "bonus": 5,
+      "label": "SSN + prepaid card",
+      "scamIds": ["government_impersonation"]
+    }
+  ]
+}

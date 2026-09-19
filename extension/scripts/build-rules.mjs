@@ -31,11 +31,11 @@ console.log(`  token keys: ${tokens}`);
 console.log(`  phrases: ${phrases}`);
 console.log(`  combos: ${compiled.combos.length}`);
 console.log(`  soft=${compiled.thresholdSoft} hard=${compiled.thresholdHard}`);
- if (dupes) console.error(`duplicate ids: ${dupes}`);
- if (missingCombo.length) console.error(`combo refs missing: ${missingCombo.join(", ")}`);
- if (catalog.rules.length < 30 || catalog.rules.length > 60) {
+if (dupes) console.error(`duplicate ids: ${dupes}`);
+if (missingCombo.length) console.error(`combo refs missing: ${missingCombo.join(", ")}`);
+if (catalog.rules.length < 30 || catalog.rules.length > 60) {
   console.error("expected ~30–50 seeded rules");
   process.exit(1);
 }
- if (dupes || missingCombo.length) process.exit(1);
+if (dupes || missingCombo.length) process.exit(1);
 console.log("ok");
