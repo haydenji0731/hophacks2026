@@ -25,4 +25,4 @@ It matches Discord stable, PTB, and Canary.
 | --- | --- |
 | `manifest.json` | Manifest V3, content script on Discord |
 | `content.js` | Wraps user text; MutationObserver for instant updates |
-| `content.css` | Left-to-right highlighter swipe + cylindrical ink |
+| `content.css` | Left-to-right highlighter swipe + solid red ink |

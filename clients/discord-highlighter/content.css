@@ -1,36 +1,16 @@
 /* Ink sits only on the text, not the avatar or message row. */
 .discord-hl-mark {
-  --hl-h: 0.86em;
+  --hl-h: 1.3em;
   display: inline;
-  padding: 0.05em 0.34em 0.1em;
-  margin: 0 0.02em;
-  border-radius: 0.7em;
+  padding: 0.22em 0.5em;
+  margin: 0 -0.12em;
+  border-radius: 0.75em;
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
   background-repeat: no-repeat;
-  background-position: left 52%;
+  background-position: left center;
   background-size: 0 var(--hl-h);
-  /* Left cap + cylinder body + leading nib. The nib stays on the right
-     of the growing background so it looks like a marker dragging across. */
-  background-image:
-    radial-gradient(
-      ellipse 0.4em 50% at 0% 50%,
-      rgba(220, 38, 38, 0.52) 0 62%,
-      transparent 64%
-    ),
-    radial-gradient(
-      ellipse 0.46em 50% at 100% 50%,
-      rgba(185, 28, 28, 0.62) 0 58%,
-      transparent 62%
-    ),
-    linear-gradient(
-      180deg,
-      rgba(254, 202, 202, 0.18) 0%,
-      rgba(248, 113, 113, 0.5) 16%,
-      rgba(220, 38, 38, 0.64) 48%,
-      rgba(153, 27, 27, 0.5) 82%,
-      rgba(254, 202, 202, 0.12) 100%
-    );
+  background-image: linear-gradient(#f87171, #f87171);
   animation: discord-hl-swipe 0.32s cubic-bezier(0.18, 0.82, 0.28, 1) forwards;
 }
 
