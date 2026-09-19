@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "description": "Small suspicious-host set for L1 link checks. Hostname Set lookup only — no page-body fetch.",
+  "hosts": [
+    "irs-refund-secure.com",
+    "irs-payments-online.com",
+    "ssa-verify-account.com",
+    "paypa1-secure.com",
+    "paypal-secure-login.net",
+    "appleid-support-verify.com",
+    "microsoft-account-help.net",
+    "amazon-refund-center.com",
+    "crypto-wallet-sync.net",
+    "giftcard-redeem-now.com",
+    "westernunion-pay-agent.com",
+    "teamviewer-support-help.com",
+    "bankofamerica-secure-alert.com",
+    "chase-verify-now.com",
+    "capitalone-fraud-desk.com"
+  ]
+}

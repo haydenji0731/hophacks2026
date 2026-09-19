@@ -1,0 +1,71 @@
+{
+  "manifest_version": 3,
+  "name": "We Hate Scammers",
+  "version": "0.1.0",
+  "description": "On-device scam pattern flagging. Badge first, banner only on high confidence. No message storage or upload.",
+  "action": {
+    "default_title": "We Hate Scammers",
+    "default_popup": "src/popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "32": "icons/icon32.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "background": {
+    "service_worker": "src/background.js",
+    "type": "module"
+  },
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://www.linkedin.com/*",
+    "https://linkedin.com/*",
+    "https://www.facebook.com/*",
+    "https://facebook.com/*",
+    "https://www.messenger.com/*",
+    "https://messenger.com/*",
+    "https://www.instagram.com/*",
+    "https://instagram.com/*"
+  ],
+  "optional_host_permissions": [
+    "http://127.0.0.1/*",
+    "http://localhost/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.linkedin.com/*",
+        "https://linkedin.com/*",
+        "https://www.facebook.com/*",
+        "https://facebook.com/*",
+        "https://www.messenger.com/*",
+        "https://messenger.com/*",
+        "https://www.instagram.com/*",
+        "https://instagram.com/*",
+        "http://127.0.0.1/*",
+        "http://localhost/*"
+      ],
+      "js": ["src/content/main.js"],
+      "type": "module",
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["testdata/fixtures.html", "privacy.md"],
+      "matches": [
+        "https://www.linkedin.com/*",
+        "https://www.facebook.com/*",
+        "https://www.instagram.com/*",
+        "http://127.0.0.1/*",
+        "http://localhost/*"
+      ]
+    }
+  ]
+}
