@@ -73,38 +73,8 @@ def select_hits(
     ]
 
 
-def _clap_vec(out, projection=None):
-    """Normalize CLAP output to an (N, D) embedding tensor."""
-    import torch
-
-    if torch.is_tensor(out):
-        vec = out
-    elif getattr(out, "text_embeds", None) is not None:
-        vec = out.text_embeds
-    elif getattr(out, "audio_embeds", None) is not None:
-        vec = out.audio_embeds
-    elif getattr(out, "pooler_output", None) is not None:
-        vec = out.pooler_output
-        if projection is not None:
-            vec = projection(vec)
-    elif getattr(out, "last_hidden_state", None) is not None:
-        vec = out.last_hidden_state[:, 0]
-        if projection is not None:
-            vec = projection(vec)
-    elif isinstance(out, (tuple, list)) and out:
-        vec = out[0]
-        if not torch.is_tensor(vec) and getattr(vec, "pooler_output", None) is not None:
-            vec = vec.pooler_output
-            if projection is not None:
-                vec = projection(vec)
-    else:
-        raise TypeError(f"unexpected CLAP output: {type(out)}")
-    return torch.nn.functional.normalize(vec.float(), dim=-1)
-
-
 @lru_cache(maxsize=1)
 def _load_clap():
-    import torch
     from transformers import ClapModel, ClapProcessor
 
     name = getattr(settings, "clap_model", None) or "laion/clap-htsat-unfused"
@@ -117,14 +87,7 @@ def _load_clap():
         for variant in variants:
             queries.append(variant)
             query_labels.append(label)
-    packed = processor(text=queries, return_tensors="pt", padding=True)
-    text_inputs = {k: packed[k] for k in ("input_ids", "attention_mask") if k in packed}
-    with torch.no_grad():
-        text_emb = _clap_vec(
-            model.get_text_features(**text_inputs),
-            projection=getattr(model, "text_projection", None),
-        )
-    return processor, model, text_emb, tuple(query_labels)
+    return processor, model, tuple(queries), tuple(query_labels)
 
 
 def spot_keywords(
@@ -135,12 +98,12 @@ def spot_keywords(
     threshold: float | None = None,
 ) -> KeywordSpotResult:
     """
-    Score sliding audio windows against phrase text embeddings (CLAP cosine).
-    Does not transcribe. Soft-fails if transformers/torch/CLAP are missing.
+    Score sliding audio windows against phrase text via CLAP logits (no STT).
+    Soft-fails if transformers/torch/CLAP are missing.
     """
     cut = settings.clap_threshold if threshold is None else threshold
     try:
-        processor, model, text_emb, query_labels = _load_clap()
+        processor, model, queries, query_labels = _load_clap()
     except Exception as exc:
         return KeywordSpotResult(
             hits=[],
@@ -165,21 +128,25 @@ def spot_keywords(
         import torch
 
         max_scores: dict[str, float] = {label: 0.0 for label in TARGET_LABELS}
+        query_list = list(queries)
         for window in _iter_windows(audio_48k, _CLAP_SR, _WIN_S, _HOP_S):
             inputs = processor(
-                audios=window,
+                text=query_list,
+                audios=window.astype(np.float32),
                 sampling_rate=_CLAP_SR,
                 return_tensors="pt",
                 padding=True,
             )
             with torch.no_grad():
-                audio_out = model.get_audio_features(**inputs)
-                audio_emb = _clap_vec(
-                    audio_out,
-                    projection=getattr(model, "audio_projection", None),
-                )
+                out = model(**inputs)
+            if getattr(out, "logits_per_audio", None) is not None:
+                sims = out.logits_per_audio.squeeze(0).cpu().numpy()
+            else:
+                audio_emb = torch.nn.functional.normalize(out.audio_embeds.float(), dim=-1)
+                text_emb = torch.nn.functional.normalize(out.text_embeds.float(), dim=-1)
                 sims = (audio_emb @ text_emb.T).squeeze(0).cpu().numpy()
-            for score, label in zip(sims, query_labels, strict=False):
+            sims = np.atleast_1d(np.asarray(sims, dtype=np.float64))
+            for score, label in zip(sims.tolist(), query_labels):
                 prev = max_scores.get(label, 0.0)
                 if float(score) > prev:
                     max_scores[label] = float(score)
