@@ -1,0 +1,127 @@
+der” calls minutes later with a payment address.",
+  ],
+  grandma_family_emergency_wire: [
+    "A grandchild is in a car crash or locked up and needs money in the next hour, in secret.",
+    "The voice sounds off or like a recording. They refuse a video call.",
+  ],
+  parcel_customs_delivery_fee: [
+    "A text from “USPS”: pay a $1.99 customs fee or your package is returned.",
+    "The link looks like a shipping site and asks for a card plus a one-time passcode.",
+  ],
+  rental_listing_deposit_scam: [
+    "A too-good apartment. The “landlord” is out of town and wants a deposit before any showing.",
+    "Photos stolen from a real listing. The keys never appear.",
+  ],
+};
+
+const EXTRA_SCAMS = [
+  {
+    id: "7c2a9f10-4b3e-4d8a-9f21-e0d4a7000001",
+    slug: "e_dating_money_request",
+    platforms: ["web", "other", "sms"],
+    aiGenerated: null,
+    victimRoles: ["dating app user", "romance seeker", "young adult"],
+    demands: ["wire", "gift_card", "crypto", "cash"],
+    description:
+      "e-dating or online dating money request; love-bombing; move off the app fast; emergency ticket hospital visa crypto or gift cards; never meet in person",
+    frequency: 30,
+  },
+  {
+    id: "7c2a9f10-4b3e-4d8a-9f21-e0d4a7000002",
+    slug: "cashier_check_overpayment",
+    platforms: ["web", "other", "sms"],
+    aiGenerated: false,
+    victimRoles: ["marketplace seller", "vehicle seller", "online seller"],
+    demands: ["check", "cash", "wire"],
+    description:
+      "cashier's check or money order overpayment; buyer pays more than asking price; asks seller to refund the extra or ship before the check clears; check later bounces",
+    frequency: 25,
+  },
+];
+
+function titleFromSlug(slug) {
+  if (TITLE_OVERRIDES[slug]) return TITLE_OVERRIDES[slug];
+  return slug
+    .split("_")
+    .map((part) => {
+      if (ACRONYMS.has(part)) return part.toUpperCase();
+      return part.charAt(0).toUpperCase() + part.slice(1);
+    })
+    .join(" ");
+}
+
+function unescapeTsvCell(raw) {
+  let text = (raw ?? "").trim();
+  if (text.startsWith('"') && text.endsWith('"')) {
+    text = text.slice(1, -1).replace(/""/g, '"');
+  }
+  return text;
+}
+
+function parsePgArray(raw) {
+  let text = unescapeTsvCell(raw);
+  if (!text || text === "{}") return [];
+  if (text.startsWith("{") && text.endsWith("}")) {
+    text = text.slice(1, -1);
+  }
+  if (!text.trim()) return [];
+  const items = [];
+  const re = /"((?:[^"\\]|\\.)*)"|([^,{}]+)/g;
+  let match;
+  while ((match = re.exec(text))) {
+    const value = (match[1] ?? match[2] ?? "").replace(/\\"/g, '"').trim();
+    if (value && value !== "{" && value !== "}") items.push(value);
+  }
+  return items;
+}
+
+function parseTsv(text) {
+  const lines = text.replace(/^\uFEFF/, "").split(/\r?\n/).filter(Boolean);
+  const headers = lines[0].split("\t");
+  return lines.slice(1).map((line) => {
+    const cols = line.split("\t");
+    const row = {};
+    headers.forEach((header, i) => {
+      row[header] = cols[i] ?? "";
+    });
+    return row;
+  });
+}
+
+function emptyTags() {
+  return { channels: [], hooks: [], asks: [], signals: [] };
+}
+
+function mergeTags(a, b) {
+  const out = emptyTags();
+  for (const group of Object.keys(out)) {
+    out[group] = [...new Set([...(a?.[group] ?? []), ...(b?.[group] ?? [])])];
+  }
+  return out;
+}
+
+function unique(list) {
+  return [...new Set((list ?? []).filter(Boolean))];
+}
+
+function catalogUuid(_slug, index) {
+  const n = String(index + 1).padStart(4, "0");
+  return `7c2a9f10-4b3e-4d8a-9f21-e0d4c000${n}`.slice(0, 36);
+}
+
+function platformsFromCatalog(entry) {
+  const set = new Set();
+  const all = [...(entry.primaryChannels ?? []), ...(entry.tags?.channels ?? [])];
+  for (const channel of all) {
+    if (["phone", "robocall", "voip"].includes(channel)) set.add("phone");
+    else if (channel === "sms") set.add("sms");
+    else if (channel.includes("discord")) set.add("discord");
+    else if (
+      [
+        "email",
+        "search",
+        "popup",
+        "ads",
+        "search_ad",
+        "comments",
+      
