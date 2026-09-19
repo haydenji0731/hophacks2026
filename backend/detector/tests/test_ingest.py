@@ -54,7 +54,7 @@ def test_ingest_scam_upserts_and_notifies(client: TestClient, monkeypatch: pytes
                 messages_sent=1,
                 dry_run=True,
                 results=[],
-                warnings=["Twilio not configured; running in dry-run."],
+                warnings=["Textbelt not configured; running in dry-run."],
             ),
             [],
         ),

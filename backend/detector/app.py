@@ -43,7 +43,7 @@ EXTENSION_TYPES = {
 app = FastAPI(
     title="Scam detector",
     description=(
-        "Mid-call screen (ElevenLabs + openWakeWord) → escalate STT/Grok → log + Twilio. "
+        "Mid-call screen (ElevenLabs + openWakeWord) → escalate STT/Grok → log + Textbelt. "
         "Also supports analyze/ingest/report."
     ),
     version="0.2.0",
@@ -149,7 +149,7 @@ async def ingest(
     to: str | None = Form(default=None),
     file: UploadFile | None = File(default=None),
 ) -> IngestResponse:
-    """Analyze transcript/audio; if scam, upsert pattern row and send Twilio SMS."""
+    """Analyze transcript/audio; if scam, upsert pattern row and send Textbelt SMS."""
     text = (transcript or "").strip() or None
     audio = await _read_audio(file)
 

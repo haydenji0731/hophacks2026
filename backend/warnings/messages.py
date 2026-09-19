@@ -3,12 +3,11 @@ from __future__ import annotations
 from warn_config import Settings, settings
 from models import NotificationTier
 
-# Per-tier opener. Every warning still states a potential scam was flagged,
-# gives a specific reason, and points to the site (see build_body).
+# One-sentence SMS. No scores, URLs, or extra instructions.
 _TIER_OPENER = {
-    "low": "Heads up: this call/text has a few scam-like signs.",
-    "medium": "Warning: this looks like a likely scam.",
-    "high": "STOP - this is very likely a scam. Do not send money or share codes.",
+    "low": "Heads up",
+    "medium": "Warning",
+    "high": "Urgent",
 }
 
 
@@ -22,12 +21,13 @@ def repeat_count(tier: NotificationTier, cfg: Settings | None = None) -> int:
 
 
 def _clean_reason(reason: str, scam_type: str | None) -> str:
+    label = (scam_type or "").strip()
+    if label and label.lower() != "none":
+        return label
     reason = (reason or "").strip()
     if reason:
-        return reason
-    if scam_type:
-        return f"matches the {scam_type} pattern"
-    return "matched known scam signals"
+        return reason.split(";")[0].strip()
+    return "a scam"
 
 
 def build_body(
@@ -39,19 +39,5 @@ def build_body(
     site_url: str | None = None,
     cfg: Settings | None = None,
 ) -> str:
-    cfg = cfg or settings
-    url = site_url or cfg.site_url
-
-    opener = _TIER_OPENER[tier]
     why = _clean_reason(reason, scam_type)
-    parts = [opener, f"Why: {why}."]
-
-    if scam_confidence is not None:
-        parts.append(f"Confidence {scam_confidence:.0%}.")
-
-    if tier == "high":
-        parts.append(f"Learn what to do and confirm it here: {url}")
-    else:
-        parts.append(f"Check it here: {url}")
-
-    return " ".join(parts)
+    return f"{_TIER_OPENER[tier]}: {why}."

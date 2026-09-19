@@ -35,7 +35,7 @@ class NotifyResponse(BaseModel):
 class HealthResponse(BaseModel):
     status: Literal["ok"] = "ok"
     service: str = "scam-warning-notifier"
-    twilio_configured: bool = False
+    textbelt_configured: bool = False
 
 
 class ErrorDetail(BaseModel):

@@ -102,7 +102,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--seconds", type=float, default=30.0, help="Chunk length")
     parser.add_argument("--sample-rate", type=int, default=16000)
     parser.add_argument("--device", type=int, default=None, help="sounddevice input device index")
-    parser.add_argument("--to", default=None, help="E.164 phone for Twilio on escalate")
+    parser.add_argument("--to", default=None, help="E.164 phone for Textbelt on escalate")
     parser.add_argument(
         "--force-escalate",
         action="store_true",

@@ -4,7 +4,7 @@ P2 from the spec: same conversation-analysis path as phone/text, on Discord.
 
 Members paste a suspicious DM or ping `!scam` / `/scamcheck`. The bot sends the text to [`backend/detector`](../detector) `POST /v1/analyze` (Grok flags; no audio) and replies with confidence, closest scam type, and a link to the site.
 
-It does **not** send Twilio SMS and does **not** store Discord usernames in Postgres.
+It does **not** send Textbelt SMS and does **not** store Discord usernames in Postgres.
 
 ## Setup (once)
 

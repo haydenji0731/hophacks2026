@@ -4,6 +4,17 @@ Living log of locked choices for HopHacks 2026 (We Hate Scammers). Update when w
 
 ---
 
+## 2026-09-19 — SMS warnings via Textbelt
+
+| Decision | Choice |
+| --- | --- |
+| SMS provider | **Textbelt** (not Twilio) |
+| Why | Twilio trial cannot send custom Body (error 572006). Textbelt sends our warning copy. |
+| Free quota | `TEXTBELT_KEY=textbelt` → **1 SMS/day**. High-tier repeats skipped on that key. |
+| Dry-run | Missing key → build copy, do not send. |
+
+---
+
 ## 2026-09-19 — Mid-call pipeline (screening → escalate → scam verdict)
 
 ### Stage A — Cheap screen (no full transcript)
@@ -30,7 +41,7 @@ Living log of locked choices for HopHacks 2026 (We Hate Scammers). Update when w
 
 | Decision | Choice |
 | --- | --- |
-| If scam | **Log** (upsert scam pattern / incident path) **and notify** (Twilio via warnings) |
+| If scam | **Log** (upsert scam pattern / incident path) **and notify** (Textbelt via warnings) |
 | If not scam | No notify; optional soft log / metrics only |
 
 ### End-to-end sequence

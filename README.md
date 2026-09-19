@@ -40,13 +40,13 @@ Call / text
     → ElevenLabs AI-voice score on audio
     → Grok transcription + language analysis
     → Detector (audio + urgency / money / impersonation flags + vector match)
-    → Twilio SMS by severity, always linking to the site
+    → Textbelt SMS by severity, always linking to the site
     → If scam-like: Grok cleans + categorizes → upsert scam record + embedding
 ```
 
 **Signals we combine:** unknown caller, cash / money / “too good” offers, romance, urgency and pressure, rule flags, and **AI-generated audio**.
 
-**Warning tiers (Twilio)**
+**Warning tiers (Textbelt)**
 
 | Confidence | Behavior |
 | --- | --- |
@@ -67,7 +67,7 @@ The website also ranks candidates from questionnaire answers (rules + embeddings
 | Website | React |
 | Transcription + analysis | Grok |
 | AI / synthetic voice detection | ElevenLabs |
-| SMS warnings | Twilio |
+| SMS warnings | Textbelt |
 | Similarity | Embeddings + vector search |
 | Stretch | Chrome extension, Discord |
 
@@ -83,7 +83,7 @@ In progress. The first slice that is in this repo is the **ElevenLabs AI-audio t
 | [`backend/db`](backend/db) | Postgres scam-pattern schema + Reddit seed (~96 types) |
 | [`DECISIONS.md`](DECISIONS.md) | Mid-call pipeline: 12s screen → sensitivity → STT/Grok → log/notify |
 | [`backend/detector`](backend/detector) | Combines ElevenLabs + Grok into confidence / notification tier |
-| [`backend/warnings`](backend/warnings) | Severity-tiered Twilio SMS notifier |
+| [`backend/warnings`](backend/warnings) | Severity-tiered Textbelt SMS notifier |
 | React questionnaire + scam pages | Planned |
 | Grok clean / categorize + vector DB | Planned |
 | Chrome / Discord | Stretch (P2) |
