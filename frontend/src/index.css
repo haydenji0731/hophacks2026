@@ -639,6 +639,73 @@ textarea {
   border: 0;
 }
 
+.news-heading {
+  margin: 0 0 0.9rem;
+  font-family: var(--display);
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--text);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.news-heading-rule {
+  display: block;
+  width: 5.5rem;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--accent) 22%,
+    var(--accent) 78%,
+    transparent 100%
+  );
+  position: relative;
+  animation: news-rule-in 0.7s var(--ease) both;
+}
+
+.news-heading-rule::before,
+.news-heading-rule::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border: 1px solid var(--accent);
+  background: var(--bg);
+  transform: translateY(-50%) rotate(45deg);
+  box-shadow: 0 0 10px color-mix(in srgb, var(--accent) 55%, transparent);
+}
+
+.news-heading-rule::before {
+  left: 0.55rem;
+}
+
+.news-heading-rule::after {
+  right: 0.55rem;
+}
+
+@keyframes news-rule-in {
+  from {
+    width: 0;
+    opacity: 0;
+  }
+  to {
+    width: 5.5rem;
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .news-heading-rule {
+    animation: none;
+  }
+}
+
 .news-bar {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -863,44 +930,6 @@ textarea {
 
 .chip:active {
   transform: translateY(0);
-}
-
-.stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-  margin: 3.5rem auto 0;
-  max-width: 760px;
-}
-
-.stat {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1.1rem 1.15rem;
-  background: var(--panel);
-  text-align: left;
-  transition: border-color 0.2s var(--ease), transform 0.2s var(--ease), background 0.2s var(--ease);
-}
-
-.stat:hover {
-  border-color: var(--border-strong);
-  background: var(--surface-hover);
-  transform: translateY(-2px);
-}
-
-.stat strong {
-  display: block;
-  font-family: var(--display);
-  font-size: 1.15rem;
-  letter-spacing: -0.03em;
-  margin-bottom: 0.3rem;
-  color: var(--accent);
-}
-
-.stat span {
-  color: var(--muted);
-  font-size: 0.82rem;
-  line-height: 1.4;
 }
 
 .compat {
@@ -1823,7 +1852,6 @@ textarea:focus,
     padding-left: 0.35rem;
   }
 
-  .stats,
   .metric-row {
     grid-template-columns: 1fr;
   }

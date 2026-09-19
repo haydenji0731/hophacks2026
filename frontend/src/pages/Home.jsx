@@ -17,21 +17,6 @@ export default function Home() {
 
       <NewsWidget />
 
-      <div className="stats reveal delay-5">
-        <div className="stat">
-          <strong>6 probes</strong>
-          <span>Channel, impersonation, money, pressure, voice.</span>
-        </div>
-        <div className="stat">
-          <strong>Known TTPs</strong>
-          <span>Family emergency, IRS, tech support, phishing.</span>
-        </div>
-        <div className="stat">
-          <strong>Discord node</strong>
-          <span>Run /scamcheck without leaving the chat.</span>
-        </div>
-      </div>
-
       <div className="compat reveal delay-6">
         <span className="compat-label">Compatible with</span>
         <div className="compat-row">
