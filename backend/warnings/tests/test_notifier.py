@@ -30,7 +30,8 @@ def test_dry_run_builds_but_does_not_send():
     resp = notify(req, cfg)
     assert resp.dry_run is True
     assert resp.messages_sent == 1
-    assert "urgency + gift card" in resp.body
+    assert "urgency + gift card" not in resp.body
+    assert "possible scam" in resp.body
     assert all(m.dry_run for m in resp.results)
 
 
@@ -81,8 +82,8 @@ def test_live_send_calls_textbelt_with_custom_body(monkeypatch):
     assert url == "https://textbelt.com/text"
     assert kwargs["data"]["phone"] == "+14105551234"
     assert kwargs["data"]["key"] == "textbelt"
-    assert "Urgent" in kwargs["data"]["message"]
-    assert "scam" in kwargs["data"]["message"]
+    assert "Warning" in kwargs["data"]["message"]
+    assert "possible scam" in kwargs["data"]["message"]
     assert all(m.sid == "tb123" for m in resp.results)
     assert resp.messages_sent == 1
     assert any("1 SMS/day" in w for w in resp.warnings)

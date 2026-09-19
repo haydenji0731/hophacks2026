@@ -7,7 +7,7 @@ Mid-call pipeline:
 
 Also exposes analyze / ingest / report for transcript-first flows.
 
-**Runtime split:** run this API on **Linux** (openWakeWord works there). Capture audio on the Mac with [`clients/mac_capture.py`](../../clients/mac_capture.py) and POST chunks here.
+**Runtime split:** run this API on **Linux** (openWakeWord works there). Capture audio on the Mac with [`desktop/listen.py`](../../desktop/listen.py) and POST chunks here.
 
 ## Run (Linux backend)
 
@@ -36,14 +36,14 @@ uv run python -c "import openwakeword; openwakeword.utils.download_models()"
 ```bash
 # from repo root — no openWakeWord on the Mac
 uv run --with sounddevice --with soundfile --with httpx --with numpy \
-  python clients/mac_capture.py \
+  python desktop/listen.py \
   --url http://LINUX_HOST:8000/v1/process \
   --seconds 30 \
   --loop \
   --to +14105551234
 ```
 
-List mic devices: `… mac_capture.py --list-devices`
+List mic devices: `… desktop/listen.py --list-devices`
 
 ## API
 
@@ -81,6 +81,14 @@ uv run python refresh_news.py --days 7 --dry-run
 `POST /v1/news/refresh?days=14` — same job as the script. Cursor Grok Bot should HTTP this (public HTTPS), not SSH. If `NEWS_REFRESH_SECRET` is set, send `X-News-Refresh-Secret` or `Authorization: Bearer …`. Empty secret is allowed for hackathon.
 
 Env: `NEWS_LOOKBACK_DAYS` (default `14`), `NEWS_REFRESH_SECRET`, `NEWS_WIRE_PATH`, `XAI_GROK_MODEL`.
+
+### Intel catalog
+
+`GET /v1/intel?q=&limit=60` — TF-IDF search over seed pattern TSVs. Empty `q` returns the top patterns.
+
+`GET /v1/intel/{name}` — one pattern, or 404.
+
+If this 404s, ravens uvicorn is older than the intel commit. `git pull` in `/mnt/disk2/hji/hophacks2026` and restart the detector process.
 
 ### Analyze / ingest / report
 
