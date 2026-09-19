@@ -23,27 +23,33 @@ function impersonation(scam: Scam): boolean {
     return true;
   }
   return hasAny(blob(scam), [
-    "irs",
-    "ssa",
-    "fbi",
-    "bank",
-    "amex",
-    "chase",
-    "microsoft",
-    "apple",
-    "usps",
-    "fedex",
-    "dhl",
-    "insurance",
-    "law firm",
-    "immigration",
-    "utility",
-    "medicare",
-    "nypd",
-    "meta support",
-    "tech support",
-    "warranty",
-    "ceo",
-    "vendor",
+    "irs", "ssa", "fbi", "bank", "amex", "chase", "microsoft", "apple", "usps", "fedex", "dhl", "insurance", "law firm", "immigration", "utility", "medicare", "nypd", "meta support", "tech support", "warranty", "ceo", "vendor",
+  ]);
+}
+
+function urgency(scam: Scam): boolean {
+  if (
+    tagMatch(scam, {
+      hooks: ["urgency", "arrest_threat", "secrecy", "family_crisis", "service_shutoff", "fear"],
+      signals: ["keep_it_secret", "threatens_arrest", "pay_within_minutes"],
+    })
+  ) {
+    return true;
+  }
+  return hasAny(blob(scam), [
+    "urgency", "secrecy", "secret", "warrant", "arrest", "shutoff", "immediately", "deportation", "bail", "emergency", "threat", "pressure", "stay on line",
+  ]);
+}
+
+function remoteOrCode(scam: Scam): boolean {
+  if (
+    tagMatch(scam, {
+      asks: ["otp_code", "otp", "remote_access", "password", "seed_phrase", "wallet_connect"],
+    })
+  ) {
+    return true;
+  }
+  return hasAny(blob(scam), [
+    "otp", "remote access", "anydesk", "teamviewer", "seed phrase", "password", "verification", "2fa", "login", "borrow phone", "call forwarding", "sim swap", "token",
   ]);
 }
