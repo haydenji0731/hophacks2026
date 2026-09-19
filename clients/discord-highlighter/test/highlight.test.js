@@ -1,5 +1,6 @@
 const assert = require("node:assert/strict");
 const { JSDOM } = require("jsdom");
+require("../scorer.js");
 const { HIGHLIGHT_CLASS, isUserMessage, scan, start } = require("../content.js");
 
 function fixture() {
@@ -12,48 +13,48 @@ function fixture() {
       <li id="chat-messages-1-222">
         <img class="avatar" alt="ava" />
         <div class="textbox">
-          <div id="message-content-222">hello from a user</div>
+          <div id="message-content-222">hey are we still on for pizza later?</div>
         </div>
       </li>
-      <div id="not-a-message">noise</div>
+      <li id="chat-messages-1-444">
+        <img class="avatar" alt="ava" />
+        <div id="message-content-444">IRS: pay overdue tax with Apple gift cards today, don't tell anyone</div>
+      </li>
     </ol>
-  </body></html>`, { pretendToBeVisual: true });
+  </body></html>`, { pretendToBeVisual: true, url: "https://discord.com/channels/1/2" });
 }
 
 const { window } = fixture();
 const { document } = window;
+globalThis.window = window;
+globalThis.document = document;
 
 const dateSep = document.getElementById("chat-messages-1-111");
-const userMsg = document.getElementById("chat-messages-1-222");
-const avatar = userMsg.querySelector(".avatar");
-const textbox = userMsg.querySelector(".textbox");
-const content = document.getElementById("message-content-222");
+const normalMsg = document.getElementById("chat-messages-1-222");
+const scamMsg = document.getElementById("chat-messages-1-444");
 
 assert.equal(isUserMessage(dateSep), false);
-assert.equal(isUserMessage(userMsg), true);
+assert.equal(isUserMessage(normalMsg), true);
+assert.equal(isUserMessage(scamMsg), true);
 
 scan(document);
 
-const mark = content.querySelector("." + HIGHLIGHT_CLASS);
-assert.ok(mark);
-assert.equal(mark.textContent, "hello from a user");
-assert.equal(userMsg.classList.contains(HIGHLIGHT_CLASS), false);
-assert.equal(avatar.classList.contains(HIGHLIGHT_CLASS), false);
-assert.equal(textbox.classList.contains(HIGHLIGHT_CLASS), false);
-assert.equal(dateSep.querySelector("." + HIGHLIGHT_CLASS), null);
+assert.equal(normalMsg.querySelector("." + HIGHLIGHT_CLASS), null);
+const scamMark = scamMsg.querySelector("." + HIGHLIGHT_CLASS);
+assert.ok(scamMark);
+assert.equal(scamMark.classList.contains("discord-hl-mark--high"), true);
 
 start(document);
 
 const incoming = document.createElement("li");
 incoming.id = "chat-messages-1-333";
 incoming.innerHTML =
-  '<img class="avatar" alt="ava" /><div id="message-content-333">new message</div>';
+  '<img class="avatar" alt="ava" /><div id="message-content-333">Click to verify your account</div>';
 document.querySelector("ol").appendChild(incoming);
 
-setImmediate(() => {
+setTimeout(() => {
   const incomingMark = incoming.querySelector("." + HIGHLIGHT_CLASS);
   assert.ok(incomingMark);
-  assert.equal(incomingMark.textContent, "new message");
-  assert.equal(incoming.classList.contains(HIGHLIGHT_CLASS), false);
+  assert.equal(incomingMark.classList.contains("discord-hl-mark--caution"), true);
   console.log("ok");
-});
+}, 20);
