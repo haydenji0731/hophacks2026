@@ -280,3 +280,135 @@ const HOOK_TAGS: Record<string, Parameters<typeof tagMatch>[1]> = {
 function reasonIf(scam: Scam, value: string, matcher: Question["matches"], label: string): string | null {
   return matcher(scam, value) ? label : null;
 }
+
+export const QUESTIONS: Question[] = [
+  {
+    id: "source",
+    prompt: "How did you get here?",
+    kind: "choice",
+    priority: 1,
+    options: [
+      { id: "phone", label: "A text warned me about a phone call" },
+      { id: "extension", label: "I was chatting or browsing" },
+      { id: "own", label: "I came here on my own" },
+    ],
+    matches(scam, value) {
+      if (value === "phone") {
+        return scam.platforms.includes("phone") || scam.platforms.includes("sms") || hasTag(scam, "channels", ["phone", "robocall", "sms"]);
+      }
+      if (value === "extension") {
+        return (
+          scam.platforms.includes("web") ||
+          scam.platforms.includes("discord") ||
+          hasTag(scam, "channels", ["social_dm", "messaging_app", "dating_app", "email"]) ||
+          hasAny(blob(scam), ["whatsapp", "telegram", "dating", "instagram", "tiktok"])
+        );
+      }
+      return null;
+    },
+    reason(scam, value) {
+      if (value === "phone" && this.matches(scam, value)) {
+        return "Often starts on a call or a warning text";
+      }
+      if (value === "extension" && this.matches(scam, value)) {
+        return "Often starts in chat, mail, or a website";
+      }
+      return null;
+    },
+  },
+  {
+    id: "age",
+    prompt: "Which age group should we write for?",
+    kind: "choice",
+    priority: 2,
+    options: [
+      { id: "child", label: "Under 18" },
+      { id: "adult", label: "18–54" },
+      { id: "older", label: "55 or older" },
+    ],
+    matches: () => null,
+  },
+  {
+    id: "notify_about",
+    prompt: "What did they say this was about?",
+    kind: "choice",
+    priority: 3,
+    skipIf: (answers) => answers.source !== "phone",
+    options: [
+      { id: "government", label: "A bank, the IRS, police, or a government office" },
+      { id: "family", label: "A family emergency or relative in trouble" },
+      { id: "account", label: "A virus, hacked account, or tech support" },
+      { id: "package", label: "A package or delivery fee" },
+      { id: "investment", label: "An investment, refund, or prize" },
+      { id: "other", label: "Something else" },
+    ],
+    matches: themeMatch,
+    reason(scam, value) {
+      if (value === "other" || !this.matches(scam, value)) return null;
+      return "Matches what the warning was about";
+    },
+  },
+  {
+    id: "evidence",
+    prompt: "Want to add a copy of the conversation?",
+    helper: "Paste or attach a text export. Files stay on this device.",
+    kind: "upload",
+    priority: 4,
+    skipIf: (answers) =>
+      answers.source !== "extension" && answers.channel !== "web" && answers.channel !== "chat",
+    matches: () => null,
+  },
+  {
+    id: "channel",
+    prompt: "How did this start?",
+    kind: "choice",
+    priority: 5,
+    skipIf: (answers) => answers.source === "phone",
+    options: [
+      { id: "phone", label: "A phone call" },
+      { id: "sms", label: "A text message" },
+      { id: "chat", label: "Chat, social, or a dating app" },
+      { id: "marketplace", label: "A marketplace listing" },
+      { id: "web", label: "Email, a website, or an ad" },
+      { id: "in_person", label: "In person, mail, or a QR code" },
+    ],
+    matches: (scam, value) => exclusiveTagMatch(scam, value, CHANNEL_TAGS, channelFallback),
+    reason(scam, value) {
+      const labels: Record<string, string> = {
+        phone: "Usually starts on a phone call",
+        sms: "Often arrives as a text",
+        chat: "Starts in chat, a DM, or a dating app",
+        marketplace: "Starts on a listing",
+        web: "Lives on the web, email, or an ad",
+        in_person: "Has an in-person, mail, or QR step",
+      };
+      return this.matches(scam, value) ? labels[value] ?? null : null;
+    },
+  },
+  {
+    id: "theme",
+    prompt: "What was it about?",
+    kind: "choice",
+    skipIf: (answers) => Boolean(answers.notify_about) && answers.notify_about !== "skip",
+    options: [
+      { id: "job", label: "A job or easy-money task" },
+      { id: "marketplace", label: "Buying or selling something" },
+      { id: "romance", label: "Dating or a new online friend" },
+      { id: "package", label: "A package or delivery fee" },
+      { id: "account", label: "An account lock or “verify now” warning" },
+      { id: "family", label: "A family emergency" },
+      { id: "investment", label: "An investment or guaranteed return" },
+      { id: "government", label: "Taxes, benefits, police, a bank, or a utility" },
+      { id: "other", label: "Something else" },
+    ],
+    matches: themeMatch,
+    reason(scam, value) {
+      if (value === "other" || !this.matches(scam, value)) return null;
+      return `Fits the “${value}” pattern`;
+    },
+  },
+];
+
+export const QUESTION_BY_ID = Object.fromEntries(
+  QUESTIONS.map((question) => [question.id, question])
+) as Record<string, Question>;
