@@ -1,6 +1,8 @@
-# Discord User Message Highlighter
+# Discord Scam Smell
 
-A local Chrome extension that draws a red highlighter across Discord user chat text. The stroke swipes left to right and leaves a rounded, cylindrical mark on the words only — not the avatar or the message row. Nothing is sent off your machine.
+Chrome extension that watches Discord locally and highlights **suspicious** user messages. Normal chat stays untouched. Caution is yellow, high risk is red. Hover a highlight for a short explanation.
+
+Nothing is sent off your machine. This is a warning, not a verdict.
 
 ## Load it in Chrome
 
@@ -9,20 +11,38 @@ A local Chrome extension that draws a red highlighter across Discord user chat t
 3. Click **Load unpacked** and select this folder (the one with `manifest.json`)
 4. Open [discord.com](https://discord.com) in Chrome
 
-If the extension is already loaded, click **Reload** on its card after pulling changes.
+If it is already loaded, click **Reload** after pulling changes.
 
-That is the whole setup. There is no account, API key, or build step.
+## What it flags
 
-## What it highlights
+Offline cue matching + a small association graph + cross-family combos (urgency + payment, authority + credentials, and similar). See [`scam-smell/README.md`](scam-smell/README.md) to add cues in JSON only.
 
-The actual message text. Avatars, the surrounding message box, date separators, and most system events (joins, pins, and similar) are left alone.
+| Band | Score | Highlight |
+| --- | --- | --- |
+| ok | 0–24 | none |
+| caution | 25–54 | yellow |
+| high | 55–100 | red |
 
-It matches Discord stable, PTB, and Canary.
+Avatars and the message row are never painted. Date separators and most system events are ignored.
+
+It matches Discord stable, PTB, and Canary, and keeps watching as you switch DMs or channels.
+
+## Develop
+
+```bash
+npm install
+npm test
+npm run build
+```
+
+`npm run build` writes `scorer.js` for the unpacked extension.
 
 ## Files
 
 | File | Role |
 | --- | --- |
-| `manifest.json` | Manifest V3, content script on Discord |
-| `content.js` | Wraps user text; MutationObserver for instant updates |
-| `content.css` | Left-to-right highlighter swipe + solid red ink |
+| `manifest.json` | Manifest V3 |
+| `scorer.js` | Bundled offline analyzer |
+| `content.js` | MutationObserver, highlights, popup |
+| `content.css` | Yellow / red highlighter + popup |
+| `scam-smell/` | Source, data, and fixtures |

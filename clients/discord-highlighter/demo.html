@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scam Smell preview</title>
+    <link rel="stylesheet" href="content.css" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        background: #313338;
+        color: #dbdee1;
+        font: 16px/1.375 "gg sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      }
+      .chat {
+        max-width: 720px;
+        margin: 48px auto;
+        padding: 24px;
+      }
+      li[id^="chat-messages-"] {
+        display: flex;
+        gap: 16px;
+        padding: 4px 8px 12px;
+        list-style: none;
+      }
+      .avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #5865f2;
+        flex: none;
+      }
+      .name {
+        margin: 0 0 2px;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #f2f3f5;
+      }
+    </style>
+  </head>
+  <body>
+    <ol class="chat" data-list-id="chat-messages">
+      <li id="chat-messages-1-100">
+        <div class="avatar" aria-hidden="true"></div>
+        <div>
+          <h3 class="name">Mira</h3>
+          <div id="message-content-100">hey, pizza at 8 still good?</div>
+        </div>
+      </li>
+      <li id="chat-messages-1-200">
+        <div class="avatar" aria-hidden="true"></div>
+        <div>
+          <h3 class="name">Unknown</h3>
+          <div id="message-content-200">Click to verify your account</div>
+        </div>
+      </li>
+      <li id="chat-messages-1-300">
+        <div class="avatar" aria-hidden="true"></div>
+        <div>
+          <h3 class="name">IRS-Help</h3>
+          <div id="message-content-300">
+            IRS: pay overdue tax with Apple gift cards today, don't tell anyone
+          </div>
+        </div>
+      </li>
+    </ol>
+    <script src="scorer.js"></script>
+    <script src="content.js"></script>
+  </body>
+</html>

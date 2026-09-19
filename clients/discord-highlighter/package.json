@@ -1,12 +1,17 @@
 {
   "name": "discord-user-message-highlighter",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
-  "description": "Chrome extension that highlights Discord user messages in red.",
+  "description": "Chrome extension that flags suspicious Discord messages offline.",
   "scripts": {
-    "test": "node test/highlight.test.js"
+    "build": "esbuild scam-smell/src/index.ts --bundle --format=iife --global-name=ScamSmell --outfile=scorer.js --footer:js=\"globalThis.ScamSmell=ScamSmell;if(typeof module!=='undefined'&&module.exports)module.exports=ScamSmell;\"",
+    "test": "npm run build && node test/highlight.test.js && tsx --test scam-smell/tests/score.test.ts"
   },
   "devDependencies": {
-    "jsdom": "^26.1.0"
+    "@types/node": "^22.13.10",
+    "esbuild": "^0.25.3",
+    "jsdom": "^26.1.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
   }
 }

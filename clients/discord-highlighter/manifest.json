@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Discord User Message Highlighter",
-  "version": "1.0.0",
-  "description": "Highlights every Discord user chat message in red. Runs locally and updates as new messages appear.",
+  "name": "Discord Scam Smell",
+  "version": "1.1.0",
+  "description": "Offline highlighter for suspicious Discord messages. Caution is yellow, high risk is red.",
   "content_scripts": [
     {
       "matches": [
@@ -11,7 +11,7 @@
         "https://canary.discord.com/*"
       ],
       "css": ["content.css"],
-      "js": ["content.js"],
+      "js": ["scorer.js", "content.js"],
       "run_at": "document_idle"
     }
   ]

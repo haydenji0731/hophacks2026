@@ -1,4 +1,4 @@
-/* Ink sits only on the text, not the avatar or message row. */
+/* Ink sits only on flagged text, not the avatar or message row. */
 .discord-hl-mark {
   --hl-h: 1.3em;
   display: inline;
@@ -10,8 +10,16 @@
   background-repeat: no-repeat;
   background-position: left center;
   background-size: 0 var(--hl-h);
-  background-image: linear-gradient(#f87171, #f87171);
+  cursor: help;
   animation: discord-hl-swipe 0.32s cubic-bezier(0.18, 0.82, 0.28, 1) forwards;
+}
+
+.discord-hl-mark--caution {
+  background-image: linear-gradient(#facc15, #facc15);
+}
+
+.discord-hl-mark--high {
+  background-image: linear-gradient(#f87171, #f87171);
 }
 
 @keyframes discord-hl-swipe {
@@ -21,6 +29,43 @@
   to {
     background-size: 100% var(--hl-h);
   }
+}
+
+.discord-hl-pop {
+  position: fixed;
+  z-index: 2147483647;
+  width: 268px;
+  max-width: calc(100vw - 16px);
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #1e1f22;
+  color: #dbdee1;
+  font: 13px/1.35 "gg sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
+}
+
+.discord-hl-pop[data-band="caution"] {
+  border: 1px solid #facc15;
+}
+
+.discord-hl-pop[data-band="high"] {
+  border: 1px solid #f87171;
+}
+
+.discord-hl-pop strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.discord-hl-pop ul {
+  margin: 0;
+  padding-left: 1.1em;
+}
+
+.discord-hl-pop p {
+  margin: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
