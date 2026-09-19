@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const STRIPS = 11;
 const STAGGER_MS = 48;
@@ -19,6 +19,12 @@ export default function BandWipe() {
 
   navigateRef.current = navigate;
 
+  // Reset scroll on every route change, so pages that open without a wipe still start at the top.
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
   useEffect(() => {
     function clearTimers() {
       timers.current.forEach((id) => window.clearTimeout(id));
@@ -36,9 +42,9 @@ export default function BandWipe() {
 
       const hit = event.target.closest("button, a");
       if (!hit) return;
-      if (hit.closest(".boot, .skip-link, .news-dots, .theme-toggle, .news-expand, .check-shell .option, .check-shell .ghost-link")) {
-      return;
-}
+      // Only the top bar and the two home-page buttons (Run check / Open intel) trigger the wipe.
+      if (!hit.closest(".site-header, .hero .cta-row")) return;
+      if (hit.closest(".theme-toggle")) return;
       if (hit.matches("[disabled]") || hit.getAttribute("aria-disabled") === "true") return;
 
       const brand = hit.closest(".brand");
