@@ -1,0 +1,112 @@
+ks),
+    description: entry.summary,
+    seedDescription: "",
+    frequency: PRIORITY_FREQUENCY[entry.questionnairePriority] ?? 6,
+    tags: mergeTags(emptyTags(), entry.tags),
+    catalogIds: [entry.id],
+    aliases: unique([...(entry.aliases ?? []), entry.name]),
+    origin: "grok",
+    questionnairePriority: entry.questionnairePriority ?? "medium",
+    catalogName: entry.name,
+    howItWorks: entry.howItWorks,
+    catalogExamples: howItWorksSteps(entry.howItWorks).slice(0, 3),
+    catalogAdvice: unique([...(entry.whatToDo ?? []), ...(entry.whatNotToDo ?? [])]),
+    reportTo: unique(entry.reportTo),
+  };
+}
+
+const rows = parseTsv(readFileSync(tsvPath, "utf8"));
+const fromTsv = rows.map((row) => ({
+  id: row.id.trim(),
+  slug: row.name.trim(),
+  platforms: parsePgArray(row.platforms),
+  aiGenerated:
+    row.ai_generated === "t" || row.ai_generated === "true"
+      ? true
+      : row.ai_generated === "f" || row.ai_generated === "false"
+        ? false
+        : null,
+  victimRoles: parsePgArray(row.victim_roles),
+  demands: parsePgArray(row.demands),
+  description: unescapeTsvCell(row.description || ""),
+  frequency: Number(row.frequency || 0),
+  tags: emptyTags(),
+  catalogIds: [],
+  aliases: [],
+  origin: "reddit",
+  questionnairePriority: null,
+}));
+
+const bySlug = new Map(fromTsv.map((scam) => [scam.slug, scam]));
+for (const extra of EXTRA_SCAMS) {
+  bySlug.set(extra.slug, {
+    ...extra,
+    tags: emptyTags(),
+    catalogIds: [],
+    aliases: [],
+    origin: "reddit",
+    questionnairePriority: null,
+  });
+}
+
+for (const scam of bySlug.values()) {
+  scam.tags = inferTags(scam);
+}
+
+const catalog = JSON.parse(readFileSync(catalogPath, "utf8"));
+const seenCatalog = new Set();
+let merged = 0;
+let created = 0;
+let newIndex = 0;
+
+for (const entry of catalog) {
+  if (seenCatalog.has(entry.id)) {
+    throw new Error(`Duplicate catalog id ${entry.id}`);
+  }
+  seenCatalog.add(entry.id);
+
+  const primarySlug = CATALOG_PRIMARY[entry.id];
+  if (primarySlug) {
+    const target = bySlug.get(primarySlug);
+    if (!target) throw new Error(`Catalog ${entry.id} mapped to missing slug ${primarySlug}`);
+    applyCatalogEntry(target, entry, { primary: true });
+    merged += 1;
+  } else if (bySlug.has(entry.id)) {
+    applyCatalogEntry(bySlug.get(entry.id), entry, { primary: true });
+    merged += 1;
+  } else {
+    bySlug.set(entry.id, newFromCatalog(entry, newIndex));
+    newIndex += 1;
+    created += 1;
+  }
+
+  for (const alsoSlug of CATALOG_ALSO[entry.id] ?? []) {
+    const also = bySlug.get(alsoSlug);
+    if (!also) continue;
+    applyCatalogEntry(also, entry, { primary: false });
+  }
+}
+
+if (seenCatalog.size !== catalog.length) {
+  throw new Error("Catalog id accounting mismatch");
+}
+
+const scams = [...bySlug.values()]
+  .filter((scam) => scam.slug)
+  .map(enrich)
+  .sort((a, b) => b.frequency - a.frequency || a.name.localeCompare(b.name));
+
+const catalogIds = scams.flatMap((scam) => scam.catalogIds);
+const uniqueCatalogIds = new Set(catalogIds);
+if (uniqueCatalogIds.size !== catalog.length) {
+  const missing = catalog.filter((entry) => !uniqueCatalogIds.has(entry.id)).map((entry) => entry.id);
+  const extras = catalogIds.filter((id, i) => catalogIds.indexOf(id) !== i);
+  throw new Error(
+    `Expected ${catalog.length} unique catalog ids on primary rows; got ${uniqueCatalogIds.size}. Missing: ${missing.join(", ") || "none"}. Dup primaries: ${extras.join(", ") || "none"}`
+  );
+}
+
+writeFileSync(outPath, `${JSON.stringify(scams, null, 2)}\n`);
+console.log(
+  `Wrote ${scams.length} scams (${merged} catalog methods merged, ${created} new, ${catalog.length} catalog ids accounted for) to ${outPath}`
+);
