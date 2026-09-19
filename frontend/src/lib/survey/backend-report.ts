@@ -21,12 +21,14 @@ const METHOD: Record<string, string> = {
   remote: "phishing link or code request",
   password: "phishing link or code request",
   wallet: "crypto payment request",
+  access: "phishing link or code request",
 };
 
 const TARGET: Record<string, string> = {
   government: "general consumer",
   bank: "account holder",
   brand: "account holder",
+  company: "account holder",
   tech: "computer user",
   account: "computer user",
   family: "family member / older adult",
