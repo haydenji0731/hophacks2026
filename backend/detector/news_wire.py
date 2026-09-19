@@ -35,7 +35,7 @@ Respond with ONLY a valid JSON object, no markdown:
 }
 
 Rules:
-- At most 8 articles. Mark the 3 hottest featured=true (highest frequency).
+- At most 8 articles. Mark the 3 newest featured=true (most recent updated_at).
 - href is always "/scams" unless you have a real public URL for that pattern.
 - Today's date unless the row is older; then use that row's date.
 - No PII. No markdown.

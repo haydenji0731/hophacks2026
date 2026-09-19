@@ -18,6 +18,8 @@ Desktop.ini
 .settings/
 .cursor/
 !.cursor/rules/
+!.cursor/skills/
+!.cursor/commands/
 
 # --- Env & secrets ---
 .env
