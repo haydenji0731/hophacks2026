@@ -10,16 +10,17 @@
   background-repeat: no-repeat;
   background-position: left center;
   background-size: 0 var(--hl-h);
+  color: inherit;
   cursor: help;
   animation: discord-hl-swipe 0.32s cubic-bezier(0.18, 0.82, 0.28, 1) forwards;
 }
 
 .discord-hl-mark--caution {
-  background-image: linear-gradient(#facc15, #facc15);
+  background-image: linear-gradient(rgba(176, 132, 24, 0.34), rgba(176, 132, 24, 0.34));
 }
 
 .discord-hl-mark--high {
-  background-image: linear-gradient(#f87171, #f87171);
+  background-image: linear-gradient(rgba(176, 56, 56, 0.36), rgba(176, 56, 56, 0.36));
 }
 
 @keyframes discord-hl-swipe {
@@ -46,11 +47,27 @@
 }
 
 .discord-hl-pop[data-band="caution"] {
-  border: 1px solid #facc15;
+  border: 1px solid rgba(176, 132, 24, 0.7);
 }
 
 .discord-hl-pop[data-band="high"] {
-  border: 1px solid #f87171;
+  border: 1px solid rgba(176, 56, 56, 0.75);
+}
+
+.discord-hl-warn {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  line-height: 1.25;
+}
+
+.discord-hl-pop[data-band="caution"] .discord-hl-warn {
+  color: #d4a017;
+}
+
+.discord-hl-pop[data-band="high"] .discord-hl-warn {
+  color: #e05a5a;
 }
 
 .discord-hl-pop strong {
@@ -64,7 +81,7 @@
   padding-left: 1.1em;
 }
 
-.discord-hl-pop p {
+.discord-hl-pop p:not(.discord-hl-warn) {
   margin: 0;
 }
 

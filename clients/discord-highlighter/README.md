@@ -1,6 +1,6 @@
 # Discord Scam Smell
 
-Chrome extension that watches Discord locally and highlights **suspicious** user messages. Normal chat stays untouched. Caution is yellow, high risk is red. Hover a highlight for a short explanation.
+Chrome extension that watches Discord locally and highlights **suspicious** user messages. Normal chat stays untouched. Caution is a muted yellow, high risk is a muted red, both translucent so the message stays readable. Hover a highlight for a short explanation. High-risk popups say **DO NOT CLICK**; caution says **BE CAREFUL BEFORE CLICKING THIS**. The popup flips above the text when it would clip off the bottom of the screen.
 
 Nothing is sent off your machine. This is a warning, not a verdict.
 

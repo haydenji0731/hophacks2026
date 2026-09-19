@@ -1,7 +1,15 @@
 const assert = require("node:assert/strict");
 const { JSDOM } = require("jsdom");
 require("../scorer.js");
-const { HIGHLIGHT_CLASS, isUserMessage, scan, start } = require("../content.js");
+const {
+  HIGHLIGHT_CLASS,
+  isUserMessage,
+  scan,
+  start,
+  clickWarning,
+  popupPosition,
+  showPop,
+} = require("../content.js");
 
 function fixture() {
   return new JSDOM(`<!doctype html><html><body>
@@ -52,9 +60,45 @@ incoming.innerHTML =
   '<img class="avatar" alt="ava" /><div id="message-content-333">Click to verify your account</div>';
 document.querySelector("ol").appendChild(incoming);
 
+assert.equal(clickWarning("high"), "DO NOT CLICK");
+assert.equal(clickWarning("caution"), "BE CAREFUL BEFORE CLICKING THIS");
+
+const below = popupPosition(
+  { top: 40, bottom: 64, left: 20 },
+  { width: 268, height: 120 },
+  { width: 1280, height: 800 },
+);
+assert.equal(below.top, 72);
+
+const flipped = popupPosition(
+  { top: 700, bottom: 740, left: 20 },
+  { width: 268, height: 120 },
+  { width: 1280, height: 800 },
+);
+assert.equal(flipped.top, 572);
+assert.ok(flipped.top >= 8);
+assert.ok(flipped.top + 120 <= 800 - 8);
+
+const tight = popupPosition(
+  { top: 10, bottom: 790, left: 20 },
+  { width: 268, height: 200 },
+  { width: 400, height: 800 },
+);
+assert.ok(tight.top >= 8);
+assert.ok(tight.top + 200 <= 800 - 8 || tight.top === 8);
+
+showPop(document, scamMark);
+const pop = document.getElementById("discord-hl-pop");
+assert.ok(pop);
+assert.equal(pop.hidden, false);
+assert.match(pop.textContent, /DO NOT CLICK/);
+assert.match(pop.textContent, /High risk signals/);
+
 setTimeout(() => {
   const incomingMark = incoming.querySelector("." + HIGHLIGHT_CLASS);
   assert.ok(incomingMark);
   assert.equal(incomingMark.classList.contains("discord-hl-mark--caution"), true);
+  showPop(document, incomingMark);
+  assert.match(document.getElementById("discord-hl-pop").textContent, /BE CAREFUL BEFORE CLICKING THIS/);
   console.log("ok");
 }, 20);

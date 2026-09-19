@@ -16,7 +16,7 @@
       .page {
         max-width: 720px;
         margin: 0 auto;
-        padding: 28px 20px 64px;
+        padding: 28px 20px 50vh;
       }
       h1 {
         margin: 0 0 8px;
@@ -68,10 +68,10 @@
         color: #b5bac1;
       }
       .result[data-band="caution"] {
-        color: #facc15;
+        color: #d4a017;
       }
       .result[data-band="high"] {
-        color: #f87171;
+        color: #e05a5a;
       }
       .chat {
         margin: 0;
@@ -173,8 +173,10 @@
           out.textContent = `Looks normal (${result.score}/100). Nothing highlighted.`;
           return;
         }
+        const warn =
+          result.band === "high" ? "DO NOT CLICK" : "BE CAREFUL BEFORE CLICKING THIS";
         const label = result.band === "high" ? "High risk signals" : "Caution";
-        out.textContent = `${label} · ${result.score}/100. ${result.reasons.join(" ")}`;
+        out.textContent = `${warn} · ${label} · ${result.score}/100. ${result.reasons.join(" ")}`;
       });
     </script>
   </body>

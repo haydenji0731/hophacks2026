@@ -110,6 +110,30 @@
     return pop;
   }
 
+  function clickWarning(band) {
+    return band === "high" ? "DO NOT CLICK" : "BE CAREFUL BEFORE CLICKING THIS";
+  }
+
+  function popupPosition(markRect, popSize, viewport, gap = 8, margin = 8) {
+    const maxWidth = Math.max(0, viewport.width - margin * 2);
+    const width = Math.min(popSize.width || 268, maxWidth);
+    const height = popSize.height || 0;
+    let left = markRect.left;
+    left = Math.min(Math.max(margin, left), viewport.width - width - margin);
+    if (!Number.isFinite(left) || left < margin) left = margin;
+
+    const below = markRect.bottom + gap;
+    const above = markRect.top - height - gap;
+    const fitsBelow = below + height <= viewport.height - margin;
+    const fitsAbove = above >= margin;
+    let top;
+    if (fitsBelow) top = below;
+    else if (fitsAbove) top = above;
+    else top = Math.max(margin, viewport.height - height - margin);
+
+    return { top, left };
+  }
+
   function showPop(doc, mark) {
     const pop = ensurePop(doc);
     const band = mark.dataset.band || "caution";
@@ -123,16 +147,22 @@
     const title = band === "high" ? "High risk signals" : "Caution";
     pop.dataset.band = band;
     pop.innerHTML =
+      `<p class="discord-hl-warn">${clickWarning(band)}</p>` +
       `<strong>${title} · ${category}</strong>` +
       (reasons.length
         ? `<ul>${reasons.map((r) => `<li>${escapeHtml(r)}</li>`).join("")}</ul>`
         : `<p>This wording matches common scam pressure tactics. It is a warning, not a verdict.</p>`);
     pop.hidden = false;
-    const rect = mark.getBoundingClientRect();
-    const top = Math.min(rect.bottom + 8, doc.defaultView.innerHeight - 8);
-    const left = Math.min(Math.max(8, rect.left), doc.defaultView.innerWidth - 288);
-    pop.style.top = `${top}px`;
-    pop.style.left = `${left}px`;
+    pop.style.top = "0px";
+    pop.style.left = "0px";
+    const view = doc.defaultView;
+    const pos = popupPosition(
+      mark.getBoundingClientRect(),
+      pop.getBoundingClientRect(),
+      { width: view.innerWidth, height: view.innerHeight },
+    );
+    pop.style.top = `${pos.top}px`;
+    pop.style.left = `${pos.left}px`;
   }
 
   function hidePop(doc) {
@@ -243,6 +273,9 @@
     processAddedNode,
     start,
     analyze,
+    clickWarning,
+    popupPosition,
+    showPop,
   };
 
   if (typeof document !== "undefined" && document.documentElement) {
