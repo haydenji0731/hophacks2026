@@ -166,5 +166,64 @@ function markFor(document, api, needle) {
   assert.equal(sidebar.querySelector("." + api.HIGHLIGHT_CLASS), null);
 }
 
+const DOCS_HTML = `<!doctype html><html><body>
+  <div id="docs-chrome"><button>Share</button></div>
+  <div class="docos-replyview-body">hey are we still on for pizza later?</div>
+  <div class="docos-replyview-body">Click to verify your account</div>
+  <div data-comment-id="c1">
+    <div class="docos-replyview-body">IRS: pay overdue tax with Apple gift cards today, don't tell anyone</div>
+  </div>
+  <div class="docs-chat-message">Click to verify your account at <a href="https://evil.example/paypal">paypal.com/login</a></div>
+  <textarea class="docos-input-textarea">IRS: pay overdue tax with Apple gift cards today, don't tell anyone</textarea>
+</body></html>`;
+
+const SLIDES_HTML = `<!doctype html><html><body>
+  <div class="punch-viewer-speakernotes-text" aria-label="Speaker notes">
+    IRS: pay overdue tax with Apple gift cards today, don't tell anyone
+  </div>
+  <div class="sketchy-text-content">Click to verify your account</div>
+  <div class="sketchy-text-content">hey are we still on for pizza later?</div>
+</body></html>`;
+
+{
+  const { document, api } = load("https://docs.google.com/document/d/abc/edit", DOCS_HTML);
+  api.scan(document);
+  const pizza = Array.from(document.querySelectorAll(".docos-replyview-body")).find((el) =>
+    el.textContent.includes("pizza"),
+  );
+  const verify = Array.from(document.querySelectorAll(".docos-replyview-body")).find((el) =>
+    el.textContent.includes("verify"),
+  );
+  const irs = Array.from(document.querySelectorAll(".docos-replyview-body")).find((el) =>
+    el.textContent.includes("IRS"),
+  );
+  const chat = document.querySelector(".docs-chat-message");
+  const compose = document.querySelector(".docos-input-textarea");
+  assert.equal(pizza.querySelector("." + api.HIGHLIGHT_CLASS), null);
+  assert.ok(verify.querySelector("." + api.HIGHLIGHT_CLASS));
+  assert.equal(verify.querySelector("." + api.HIGHLIGHT_CLASS).classList.contains("discord-hl-mark--caution"), true);
+  assert.ok(irs.querySelector("." + api.HIGHLIGHT_CLASS));
+  assert.equal(irs.querySelector("." + api.HIGHLIGHT_CLASS).classList.contains("discord-hl-mark--high"), true);
+  assert.ok(chat.querySelector("." + api.HIGHLIGHT_CLASS));
+  assert.equal(compose.parentElement.querySelector("textarea." + api.HIGHLIGHT_CLASS), null);
+  assert.equal(compose.classList.contains(api.HIGHLIGHT_CLASS), false);
+}
+
+{
+  const { document, api } = load("https://docs.google.com/presentation/d/xyz/edit", SLIDES_HTML);
+  api.scan(document);
+  const notes = document.querySelector(".punch-viewer-speakernotes-text");
+  const verify = Array.from(document.querySelectorAll(".sketchy-text-content")).find((el) =>
+    el.textContent.includes("verify"),
+  );
+  const pizza = Array.from(document.querySelectorAll(".sketchy-text-content")).find((el) =>
+    el.textContent.includes("pizza"),
+  );
+  assert.ok(notes.querySelector("." + api.HIGHLIGHT_CLASS));
+  assert.equal(notes.querySelector("." + api.HIGHLIGHT_CLASS).classList.contains("discord-hl-mark--high"), true);
+  assert.ok(verify.querySelector("." + api.HIGHLIGHT_CLASS));
+  assert.equal(pizza.querySelector("." + api.HIGHLIGHT_CLASS), null);
+}
+
 console.log("ok");
 process.exit(0);
