@@ -102,14 +102,24 @@ function categoryFor(hits: CueHit[], text: string): ScamCategory {
     ids.has("giveaway") ||
     ids.has("nitro_free") ||
     ids.has("you_have_won") ||
-    ids.has("lottery")
+    ids.has("lottery") ||
+    ids.has("instagram_giveaway")
   ) {
     return "giveaway";
   }
   if (ids.has("crypto_invest") || ids.has("recover_crypto") || ids.has("pig_butcher")) {
     return "investment";
   }
-  if (families.has("credential") || ids.has("secure_link") || ids.has("login_link")) {
+  if (
+    families.has("credential") ||
+    ids.has("secure_link") ||
+    ids.has("login_link") ||
+    ids.has("instagram_support") ||
+    ids.has("meta_verified") ||
+    ids.has("copyright_strike") ||
+    ids.has("verification_fee") ||
+    ids.has("confirm_this_is_you")
+  ) {
     return "phishing";
   }
   if (families.has("authority") && families.has("payment")) return "phishing";
@@ -153,6 +163,7 @@ export function analyze(text: string): ScamSmellResult {
     raw -= Math.min(4, benignScore * 0.15);
   }
 
+  // Bias toward caution: a single serious family plus action/link should not sit at 0.
   if (raw < 8 && (families.has("credential") || families.has("payment"))) {
     raw = Math.max(raw, 10);
   }
