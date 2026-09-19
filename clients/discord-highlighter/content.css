@@ -2,10 +2,6 @@
 .discord-hl-mark {
   --hl-h: 1.3em;
   display: inline;
-  width: auto;
-  max-width: max-content;
-  flex: 0 0 auto;
-  align-self: flex-start;
   padding: 0.22em 0.5em;
   margin: 0 -0.12em;
   border-radius: 0.75em;
@@ -25,6 +21,12 @@
 
 .discord-hl-mark--high {
   background-image: linear-gradient(rgba(176, 56, 56, 0.36), rgba(176, 56, 56, 0.36));
+}
+
+.discord-hl-mark--tight {
+  padding: 0.04em 0.06em;
+  margin: 0;
+  border-radius: 0.28em;
 }
 
 @keyframes discord-hl-swipe {

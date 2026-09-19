@@ -36,7 +36,7 @@ Avatars, nav chrome, and composers are never painted.
 
 | Site | Watched text |
 | --- | --- |
-| Discord | User messages (stable, PTB, Canary). Survives DM / channel switches. |
+| Discord | User messages (stable, PTB, Canary), including ones you just sent. Survives DM / channel switches. |
 | Instagram | Direct messages, captions, and comments. Rebuilds word-split bubbles inside the DM form and paints only the text. |
 | Reddit | Post bodies/titles and comments (new and old Reddit). |
 
