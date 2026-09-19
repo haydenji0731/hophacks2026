@@ -1,6 +1,6 @@
-# Discord Scam Smell
+# Scam Smell
 
-Chrome extension that watches Discord locally and highlights **suspicious** user messages. Normal chat stays untouched. Caution is a muted yellow, high risk is a muted red, both translucent so the message stays readable. Hover a highlight for a short explanation. High-risk popups say **DO NOT CLICK**; caution says **BE CAREFUL BEFORE CLICKING THIS**. The popup flips above the text when it would clip off the bottom of the screen.
+Chrome extension that watches **Discord**, **Instagram**, and **Reddit** locally and highlights **suspicious** user text. Normal chat stays untouched. Caution is a muted yellow, high risk is a muted red, both translucent so the message stays readable. Hover a highlight for a short explanation. High-risk popups say **DO NOT CLICK**; caution says **BE CAREFUL BEFORE CLICKING THIS**. The popup flips above the text when it would clip off the bottom of the screen.
 
 Nothing is sent off your machine. This is a warning, not a verdict.
 
@@ -9,7 +9,7 @@ Nothing is sent off your machine. This is a warning, not a verdict.
 1. Open `chrome://extensions`
 2. Turn on **Developer mode**
 3. Click **Load unpacked** and select this folder (the one with `manifest.json`)
-4. Open [discord.com](https://discord.com) in Chrome
+4. Open Discord, Instagram (including DMs), or Reddit
 
 If it is already loaded, click **Reload** after pulling changes.
 
@@ -23,9 +23,13 @@ Offline cue matching + a small association graph + cross-family combos (urgency 
 | caution | 25–54 | yellow |
 | high | 55–100 | red |
 
-Avatars and the message row are never painted. Date separators and most system events are ignored.
+Avatars, nav chrome, and composers are never painted.
 
-It matches Discord stable, PTB, and Canary, and keeps watching as you switch DMs or channels.
+| Site | Watched text |
+| --- | --- |
+| Discord | User messages (stable, PTB, Canary). Survives DM / channel switches. |
+| Instagram | Direct messages, captions, and comments. Survives thread switches. |
+| Reddit | Post bodies/titles and comments (new and old Reddit). |
 
 ## Develop
 
@@ -43,6 +47,6 @@ npm run build
 | --- | --- |
 | `manifest.json` | Manifest V3 |
 | `scorer.js` | Bundled offline analyzer |
-| `content.js` | MutationObserver, highlights, popup |
+| `content.js` | Site adapters, MutationObserver, highlights, popup |
 | `content.css` | Yellow / red highlighter + popup |
 | `scam-smell/` | Source, data, and fixtures |
