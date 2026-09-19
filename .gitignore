@@ -1,3 +1,6 @@
+# --- Mis ---
+training_data/*wav
+
 # --- OS ---
 .DS_Store
 .AppleDouble
