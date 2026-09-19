@@ -2,13 +2,11 @@
   const HIGHLIGHT_CLASS = "discord-hl-mark";
   const POP_ID = "discord-hl-pop";
   const BLOCK_TAGS = /^(PRE|UL|OL|BLOCKQUOTE|DIV|TABLE|H[1-6]|HR)$/;
-  const SKIP_CHROME = "nav, header, footer, aside, [role='navigation'], [role='banner'], [role='tablist'], time, textarea, [contenteditable='true']";
+  const SKIP_CHROME = "nav, header, footer, aside, [role='navigation'], [role='banner'], [role='tablist'], button, [role='button'], time, textarea, [contenteditable='true'], form";
   const IG_UI =
-    /^(liked by|view all(?: \d+ comments?)?|follow|following|suggested for you|see translation|sent|home|search|reels|shop|messages|notifications|create|more|log in|sign up|see all|liked your|started following|\d+[kmb]?\s*(?:likes?|comments?|views?))$/i;
-  const IG_HOST_SEL =
-    '[dir="auto"], [role="none"], [role="presentation"], [role="row"], [role="listitem"], span, p, h1';
-  const IG_NOT_BUBBLE =
-    "form, main, article, nav, header, footer, aside, [role='log'], [role='navigation'], [role='banner'], [data-pagelet], [aria-label*='onversation' i], [aria-label*='essages' i]";
+    /^(liked by|view all(?: \d+ comments?)?|follow|following|suggested for you|see translation|sent|home|search|reels|shop|messages|notifications|create|more)$/i;
+  const IG_THREAD =
+    "form, main, article, nav, header, footer, aside, [role='log'], [role='navigation'], [data-pagelet], [aria-label^='Conversation' i], [aria-label^='conversation'], [aria-label*='essages' i]";
   const HANDLE_ONLY = /^@?[a-zA-Z0-9._]{1,30}$/;
   const CATEGORY_LABEL = {
     phishing: "Phishing",
@@ -79,6 +77,17 @@
   const INSTAGRAM = {
     name: "instagram",
     matchHost: (host) => /(?:^|\.)instagram\.com$/.test(host),
+    skip(el) {
+      if (!el || el.nodeType !== 1 || !el.closest) return true;
+      if (el.closest("nav, header, footer, aside, [role='navigation'], [role='banner'], [role='tablist']")) {
+        return true;
+      }
+      if (el.closest("textarea, [contenteditable='true'], svg, img, video")) return true;
+      return false;
+    },
+    isThread(el) {
+      return Boolean(el && el.matches && el.matches(IG_THREAD));
+    },
     joinedText(el) {
       if (!el) return "";
       const pieces = [];
@@ -117,94 +126,57 @@
       if (!fallback) return joined;
       return joined.split(/\s+/).length >= fallback.split(/\s+/).length ? joined : fallback;
     },
-    skip(el) {
-      if (!el || el.nodeType !== 1 || !el.closest) return true;
-      if (el.closest("nav, [role='navigation'], [role='tablist'], [role='banner'], footer, aside")) return true;
-      if (el.closest("textarea, [contenteditable='true'], svg")) return true;
-      return false;
-    },
-    isNotBubble(el) {
-      return Boolean(el && el.matches && el.matches(IG_NOT_BUBBLE));
-    },
-    isFragment(el) {
-      if (!el || !el.matches || !el.matches(IG_HOST_SEL)) return false;
-      if (this.skip(el) || this.isNotBubble(el)) return false;
-      const text = this.visibleText(el);
-      if (!text || text.length > 1500) return false;
-      if (IG_UI.test(text)) return false;
-      return true;
-    },
-    isTextLeaf(el) {
-      if (!el || el.nodeType !== 1 || this.skip(el) || this.isNotBubble(el)) return false;
-      const text = this.visibleText(el);
-      if (!text || text.length > 80) return false;
-      if (IG_UI.test(text)) return false;
-      const childCount = el.children ? el.children.length : 0;
-      return childCount <= 2;
-    },
-    isCandidate(el) {
-      if (!this.isFragment(el)) return false;
-      const text = this.visibleText(el);
-      if (text.length < 8) return false;
+    isSentence(text) {
+      if (!text || text.length < 8 || text.length > 1500) return false;
       if (HANDLE_ONLY.test(text) && !/\s/.test(text)) return false;
+      if (IG_UI.test(text)) return false;
       return true;
     },
-    pieceNodes(el) {
+    pieces(el) {
       if (!el || !el.children) return [];
-      const usable = (node) => this.isFragment(node) || this.isTextLeaf(node);
-      const direct = Array.from(el.children).filter(usable);
-      if (direct.length >= 2) return direct;
-      const nested = [];
-      Array.from(el.children).forEach((wrap) => {
-        if (this.skip(wrap) || this.isNotBubble(wrap)) return;
-        const kids = Array.from(wrap.children || []).filter(usable);
-        if (kids.length) nested.push(...kids);
-        else if (usable(wrap)) nested.push(wrap);
+      return Array.from(el.children).filter((kid) => {
+        if (this.skip(kid) || this.isThread(kid)) return false;
+        const text = this.visibleText(kid);
+        return Boolean(text) && text.length <= 80;
       });
-      return nested.length >= 2 ? nested : direct;
     },
-    isSplitParent(el) {
-      if (!el || el.nodeType !== 1 || this.skip(el) || this.isNotBubble(el)) return false;
-      const pieces = this.pieceNodes(el);
-      if (pieces.length < 2 || pieces.length > 80) return false;
-      const texts = pieces.map((node) => this.visibleText(node)).filter(Boolean);
-      if (texts.length < 2) return false;
+    isBubble(el) {
+      if (!el || el.nodeType !== 1 || this.skip(el) || this.isThread(el)) return false;
+      const kids = this.pieces(el);
+      if (kids.length < 2 || kids.length > 80) return false;
+      const texts = kids.map((kid) => this.visibleText(kid));
       const combined = texts.join(" ").replace(/\s+/g, " ").trim();
-      if (combined.length < 8 || combined.length > 800) return false;
-      if (IG_UI.test(combined)) return false;
-      const wordLike = texts.filter((text) => text.length <= 40 && !/\s/.test(text)).length;
-      if (wordLike >= texts.length * 0.6) return true;
-      const shortish = texts.filter((text) => text.length <= 80).length;
-      if (texts.length <= 8 && shortish === texts.length) {
-        const longest = Math.max(...texts.map((text) => text.length));
-        return longest < combined.length * 0.7;
+      if (!this.isSentence(combined)) return false;
+      const wordish = texts.filter((text) => text.length <= 40 && !/\s/.test(text)).length;
+      return wordish >= texts.length * 0.6;
+    },
+    isLeafMessage(el) {
+      if (!el || el.nodeType !== 1 || this.skip(el) || this.isThread(el)) return false;
+      const nested = el.querySelectorAll ? el.querySelectorAll('[dir="auto"]') : [];
+      const hasDirChild = Array.from(nested).some((kid) => kid !== el);
+      if (el.getAttribute && el.getAttribute("dir") === "auto" && !hasDirChild) {
+        return this.isSentence(this.visibleText(el));
+      }
+      if (el.matches && el.matches("span, p") && !hasDirChild && !this.isBubble(el)) {
+        return this.isSentence(this.visibleText(el));
       }
       return false;
     },
-    ancestorSplit(el) {
+    ancestorBubble(el) {
       let node = el && el.parentElement;
-      for (let i = 0; i < 6 && node; i += 1) {
-        if (this.isNotBubble(node)) return null;
-        if (this.isSplitParent(node)) return node;
+      for (let i = 0; i < 5 && node; i += 1) {
+        if (this.isThread(node)) return null;
+        if (this.isBubble(node)) return node;
         node = node.parentElement;
       }
       return null;
     },
     isHost(el) {
-      if (this.isSplitParent(el)) {
-        const outer = this.ancestorSplit(el);
-        return !outer;
+      if (this.isBubble(el)) {
+        return !Array.from(el.children || []).some((kid) => this.isBubble(kid));
       }
-      if (!this.isCandidate(el)) return false;
-      if (this.ancestorSplit(el)) return false;
-      const text = this.visibleText(el);
-      const kids = el.querySelectorAll ? el.querySelectorAll(IG_HOST_SEL) : [];
-      for (const kid of kids) {
-        if (kid === el) continue;
-        if (!this.isCandidate(kid) && !this.isSplitParent(kid)) continue;
-        if (this.visibleText(kid).length >= text.length * 0.7) return false;
-      }
-      return true;
+      if (!this.isLeafMessage(el)) return false;
+      return !this.ancestorBubble(el);
     },
     closestHost(el) {
       let node = el && el.nodeType === 1 ? el : el && el.parentElement;
@@ -218,26 +190,22 @@
       if (!root || !root.querySelectorAll) return [];
       const scopes = [];
       const scopeSel =
-        '[data-pagelet="IGDMessagesList"], [aria-label*="onversation" i], [aria-label*="essages" i], [role="log"], article';
+        '[data-pagelet="IGDMessagesList"], [aria-label^="Conversation" i], [aria-label^="conversation"], article';
       if (root.matches && root.matches(scopeSel + ", main, form")) scopes.push(root);
       root.querySelectorAll(scopeSel).forEach((el) => scopes.push(el));
-      if (root.querySelectorAll) {
-        root.querySelectorAll("form").forEach((el) => {
-          if (el.querySelector && el.querySelector('[aria-label*="onversation" i], [data-pagelet="IGDMessagesList"]')) {
-            scopes.push(el);
-          }
-        });
-      }
+      root.querySelectorAll("form").forEach((el) => {
+        if (el.querySelector && el.querySelector(scopeSel)) scopes.push(el);
+      });
       const search = unique(scopes.length ? scopes : [root]);
       const found = [];
       for (const scope of search) {
         if (this.isHost(scope)) found.push(scope);
         if (!scope.querySelectorAll) continue;
         const parents = new Set();
-        scope.querySelectorAll(IG_HOST_SEL).forEach((el) => {
+        scope.querySelectorAll('[dir="auto"], span, p').forEach((el) => {
           if (this.isHost(el)) found.push(el);
           let parent = el.parentElement;
-          for (let i = 0; i < 5 && parent && parent !== scope; i += 1) {
+          for (let i = 0; i < 4 && parent && parent !== scope; i += 1) {
             parents.add(parent);
             parent = parent.parentElement;
           }
@@ -432,27 +400,14 @@
     flush();
   }
 
-  function wrapDeep(contentEl, result) {
+  function wrapInlineDeep(contentEl, result) {
     wrapInlineRuns(contentEl, result);
     if (contentEl.querySelector && contentEl.querySelector("." + HIGHLIGHT_CLASS)) return;
-    const blocks = Array.from(contentEl.children || []).filter(
-      (node) =>
-        node.nodeType === 1 &&
-        BLOCK_TAGS.test(node.tagName) &&
-        !(node.classList && node.classList.contains(HIGHLIGHT_CLASS)),
-    );
-    if (blocks.length) {
-      blocks.forEach((block) => wrapDeep(block, result));
-      if (contentEl.querySelector && contentEl.querySelector("." + HIGHLIGHT_CLASS)) return;
-    }
-    const text = String(contentEl.textContent || "").trim();
-    if (!text) return;
-    const doc = contentEl.ownerDocument;
-    const mark = doc.createElement("span");
-    mark.className = HIGHLIGHT_CLASS;
-    applyResult(mark, result);
-    while (contentEl.firstChild) mark.appendChild(contentEl.firstChild);
-    contentEl.appendChild(mark);
+    Array.from(contentEl.children || []).forEach((child) => {
+      if (child.nodeType === 1 && BLOCK_TAGS.test(child.tagName)) {
+        wrapInlineDeep(child, result);
+      }
+    });
   }
 
   function applyResult(mark, result) {
@@ -589,7 +544,7 @@
     unwrap(content);
     content.dataset.scamKey = key;
     if (result.band === "ok") return;
-    wrapDeep(content, result);
+    wrapInlineDeep(content, result);
   }
 
   function mark(el) {
