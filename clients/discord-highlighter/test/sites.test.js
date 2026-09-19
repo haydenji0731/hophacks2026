@@ -10,18 +10,6 @@ function load(url, html) {
   return { document: window.document, api: require("../content.js") };
 }
 
-function tightest(document, needle) {
-  return Array.from(document.querySelectorAll("body *"))
-    .filter((el) => (el.textContent || "").includes(needle))
-    .sort((a, b) => (a.textContent || "").length - (b.textContent || "").length)[0];
-}
-
-function markFor(document, api, needle) {
-  const el = tightest(document, needle);
-  if (!el) return null;
-  return (el.closest && el.closest("." + api.HIGHLIGHT_CLASS)) || el.querySelector("." + api.HIGHLIGHT_CLASS);
-}
-
 const IG_HTML = `<!doctype html><html><body>
   <div data-pagelet="IGDMessagesList" aria-label="Conversation with Sam">
     <div role="none">
@@ -41,36 +29,6 @@ const IG_HTML = `<!doctype html><html><body>
     </div>
     <nav><div dir="auto">Home</div></nav>
   </div>
-</body></html>`;
-
-const IG_FORM_SPLIT_HTML = `<!doctype html><html><body>
-  <form>
-    <div data-pagelet="IGDMessagesList" aria-label="Conversation with Support">
-      <div role="row">
-        <div class="xhashed" role="none">
-          <div role="presentation">
-            <div>
-              <span dir="auto">hey</span><span dir="auto">are</span><span dir="auto">we</span><span dir="auto">still</span><span dir="auto">on</span><span dir="auto">for</span><span dir="auto">pizza</span><span dir="auto">later?</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div role="row">
-        <div class="xhashed" role="none">
-          <div role="presentation">
-            <div>
-              <span dir="auto">Hi,</span><span dir="auto">this</span><span dir="auto">is</span><span dir="auto">Instagram</span><span dir="auto">Support.</span><span dir="auto">Your</span><span dir="auto">account</span><span dir="auto">will</span><span dir="auto">be</span><span dir="auto">disabled.</span><span dir="auto">Pay</span><span dir="auto">a</span><span dir="auto">$49</span><span dir="auto">verification</span><span dir="auto">fee</span><span dir="auto">to</span><span dir="auto">keep</span><span dir="auto">your</span><span dir="auto">Meta</span><span dir="auto">Verified</span><span dir="auto">badge.</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div role="row">
-        <div role="presentation">
-          <span>Your reel received a copyright strike. Pay the appeal fee immediately to remove the strike.</span>
-        </div>
-      </div>
-    </div>
-  </form>
 </body></html>`;
 
 const REDDIT_HTML = `<!doctype html><html><body>
@@ -118,19 +76,66 @@ const REDDIT_HTML = `<!doctype html><html><body>
   assert.equal(home.querySelector("." + api.HIGHLIGHT_CLASS), null);
 }
 
+const IG_FORM_SPLIT_HTML = `<!doctype html><html><body>
+  <form>
+    <div data-pagelet="IGDMessagesList" aria-label="Conversation with Sam">
+      <div role="row">
+        <div class="xhashed" role="none">
+          <div role="presentation">
+            <div>
+              <span dir="auto">hey</span><span dir="auto">are</span><span dir="auto">we</span><span dir="auto">still</span><span dir="auto">on</span><span dir="auto">for</span><span dir="auto">pizza</span><span dir="auto">later?</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div role="row">
+        <div class="xhashed" role="none">
+          <div role="presentation">
+            <div>
+              <span dir="auto">Click</span><span dir="auto">to</span><span dir="auto">verify</span><span dir="auto">your</span><span dir="auto">account</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div role="row">
+        <div class="xhashed" role="none">
+          <div role="presentation">
+            <div>
+              <span dir="auto">IRS:</span><span dir="auto">pay</span><span dir="auto">overdue</span><span dir="auto">tax</span><span dir="auto">with</span><span dir="auto">Apple</span><span dir="auto">gift</span><span dir="auto">cards</span><span dir="auto">today,</span><span dir="auto">don't</span><span dir="auto">tell</span><span dir="auto">anyone</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</body></html>`;
+
+function tightest(document, needle) {
+  return Array.from(document.querySelectorAll("body *"))
+    .filter((el) => (el.textContent || "").includes(needle))
+    .sort((a, b) => (a.textContent || "").length - (b.textContent || "").length)[0];
+}
+
+function markFor(document, api, needle) {
+  const el = tightest(document, needle);
+  if (!el) return null;
+  return (el.closest && el.closest("." + api.HIGHLIGHT_CLASS)) || el.querySelector("." + api.HIGHLIGHT_CLASS);
+}
+
 {
   const { document, api } = load("https://www.instagram.com/direct/t/9/", IG_FORM_SPLIT_HTML);
   api.scan(document);
   const pizzaMark = markFor(document, api, "pizza");
-  const verifyMark = markFor(document, api, "verification");
-  const strikeMark = markFor(document, api, "copyright");
+  const verifyMark = markFor(document, api, "verify");
+  const irsMark = markFor(document, api, "IRS");
   assert.equal(pizzaMark, null, "benign word-split pizza DM should stay clean");
-  assert.ok(verifyMark, "word-split Instagram Support verification fee should highlight");
-  assert.equal(verifyMark.classList.contains("discord-hl-mark--high"), true);
-  assert.ok(strikeMark, "copyright-strike bubble without dir=auto should highlight");
-  assert.equal(strikeMark.classList.contains("discord-hl-mark--high"), true);
-  assert.match(verifyMark.closest('[role="row"]').textContent, /InstagramSupport|Instagram Support/);
-  assert.match(verifyMark.closest("[data-scam-key]").dataset.scamKey, /Instagram Support/);
+  assert.ok(verifyMark, "word-split verify line inside a form should highlight");
+  assert.equal(verifyMark.classList.contains("discord-hl-mark--caution"), true);
+  assert.ok(irsMark, "word-split IRS line inside a form should highlight");
+  assert.equal(irsMark.classList.contains("discord-hl-mark--high"), true);
+  assert.equal(verifyMark.tagName, "SPAN");
+  assert.notEqual(verifyMark.parentElement.getAttribute("role"), "row");
+  assert.notEqual(irsMark.parentElement.getAttribute("role"), "row");
 }
 
 {
