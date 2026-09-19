@@ -1,21 +1,11 @@
 {
   "manifest_version": 3,
   "name": "Scam Smell",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Offline highlighter for suspicious Discord, Instagram, and Reddit messages. Caution is yellow, high risk is red.",
-  "icons": {
-    "16": "icons/icon16.png",
-    "48": "icons/icon48.png",
-    "128": "icons/icon128.png"
-  },
   "action": {
     "default_title": "Scam Smell",
-    "default_popup": "popup.html",
-    "default_icon": {
-      "16": "icons/icon16.png",
-      "48": "icons/icon48.png",
-      "128": "icons/icon128.png"
-    }
+    "default_popup": "popup.html"
   },
   "permissions": ["activeTab"],
   "content_scripts": [
