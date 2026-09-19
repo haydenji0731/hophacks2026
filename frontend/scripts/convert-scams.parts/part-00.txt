@@ -1,0 +1,82 @@
+/**
+ * Converts the pattern TSV plus the method catalog into the JSON the site
+ * scores against. Catalog ids that already exist as slugs are merged
+ * instead of duplicated.
+ *
+ * Usage: node scripts/convert-scams.mjs
+ */
+import { readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const tsvPath = join(root, "data", "reddit_scam_patterns.062126_091926.tsv");
+const catalogPath = join(root, "data", "scam-catalog.json");
+const outPath = join(root, "src", "data", "scams.json");
+
+const TITLE_OVERRIDES = {
+  irs_ssa_tax_impersonation: "IRS / SSA tax impersonation",
+  bank_amex_fbi_spoof_call: "Bank / Amex / FBI spoof call",
+  otp_google_wallet_checkout_phish: "OTP / Google Wallet checkout phish",
+  sim_swap_account_takeover: "SIM-swap account takeover",
+  ceo_business_email_compromise: "CEO / business email compromise",
+  mfa_otp_unused_account_texts: "Unexpected MFA / OTP texts",
+  pig_butchering_crypto_romance: "Pig-butchering crypto romance",
+  zelle_venmo_wrong_person_refund: "Zelle / Venmo wrong-person refund",
+  paypal_friends_family_goods: "PayPal Friends & Family goods scam",
+  tech_support_remote_access: "Tech-support remote access",
+  no_caller_id_late_night_probe: "No-caller-ID late-night probe",
+  facetime_verify_identity_bridge: "FaceTime \u201cverify identity\u201d bridge",
+  qr_code_payment_redirect: "QR-code payment redirect",
+  atm_card_skimmer_physical: "Physical ATM / pump skimmer",
+  e_dating_money_request: "E-dating money request",
+  cashier_check_overpayment: "Cashier\u2019s-check overpayment",
+  marketplace_overpayment_fake_check: "Marketplace fake-check overpayment",
+};
+
+/**
+ * Catalog id → existing encyclopedia slug. Same core method, do not add
+ * a second row. Tags and aliases are merged onto the slug.
+ */
+const CATALOG_PRIMARY = {
+  irs_tax: "irs_ssa_tax_impersonation",
+  tech_support: "tech_support_remote_access",
+  package_delivery_sms: "parcel_customs_delivery_fee",
+  romance_crypto: "pig_butchering_crypto_romance",
+  fake_job: "job_offer_training_equipment_fee",
+  bank_safe_account: "bank_amex_fbi_spoof_call",
+  family_emergency: "family_member_impersonation_jail",
+  rental_escrow: "rental_listing_deposit_scam",
+  qr_parking: "parking_ticket_qr_scam",
+  phishing_login: "phishing_lookalike_shop",
+  crypto_investment: "investment_trading_app_clone",
+  utility_shutoff: "utility_shutoff_urgency",
+  student_loan_forgiveness: "student_loan_forgiveness_phish",
+  seo_poisoned_support: "google_ads_spoofed_support",
+  car_warranty_robocall: "car_warranty_mail_robocall",
+  amazon_apple_refund: "refund_scam_double_dip",
+  unpaid_toll_sms: "toll_road_text_phish",
+  wrong_number_romance: "wrong_number_text_rapport",
+  task_scam: "task_telegram_watch_to_earn",
+  whatsapp_otp_hijack: "whatsapp_otp_code_share",
+  linkedin_fake_recruiter: "linkedin_recruiter_crypto_job",
+  marketplace_overpayment: "marketplace_overpayment_fake_check",
+  facebook_marketplace_escrow: "facebook_marketplace_payment_scam",
+  instagram_verification_fee: "instagram_account_report_lure",
+  tiktok_fake_giveaway: "gift_card_tiktok_outreach",
+  sextortion_social: "sextortion_webcam_blackmail",
+  sim_swap: "sim_swap_account_takeover",
+  crypto_airdrop_drain: "wallet_drainer_dapp_approve",
+  seed_phrase_phishing: "crypto_seed_phrase_phish",
+  fake_charity_disaster: "charity_crisis_donation_scam",
+  inheritance_advance_fee: "inheritance_advance_fee",
+  debt_collection_impersonation: "fake_law_firm_debt_threat",
+  fake_check_overpayment: "cashier_check_overpayment",
+  money_mule: "check_cashing_mule",
+  discord_nitro_phishing: "discord_mod_nitro_phishing",
+  dating_app_romance: "e_dating_money_request",
+  recovery_room: "crypto_recovery_secondary_scam",
+  celebrity_crypto_giveaway: "crypto_giveaway_elon_impersonation",
+  pet_scam: "pet_sale_rehome_fee",
+  payment_app_goods_scam: "paypal_friends_family_goods",
+  account_r
