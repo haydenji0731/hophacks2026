@@ -80,7 +80,7 @@ In progress. The first slice that is in this repo is the **ElevenLabs AI-audio t
 | Path | Status |
 | --- | --- |
 | [`backend/ai_audio`](backend/ai_audio) | ElevenLabs synthetic-voice detector (`elevenlabs_ai_score`, `ai_voice_used`) |
-| [`backend/db`](backend/db) | Postgres scam-pattern schema (SQLAlchemy + Alembic) |
+| [`backend/db`](backend/db) | Postgres scam-pattern schema + Reddit seed (~96 types) |
 | [`backend/detector`](backend/detector) | Combines ElevenLabs + Grok into confidence / notification tier |
 | [`backend/warnings`](backend/warnings) | Severity-tiered Twilio SMS notifier |
 | React questionnaire + scam pages | Planned |
