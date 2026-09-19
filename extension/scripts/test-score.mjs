@@ -99,7 +99,7 @@ extras.push({
 const hostDoc = JSON.parse(readFileSync(join(root, "rules/hosts.json"), "utf8"));
 const hostSet = compileHosts(hostDoc);
 const badHost = hostnameFromHref("https://irs-refund-secure.com/pay");
-const goodHost = hostnameFromHref("https://www.linkedin.com/in/example");
+const goodHost = hostnameFromHref("https://discord.com/channels/@me");
 extras.push({
   id: "l1_host_set",
   ok: hostSet.has(badHost) && !hostSet.has(goodHost),

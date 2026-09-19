@@ -1,6 +1,6 @@
 # We Hate Scammers — Chrome extension
 
-On-device scam pattern flagging for LinkedIn, Facebook, and Instagram. Inspired by uBlock: cheap checks first, compiled lists, silent defaults.
+On-device scam pattern flagging for Discord, Instagram, and Facebook. Inspired by uBlock: cheap checks first, compiled lists, silent defaults.
 
 This folder is the stretch Chrome client for [We Hate Scammers](https://github.com/haydenji0731/hophacks2026). It does **not** replace the phone detector or the website questionnaire. It deep-links to `https://wehatescammers.com/questionnaire?hint={topScamId}`.
 
@@ -26,9 +26,9 @@ L4  badge (soft) → banner (hard)  never echo the user's text
 ```
 
 ```
-rules.json ──compileRules.js──▶ { tokenMap, phrases, combos }
+rules.json ──compileRules.js──► { tokenMap, phrases, combos }
                                       │
-page text ──scan.js (debounce/hash)──▶ score.js (pure)
+page text ──scan.js (debounce/hash)──► score.js (pure)
                                       │
                                { score, reasons, topScamId }
                                       │
@@ -80,7 +80,7 @@ See [privacy.md](privacy.md). Allowed storage keys: `enabled`, `sitesEnabled`, `
 
 ## Permissions
 
-`storage` only. Host permissions are LinkedIn, Facebook/Messenger, and Instagram. Localhost matches exist so the served fixture can exercise the content script.
+`storage` only. Host permissions are Discord, Instagram, and Facebook/Messenger. Localhost matches exist so the served fixture can exercise the content script.
 
 ## Layout
 

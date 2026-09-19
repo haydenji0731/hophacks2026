@@ -24,8 +24,9 @@
   },
   "permissions": ["storage"],
   "host_permissions": [
-    "https://www.linkedin.com/*",
-    "https://linkedin.com/*",
+    "https://discord.com/*",
+    "https://*.discord.com/*",
+    "https://discordapp.com/*",
     "https://www.facebook.com/*",
     "https://facebook.com/*",
     "https://www.messenger.com/*",
@@ -40,8 +41,9 @@
   "content_scripts": [
     {
       "matches": [
-        "https://www.linkedin.com/*",
-        "https://linkedin.com/*",
+        "https://discord.com/*",
+        "https://*.discord.com/*",
+        "https://discordapp.com/*",
         "https://www.facebook.com/*",
         "https://facebook.com/*",
         "https://www.messenger.com/*",
@@ -60,7 +62,8 @@
     {
       "resources": ["testdata/fixtures.html", "privacy.md"],
       "matches": [
-        "https://www.linkedin.com/*",
+        "https://discord.com/*",
+        "https://*.discord.com/*",
         "https://www.facebook.com/*",
         "https://www.instagram.com/*",
         "http://127.0.0.1/*",

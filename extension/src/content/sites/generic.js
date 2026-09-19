@@ -19,7 +19,9 @@ export function getRoot(doc = document) {
 
 export function siteIdFromHost(hostname) {
   const host = String(hostname || "").replace(/^www\./, "");
-  if (host === "linkedin.com") return "linkedin";
+  if (host === "discord.com" || host === "discordapp.com" || host.endsWith(".discord.com")) {
+    return "discord";
+  }
   if (host === "facebook.com" || host === "messenger.com") return "facebook";
   if (host === "instagram.com") return "instagram";
   return "generic";

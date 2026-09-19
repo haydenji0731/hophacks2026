@@ -7,7 +7,7 @@ We Hate Scammers (browser extension) flags scam **patterns** on-device. It is a 
 | Key | Meaning |
 | --- | --- |
 | `enabled` | Master kill switch |
-| `sitesEnabled` | Per-site kill switches (`linkedin`, `facebook`, `instagram`) |
+| `sitesEnabled` | Per-site kill switches (`discord`, `instagram`, `facebook`) |
 | `rulesVersion` | Integer from `rules/rules.json` |
 | `warningsShown` | Counter only |
 | `userDisabledRuleIds` | Optional list of rule ids the user muted |

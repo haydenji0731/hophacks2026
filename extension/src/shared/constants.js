@@ -14,19 +14,19 @@ export const STORAGE_KEYS = Object.freeze({
 export const ALLOWED_STORAGE_KEYS = Object.freeze(Object.values(STORAGE_KEYS));
 
 export const SITE_IDS = Object.freeze([
-  "linkedin",
+  "discord",
   "facebook",
   "instagram",
 ]);
 
 export const SITE_HOSTS = Object.freeze({
-  linkedin: ["www.linkedin.com", "linkedin.com"],
+  discord: ["discord.com", "ptb.discord.com", "canary.discord.com", "discordapp.com"],
   facebook: ["www.facebook.com", "facebook.com", "www.messenger.com", "messenger.com"],
   instagram: ["www.instagram.com", "instagram.com"],
 });
 
 export const DEFAULT_SITES_ENABLED = Object.freeze({
-  linkedin: true,
+  discord: true,
   facebook: true,
   instagram: true,
 });

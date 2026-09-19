@@ -1,7 +1,9 @@
 import {
+  DEFAULT_SITES_ENABLED,
   DEFAULT_STORAGE,
   MSG,
   QUESTIONNAIRE_URL,
+  SITE_IDS,
   STORAGE_KEYS,
 } from "./shared/constants.js";
 
@@ -34,8 +36,14 @@ async function ensureDefaults() {
   if (typeof current[STORAGE_KEYS.enabled] !== "boolean") {
     next[STORAGE_KEYS.enabled] = DEFAULT_STORAGE.enabled;
   }
-  if (!current[STORAGE_KEYS.sitesEnabled] || typeof current[STORAGE_KEYS.sitesEnabled] !== "object") {
-    next[STORAGE_KEYS.sitesEnabled] = { ...DEFAULT_STORAGE.sitesEnabled };
+  const sites = current[STORAGE_KEYS.sitesEnabled];
+  if (!sites || typeof sites !== "object" || "linkedin" in sites || SITE_IDS.some((id) => !(id in sites))) {
+    const merged = { ...DEFAULT_SITES_ENABLED, ...(sites && typeof sites === "object" ? sites : {}) };
+    next[STORAGE_KEYS.sitesEnabled] = {
+      discord: merged.discord !== false,
+      facebook: merged.facebook !== false,
+      instagram: merged.instagram !== false,
+    };
   }
   if (typeof current[STORAGE_KEYS.warningsShown] !== "number") {
     next[STORAGE_KEYS.warningsShown] = 0;

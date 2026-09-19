@@ -9,12 +9,12 @@ import { createScanner } from "./scan.js";
 import { collectLinkHits, compileHosts } from "./links.js";
 import { applyBadge, escalate, resetBurst, showBanner } from "./ui.js";
 import { getRoot as genericRoot, siteIdFromHost } from "./sites/generic.js";
-import { getRoot as linkedinRoot } from "./sites/linkedin.js";
+import { getRoot as discordRoot } from "./sites/discord.js";
 import { getRoot as facebookRoot } from "./sites/facebook.js";
 import { getRoot as instagramRoot } from "./sites/instagram.js";
 
 const ROOTS = {
-  linkedin: linkedinRoot,
+  discord: discordRoot,
   facebook: facebookRoot,
   instagram: instagramRoot,
   generic: genericRoot,
