@@ -28,7 +28,7 @@ export function tagMatch(scam: Scam, spec: TagSpec, mode: "any" | "all" = "any")
   return mode === "all" ? checks.every(Boolean) : checks.some(Boolean);
 }
 
-/** True if this scam is the catalog method or the Reddit slug it was merged onto. */
+/** True if this scam is the method id or a slug it was merged onto. */
 export function isMethod(scam: Scam, ...ids: string[]): boolean {
   const have = new Set([scam.slug, ...(scam.catalogIds ?? [])]);
   return ids.some((id) => have.has(id));
