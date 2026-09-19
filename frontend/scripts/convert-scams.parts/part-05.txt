@@ -1,0 +1,99 @@
+e ?? []).slice(0, 2);
+  const steps = fromCatalog.length
+    ? fromCatalog
+    : ["Stop talking to them. Do not send money, gift cards, or codes."];
+  const push = (line) => {
+    if (!steps.some((step) => step.toLowerCase() === line.toLowerCase())) steps.push(line);
+  };
+  push("Do not call a number they gave you. Use a number from your statement, a bill, or a trusted person.");
+  if (blob.includes("check")) {
+    push("Do not spend money from a check they sent. Tell your bank it may be fake.");
+  } else if (blob.includes("gift")) {
+    push("Do not buy gift cards for anyone who called you. Banks and the IRS never ask for that.");
+  } else {
+    push("Tell a family member, friend, or the real company. Then report it at reportfraud.ftc.gov.");
+  }
+  return steps.slice(0, 4);
+}
+
+function signalsFor(scam) {
+  const fromHow = howItWorksSteps(scam.howItWorks);
+  if (fromHow.length) return fromHow;
+  return String(scam.description ?? "")
+    .split(";")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1));
+}
+
+function examplesFor(scam, signals) {
+  if (EXAMPLES[scam.slug]) return EXAMPLES[scam.slug];
+  if (scam.catalogExamples?.length) return scam.catalogExamples;
+  const generated = signals.slice(0, 3).map((signal) => `People report: ${signal}.`);
+  if (generated.length >= 2) return generated;
+  generated.push(
+    `A typical pitch mentions ${titleFromSlug(scam.slug).toLowerCase()} and asks you to act before you can check.`
+  );
+  return generated;
+}
+
+function enrich(scam) {
+  const signals = signalsFor(scam);
+  const rest = { ...scam };
+  const catalogName = rest.catalogName;
+  delete rest.catalogAdvice;
+  delete rest.catalogExamples;
+  delete rest.howItWorks;
+  delete rest.catalogName;
+  return {
+    ...rest,
+    name: catalogName || titleFromSlug(scam.slug),
+    signals,
+    examples: examplesFor(scam, signals),
+    whatToDo: adviceFor(scam),
+    simpleWhatToDo: simpleAdvice(scam),
+    tags: scam.tags ?? emptyTags(),
+    catalogIds: unique(scam.catalogIds),
+    aliases: unique(scam.aliases),
+    origin: scam.origin ?? "reddit",
+    questionnairePriority: scam.questionnairePriority ?? null,
+  };
+}
+
+function applyCatalogEntry(target, entry, { primary }) {
+  target.tags = mergeTags(target.tags, entry.tags);
+  target.aliases = unique([
+    ...(target.aliases ?? []),
+    ...(entry.aliases ?? []),
+    entry.name,
+    entry.id !== target.slug ? entry.id : null,
+  ]);
+  if (primary) {
+    target.catalogIds = unique([...(target.catalogIds ?? []), entry.id]);
+    target.catalogName = entry.name;
+    target.seedDescription = target.seedDescription || target.description;
+    target.description = entry.summary || target.description;
+    target.howItWorks = entry.howItWorks;
+    target.catalogExamples = howItWorksSteps(entry.howItWorks).slice(0, 3);
+    target.catalogAdvice = unique([...(entry.whatToDo ?? []), ...(entry.whatNotToDo ?? [])]);
+    target.reportTo = unique(entry.reportTo);
+    target.questionnairePriority = entry.questionnairePriority ?? target.questionnairePriority;
+    target.origin = target.origin === "reddit" || !target.origin ? "both" : target.origin;
+    const extraPlatforms = platformsFromCatalog(entry);
+    target.platforms = unique([...(target.platforms ?? []), ...extraPlatforms]);
+    target.demands = unique([...(target.demands ?? []), ...demandsFromAsks(entry.tags?.asks)]);
+    target.victimRoles = unique([...(target.victimRoles ?? []), ...victimRolesFromCatalog(entry)]);
+  } else {
+    target.origin = target.origin === "grok" ? "grok" : target.origin === "both" ? "both" : "both";
+    target.questionnairePriority = target.questionnairePriority ?? entry.questionnairePriority ?? null;
+  }
+}
+
+function newFromCatalog(entry, index) {
+  return {
+    id: catalogUuid(entry.id, index),
+    slug: entry.id,
+    platforms: platformsFromCatalog(entry),
+    aiGenerated: false,
+    victimRoles: victimRolesFromCatalog(entry),
+    demands: demandsFromAsks(entry.tags?.as
