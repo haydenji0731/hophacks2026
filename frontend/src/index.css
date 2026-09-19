@@ -168,3 +168,64 @@ textarea,
 .muted {
   color: var(--muted);
 }
+
+.a11y-large {
+  font-size: 1.15rem;
+}
+.a11y-large h1 {
+  font-size: 2rem;
+  line-height: 1.25;
+}
+
+.btn-xl {
+  padding: 1rem 1.4rem;
+  font-size: 1.15rem;
+  width: 100%;
+  max-width: 28rem;
+  text-align: center;
+}
+
+.option-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin: 1.25rem 0 1.5rem;
+}
+.option-picked {
+  border-color: var(--accent);
+  background: #2a1518;
+}
+
+.result-primary {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem 1.4rem;
+  margin: 1rem 0 1.5rem;
+}
+.result-primary h2 {
+  margin-top: 0;
+}
+.result-alt {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1rem;
+  margin: 0.5rem 0;
+}
+.result-alt p {
+  margin: 0.35rem 0 0;
+}
+
+.report-status {
+  margin: 1rem 0 0;
+  color: var(--accent-2);
+}
+.report-status.error {
+  color: var(--accent);
+}
+
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

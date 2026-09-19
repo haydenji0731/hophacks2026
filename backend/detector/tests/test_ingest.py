@@ -139,6 +139,43 @@ def test_ingest_db_failure_is_soft(client: TestClient, monkeypatch: pytest.Monke
     assert body["notify"] is not None
 
 
+def test_report_upserts_without_sms(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setattr(
+        "app.upsert_report",
+        lambda **_k: (
+            DbUpsertResult(
+                action="updated",
+                scam_id="11111111-1111-1111-1111-111111111111",
+                name="Family emergency / bail scam",
+                frequency=4,
+            ),
+            [],
+        ),
+    )
+    response = client.post(
+        "/v1/report",
+        json={
+            "scam_type": "Family emergency / bail scam",
+            "method": "gift card payment request",
+            "target": "family member / older adult",
+            "reasoning": "Phone call. Gift cards. Urgency.",
+            "ai_generated": True,
+            "platform": "phone",
+        },
+    )
+    body = response.json()
+    assert response.status_code == 200
+    assert body["db"]["action"] == "updated"
+    assert body["db"]["frequency"] == 4
+    assert body["warnings"] == []
+
+
+def test_report_requires_scam_type(client: TestClient) -> None:
+    response = client.post("/v1/report", json={"scam_type": "  "})
+    assert response.status_code == 400
+    assert response.json()["detail"]["error"] == "missing_scam_type"
+
+
 def test_ingest_requires_input(client: TestClient) -> None:
     response = client.post("/v1/ingest", data={})
     assert response.status_code == 400

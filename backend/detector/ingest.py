@@ -33,17 +33,23 @@ def _notify_result_from_payload(payload: Any) -> NotifyResult:
     return NotifyResult.model_validate(data)
 
 
-def _try_upsert(analysis: AnalyzeResponse) -> tuple[DbUpsertResult | None, list[str]]:
+def upsert_report(
+    *,
+    scam_type: str,
+    method: str = "none",
+    target: str = "unclear",
+    reasoning: str = "",
+    ai_generated: bool | None = None,
+    platform: str = "phone",
+) -> tuple[DbUpsertResult, list[str]]:
+    """Save a user-confirmed questionnaire report into scam patterns. No SMS."""
     warnings: list[str] = []
-    grok = analysis.grok
-    if grok is None or not grok.is_scam:
-        return DbUpsertResult(action="skipped"), warnings
-
     try:
         _prefer_package(
             DB,
-            ("models", "session", "repository", "db_config"),
+            drop_modules=("models", "session", "repository", "db_config"),
         )
+        from models import Platform
         from repository import upsert_scam_from_detection
         from session import get_session_factory
     except Exception as exc:
@@ -51,15 +57,21 @@ def _try_upsert(analysis: AnalyzeResponse) -> tuple[DbUpsertResult | None, list[
         return DbUpsertResult(action="skipped"), warnings
 
     try:
+        plat = Platform(platform)
+    except ValueError:
+        plat = Platform.other
+
+    try:
         session = get_session_factory()()
         try:
             result = upsert_scam_from_detection(
                 session,
-                scam_type=grok.scam_type,
-                method=grok.method,
-                target=grok.target,
-                reasoning=grok.reasoning,
-                ai_generated=analysis.ai_generated,
+                scam_type=scam_type,
+                method=method,
+                target=target,
+                reasoning=reasoning,
+                ai_generated=ai_generated,
+                platform=plat,
             )
         finally:
             session.close()
@@ -79,6 +91,19 @@ def _try_upsert(analysis: AnalyzeResponse) -> tuple[DbUpsertResult | None, list[
             frequency=int(scam.frequency),
         ),
         warnings,
+    )
+
+
+def _try_upsert(analysis: AnalyzeResponse) -> tuple[DbUpsertResult | None, list[str]]:
+    grok = analysis.grok
+    if grok is None or not grok.is_scam:
+        return DbUpsertResult(action="skipped"), []
+    return upsert_report(
+        scam_type=grok.scam_type,
+        method=grok.method,
+        target=grok.target,
+        reasoning=grok.reasoning,
+        ai_generated=analysis.ai_generated,
     )
 
 

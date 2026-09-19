@@ -67,3 +67,17 @@ class NotifyResult(BaseModel):
 class IngestResponse(AnalyzeResponse):
     db: DbUpsertResult | None = None
     notify: NotifyResult | None = None
+
+
+class ReportRequest(BaseModel):
+    scam_type: str
+    method: str = "none"
+    target: str = "unclear"
+    reasoning: str = ""
+    ai_generated: bool | None = None
+    platform: str = "phone"
+
+
+class ReportResponse(BaseModel):
+    db: DbUpsertResult
+    warnings: list[str] = Field(default_factory=list)

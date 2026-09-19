@@ -1,6 +1,15 @@
 import os
 import json
+from pathlib import Path
+
 import requests
+
+try:
+    from dotenv import load_dotenv
+
+    load_dotenv(Path(__file__).resolve().parents[1] / ".env")
+except ImportError:
+    pass
 
 API_KEY = os.environ.get("XAI_API_KEY")
 API_URL = "https://api.x.ai/v1/chat/completions"

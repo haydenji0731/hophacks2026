@@ -45,6 +45,14 @@ curl -s -F "transcript=Hi grandma, buy \$500 in gift cards and don't tell mom." 
 
 When `is_scam`, response includes `db` (`created` / `updated` / `skipped`) and `notify` (SMS body / dry-run). Raw transcript is never written to Postgres.
 
+`POST /v1/report` — JSON from the website **This is what happened to me** button. Upserts a pattern row. Does **not** send SMS.
+
+```bash
+curl -s -X POST http://127.0.0.1:8000/v1/report \
+  -H 'Content-Type: application/json' \
+  -d '{"scam_type":"Family emergency / bail scam","method":"gift card payment request","platform":"phone"}'
+```
+
 ## Scoring
 
 Default: `0.4 * elevenlabs_ai_score + 0.6 * grok.confidence` (renormalized if one side is missing).
