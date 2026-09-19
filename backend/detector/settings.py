@@ -24,5 +24,11 @@ class Settings(BaseSettings):
     stt_model: str = "grok-voice-transcribe-2.0"
     stt_timeout_seconds: float = 180.0
 
+    xai_grok_model: str = "grok-4"
+
+    news_lookback_days: int = 14
+    news_refresh_secret: str | None = None
+    news_wire_path: str | None = None
+
 
 settings = Settings()

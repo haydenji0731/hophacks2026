@@ -119,3 +119,21 @@ class ProcessResponse(BaseModel):
     warnings: list[str] = Field(default_factory=list)
     db: DbUpsertResult | None = None
     notify: NotifyResult | None = None
+
+
+class NewsArticle(BaseModel):
+    id: str
+    source: str
+    date: str
+    title: str
+    dek: str
+    href: str
+    featured: bool = False
+
+
+class NewsFeedResponse(BaseModel):
+    updated_at: str | None = None
+    lookback_days: int | None = None
+    articles: list[NewsArticle] = Field(default_factory=list)
+    warnings: list[str] = Field(default_factory=list)
+    source_count: int | None = None
