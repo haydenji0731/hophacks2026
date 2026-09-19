@@ -13,8 +13,7 @@ const DEFAULT_PHRASE_CHAR_CAP = 4000;
  *   weight: number,
  *   scamIds: string[],
  *   label?: string,
- * }}
- RawRule
+ * }} RawRule
  *
  * @typedef {{
  *   id: string,
@@ -22,8 +21,7 @@ const DEFAULT_PHRASE_CHAR_CAP = 4000;
  *   scamIds: string[],
  *   label: string,
  *   type: string,
- * }}
- RuleRef
+ * }} RuleRef
  */
 
 export function normalizePhrase(pattern) {
