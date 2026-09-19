@@ -3,6 +3,7 @@ from types import SimpleNamespace
 from keywords import (
     SCAM_WAKE_PHRASES,
     live_phrases,
+    load_wake_phrases,
     merge_phrase_books,
     payload_to_book,
     refresh_phrases,
@@ -53,5 +54,6 @@ def test_refresh_phrases_writes_json(tmp_path, monkeypatch) -> None:
     book = payload_to_book(payload)
     labels = [label for label, _ in book]
     assert labels[0] == "tech_support"
+    assert load_wake_phrases() == SCAM_WAKE_PHRASES
     live = live_phrases()
-    assert live["phrases"][0]["label"] == "tech_support"
+    assert live["phrases"][0]["label"] == "gift_card"

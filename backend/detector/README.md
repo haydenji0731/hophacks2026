@@ -84,7 +84,7 @@ Env: `NEWS_LOOKBACK_DAYS` (default `14`), `NEWS_REFRESH_SECRET`, `NEWS_WIRE_PATH
 
 ### CLAP phrases (wake list)
 
-Spoken phrases are frozen in `clap_phrases.json` (same idea as the news wire). CLAP reads that file on each clip; it does **not** query Postgres on the hot path. Refresh pulls a non-redundant set from `scams` (name / demands / short method) and fills gaps from the built-in seed.
+CLAP compares each clip against the built-in seed in `keywords.py` (`SCAM_WAKE_PHRASES`: gift card, IRS, arrest warrant, …). It does **not** query Postgres and it does **not** use `clap_phrases.json` for matching — that file is a DB catalog dump only (pattern slugs / demand enums, not spoken lines).
 
 ```bash
 # on ravens, detector cwd, DATABASE_URL in .env
@@ -104,7 +104,7 @@ Cron (every 6 hours):
 0 */6 * * * cd /mnt/disk2/hji/hophacks2026/backend/detector && uv run python refresh_phrases.py
 ```
 
-`GET /v1/phrases` — current frozen book. `POST /v1/phrases/refresh` — rewrite the JSON. Restart uvicorn is not required; the detector reloads the file within a minute.
+`GET /v1/phrases` — seed book CLAP actually scores against. `POST /v1/phrases/refresh` — rewrite `clap_phrases.json` from Postgres (catalog only; restart not required, matcher ignores it).
 
 ### Intel catalog
 
