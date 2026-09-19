@@ -1,14 +1,16 @@
 const assert = require("node:assert/strict");
 const { JSDOM } = require("jsdom");
 require("../scorer.js");
+require("../settings.js");
 const {
   HIGHLIGHT_CLASS,
+  WHY_CLASS,
   isUserMessage,
   scan,
   start,
   clickWarning,
-  popupPosition,
-  showPop,
+  applySettings,
+  toggleWhy,
   pingStatus,
 } = require("../content.js");
 
@@ -80,62 +82,38 @@ setTimeout(() => {
   document.getElementById("message-content-666").textContent = "Click to verify your account";
 }, 5);
 
-assert.equal(clickWarning("high"), "DO NOT CLICK");
-assert.equal(clickWarning("caution"), "BE CAREFUL BEFORE CLICKING THIS");
-
-const below = popupPosition(
-  { top: 40, bottom: 64, left: 20 },
-  { width: 268, height: 120 },
-  { width: 1280, height: 800 },
-);
-assert.equal(below.top, 72);
-
-const flipped = popupPosition(
-  { top: 700, bottom: 740, left: 20 },
-  { width: 268, height: 120 },
-  { width: 1280, height: 800 },
-);
-assert.equal(flipped.top, 572);
-assert.ok(flipped.top >= 8);
-assert.ok(flipped.top + 120 <= 800 - 8);
-
-const tight = popupPosition(
-  { top: 10, bottom: 790, left: 20 },
-  { width: 268, height: 200 },
-  { width: 400, height: 800 },
-);
-assert.ok(tight.top >= 8);
-assert.ok(tight.top + 200 <= 800 - 8 || tight.top === 8);
-
-const unmeasured = popupPosition(
-  { top: 700, bottom: 740, left: 20 },
-  { width: 268, height: 0 },
-  { width: 1280, height: 800 },
-);
-assert.ok(unmeasured.top + 140 <= 800 - 8);
-assert.ok(unmeasured.top < 700);
+assert.equal(clickWarning("high"), "DO NOT CLICK ANY LINKS.");
+assert.equal(clickWarning("caution"), "BE MINDFUL OF LINKS");
 
 const ping = pingStatus(document);
 assert.equal(ping.ok, true);
 assert.match(String(ping.site), /discord/);
 assert.ok(ping.marks >= 1);
 
-showPop(document, scamMark);
-const pop = document.getElementById("discord-hl-pop");
-assert.ok(pop);
-assert.equal(pop.hidden, false);
-assert.match(pop.textContent, /DO NOT CLICK/);
-assert.match(pop.textContent, /High risk signals/);
+applySettings({ aggression: "point", descriptions: true });
+const why = toggleWhy(scamMsg.querySelector("." + HIGHLIGHT_CLASS), true);
+assert.ok(why);
+assert.equal(why.hidden, false);
+assert.match(why.textContent, /DO NOT CLICK ANY LINKS/);
+assert.match(why.textContent, /High risk signals/);
+assert.equal(document.querySelector(".discord-hl-pop"), null);
+
+applySettings({ aggression: "point", descriptions: false });
+const closed = toggleWhy(scamMsg.querySelector("." + HIGHLIGHT_CLASS), true);
+assert.ok(closed);
+assert.equal(closed.hidden, true);
 
 setTimeout(() => {
   const incomingMark = incoming.querySelector("." + HIGHLIGHT_CLASS);
   assert.ok(incomingMark);
   assert.equal(incomingMark.classList.contains("discord-hl-mark--caution"), true);
-  showPop(document, incomingMark);
-  assert.match(document.getElementById("discord-hl-pop").textContent, /BE CAREFUL BEFORE CLICKING THIS/);
+  applySettings({ aggression: "point", descriptions: true });
+  const incomingWhy = toggleWhy(incomingMark, true);
+  assert.match(incomingWhy.textContent, /BE MINDFUL OF LINKS/);
   const pendingMark = pending.querySelector("." + HIGHLIGHT_CLASS);
   assert.ok(pendingMark, "outgoing message should highlight after Discord fills the node");
   assert.equal(pendingMark.classList.contains("discord-hl-mark--caution"), true);
+  assert.equal(document.querySelector("." + WHY_CLASS + "[hidden=false], ." + WHY_CLASS + ":not([hidden])") != null || incomingWhy.hidden === false, true);
   console.log("ok");
   process.exit(0);
 }, 40);

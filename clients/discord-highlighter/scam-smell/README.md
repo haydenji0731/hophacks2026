@@ -1,6 +1,6 @@
-# Scam Smell
+# Sherpa scorer
 
-Offline scorer for short social-media text (Discord DMs, ad copy, email snippets, link-preview text). It returns a 0–100 suspicion score, a band (`ok` / `caution` / `high`), up to three plain-language reasons, and highlight spans.
+Offline scorer used by the Sherpa Chrome extension for short social-media text (Discord DMs, ad copy, email snippets, link-preview text). It returns a 0–100 suspicion score, a band (`ok` / `caution` / `high`), up to three plain-language reasons, and highlight spans.
 
 No network. No “this is definitely a scam” claims — only suspicious / high-risk signals.
 

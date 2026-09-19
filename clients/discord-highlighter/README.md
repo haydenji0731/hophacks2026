@@ -1,6 +1,6 @@
 # Sherpa
 
-Chrome extension that watches **Discord**, **Instagram**, and **Reddit** locally and highlights **suspicious** user text. Normal chat stays untouched. Credit is a muted yellow, high risk is a muted red, both translucent so the message stays readable.
+Chrome extension that watches **Discord**, **Instagram**, and **Reddit** locally and highlights **suspicious** user text. Normal chat stays untouched. Caution is a muted yellow, high risk is a muted red, both translucent so the message stays readable.
 
 Yellow highlights say **BE MINDFUL OF LINKS**. Red highlights say **DO NOT CLICK ANY LINKS.**
 
