@@ -1,0 +1,39 @@
+{
+  "patterns": [
+    {
+      "id": "order_shipped",
+      "patterns": [
+        "your order has shipped",
+        "your amazon order has shipped",
+        "out for delivery",
+        "tracking number",
+        "your package is on the way"
+      ],
+      "weight": 12
+    },
+    {
+      "id": "unsubscribe",
+      "patterns": ["unsubscribe", "manage your email preferences", "you are receiving this because"],
+      "weight": 10
+    },
+    {
+      "id": "password_reset_requested",
+      "patterns": [
+        "password reset you requested",
+        "you requested a password reset",
+        "reset your password because you asked"
+      ],
+      "weight": 12
+    },
+    {
+      "id": "receipt",
+      "patterns": ["receipt for your purchase", "thanks for your order", "your invoice is attached"],
+      "weight": 8
+    },
+    {
+      "id": "muted_pin",
+      "patterns": ["pinned a message", "unpinned a message", "changed the channel name"],
+      "weight": 8
+    }
+  ]
+}
