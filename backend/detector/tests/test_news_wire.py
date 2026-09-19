@@ -3,7 +3,7 @@ from types import SimpleNamespace
 import pytest
 
 from grok import GrokError
-from news_wire import fallback_cards, parse_articles, refresh_wire, serialize_scam
+from news_wire import align_cards, fallback_cards, parse_articles, refresh_wire, serialize_scam
 from settings import settings
 
 
@@ -75,6 +75,34 @@ def test_parse_articles_caps_featured_and_fills_missing() -> None:
     assert sum(1 for a in parsed if a["featured"]) == 3
     assert parsed[3]["featured"] is False
     assert parsed[1]["href"] == "/scams"
+
+
+def test_align_cards_keeps_newest_row_if_grok_skips_it() -> None:
+    rows = [
+        {"name": "microsoft_teams_vishing_meeting", "demands": ["wire"], "date": "2026-09-19"},
+        {"name": "facebook_marketplace_payment_scam", "demands": ["cash"], "date": "2026-09-18"},
+        {"name": "job_offer_training_equipment_fee", "demands": ["wire"], "date": "2026-09-18"},
+    ]
+    grok_only_old = [
+        {
+            "id": "facebook-marketplace-payment-scam",
+            "title": "Facebook Marketplace trap",
+            "dek": "Off-platform pay.",
+            "href": "/scams",
+            "source": "WeHateScammers",
+            "date": "2026-09-19",
+            "featured": True,
+        }
+    ]
+    cards = align_cards(rows, grok_only_old)
+    assert [c["id"] for c in cards] == [
+        "microsoft-teams-vishing-meeting",
+        "facebook-marketplace-payment-scam",
+        "job-offer-training-equipment-fee",
+    ]
+    assert cards[0]["featured"] is True
+    assert "microsoft_teams_vishing_meeting" in cards[0]["dek"]
+    assert cards[1]["title"] == "Facebook Marketplace trap"
 
 
 def test_parse_articles_empty_uses_fallback() -> None:
