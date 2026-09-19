@@ -1,0 +1,74 @@
+[
+  {
+    "id": "amazon_shipped",
+    "text": "Your Amazon order has shipped. Tracking number 1Z999 is on the way.",
+    "expectedBand": "ok"
+  },
+  {
+    "id": "click_verify",
+    "text": "Click to verify your account",
+    "expectedBand": "caution",
+    "mustIncludeReason": "verify"
+  },
+  {
+    "id": "irs_gift_cards",
+    "text": "IRS: pay overdue tax with Apple gift cards today, don't tell anyone",
+    "expectedBand": "high",
+    "mustIncludeReason": "payment"
+  },
+  {
+    "id": "nigerian_prince",
+    "text": "I am the son of the late Nigerian prince. You are named as next of kin to transfer $21,000,000. Pay a processing fee via Western Union and keep this confidential.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "nitro_giveaway",
+    "text": "FREE Discord Nitro giveaway! First 10 people click here: https://discord.gift/abc123",
+    "expectedBand": "high"
+  },
+  {
+    "id": "customs_itunes",
+    "text": "Your package is held by customs. Please purchase iTunes cards to clear a customs fee and send a screenshot of the codes.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "tech_support",
+    "text": "Microsoft support: we detected a virus. Download AnyDesk and call this number immediately so we can unlock your account.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "romance_gift",
+    "text": "I'm deployed overseas and can't video call. I love you, please send iTunes gift cards so I can come home. Don't tell anyone.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "job_mule",
+    "text": "Work from home easy money. I just need you to receive a package and keep a percentage. No experience needed.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "hello",
+    "text": "hey are we still on for pizza later?",
+    "expectedBand": "ok"
+  },
+  {
+    "id": "password_reset",
+    "text": "You requested a password reset. Use this link we emailed only if you asked for it.",
+    "expectedBand": "ok"
+  },
+  {
+    "id": "r_scams_fake_check",
+    "text": "You've been selected as a mystery shopper. Deposit this check, buy Walmart gift cards with the extra, and wire the rest. Keep this confidential.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "r_scams_crypto_recovery",
+    "text": "FBI asset recovery: we can retrieve your bitcoin. Pay a release fee in USDT to this wallet address today.",
+    "expectedBand": "high"
+  },
+  {
+    "id": "short_link_phish",
+    "text": "Your Steam account will be terminated. Login here http://bit.ly/steam-auth to verify your account.",
+    "expectedBand": "high"
+  }
+]
