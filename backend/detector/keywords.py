@@ -73,6 +73,35 @@ def select_hits(
     ]
 
 
+def _clap_vec(out, projection=None):
+    """Normalize CLAP output to an (N, D) embedding tensor."""
+    import torch
+
+    if torch.is_tensor(out):
+        vec = out
+    elif getattr(out, "text_embeds", None) is not None:
+        vec = out.text_embeds
+    elif getattr(out, "audio_embeds", None) is not None:
+        vec = out.audio_embeds
+    elif getattr(out, "pooler_output", None) is not None:
+        vec = out.pooler_output
+        if projection is not None:
+            vec = projection(vec)
+    elif getattr(out, "last_hidden_state", None) is not None:
+        vec = out.last_hidden_state[:, 0]
+        if projection is not None:
+            vec = projection(vec)
+    elif isinstance(out, (tuple, list)) and out:
+        vec = out[0]
+        if not torch.is_tensor(vec) and getattr(vec, "pooler_output", None) is not None:
+            vec = vec.pooler_output
+            if projection is not None:
+                vec = projection(vec)
+    else:
+        raise TypeError(f"unexpected CLAP output: {type(out)}")
+    return torch.nn.functional.normalize(vec.float(), dim=-1)
+
+
 @lru_cache(maxsize=1)
 def _load_clap():
     import torch
@@ -88,10 +117,13 @@ def _load_clap():
         for variant in variants:
             queries.append(variant)
             query_labels.append(label)
-    text_inputs = processor(text=queries, return_tensors="pt", padding=True)
+    packed = processor(text=queries, return_tensors="pt", padding=True)
+    text_inputs = {k: packed[k] for k in ("input_ids", "attention_mask") if k in packed}
     with torch.no_grad():
-        text_emb = model.get_text_features(**text_inputs)
-        text_emb = torch.nn.functional.normalize(text_emb, dim=-1)
+        text_emb = _clap_vec(
+            model.get_text_features(**text_inputs),
+            projection=getattr(model, "text_projection", None),
+        )
     return processor, model, text_emb, tuple(query_labels)
 
 
@@ -141,8 +173,11 @@ def spot_keywords(
                 padding=True,
             )
             with torch.no_grad():
-                audio_emb = model.get_audio_features(**inputs)
-                audio_emb = torch.nn.functional.normalize(audio_emb, dim=-1)
+                audio_out = model.get_audio_features(**inputs)
+                audio_emb = _clap_vec(
+                    audio_out,
+                    projection=getattr(model, "audio_projection", None),
+                )
                 sims = (audio_emb @ text_emb.T).squeeze(0).cpu().numpy()
             for score, label in zip(sims, query_labels, strict=False):
                 prev = max_scores.get(label, 0.0)
