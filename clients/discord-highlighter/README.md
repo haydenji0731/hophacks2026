@@ -12,10 +12,10 @@ Open the toolbar popup and use the Warn / Block switch.
 
 | Mode | What it does |
 | --- | --- |
-| **Warn** (default) | Highlight the text. Hover a highlight for the reason when descriptions are on. Links open normally. |
-| **Block** | Same highlights, and a click on a **highlighted** link always asks **Continue / Go back** and shows the real destination. Ordinary links are left alone. |
+| **Warn** (default) | Highlight the text. Hover a highlight for the reason when hover comments are on. Links open normally. |
+| **Block** | Highlighted links prompt to continue/go back when clicked. Ordinary links are left alone. |
 
-**Show highlights** is a checkbox in the same menu. Unchecking it hides the colored marks, hover reasons, and live Docs/Drive bar immediately — no reload.
+**Show hover comments** is a checkbox in the same menu. Unchecking it hides the hover reason cards immediately and leaves the colored marks on.
 
 ## Theme
 
@@ -36,7 +36,7 @@ The toolbar has a Light / Dark switch. It restyles the popup, hover cards, Block
 ## Load it in Chrome
 
 1. Open `chrome://extensions`
-2. Turn on **Developer mode**
+2. Turn on **Developer mode`
 3. Click **Load unpacked** and select this folder (the one with `manifest.json`)
 4. Open Discord, Instagram (including DMs), Reddit, Google Docs, or Google Slides
 
@@ -47,7 +47,7 @@ If it is already loaded, click **Reload** after pulling changes.
 1. Pin **Sherpa** from the Chrome puzzle-piece menu so the toolbar button stays visible.
 2. Open Discord, Instagram, Reddit, Docs, or Slides.
 3. Click the icon. It should say **Working on this tab**.
-4. Set Warn / Block, Light / Dark, and the highlights checkbox. Those apply to the current tab immediately.
+4. Set Warn / Block, Light / Dark, and the hover-comments checkbox. Those apply to the current tab immediately.
 
 If it says it is not injected, reload the tab or reload the unpacked extension.
 

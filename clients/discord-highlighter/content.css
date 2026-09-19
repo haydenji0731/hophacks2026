@@ -31,15 +31,8 @@ html[data-sherpa-theme="light"] {
   --sherpa-h3: #a7c957;
 }
 
-html[data-sherpa-hl="off"] .discord-hl-mark {
-  background-image: none !important;
-  animation: none !important;
-  cursor: inherit;
-}
-html[data-sherpa-hl="off"] .discord-hl-pop,
-html[data-sherpa-hl="off"] .sherpa-why-panel,
-html[data-sherpa-hl="off"] .sherpa-select-bar,
-html[data-sherpa-hl="off"] .sherpa-docs-ink {
+html[data-sherpa-desc="0"] .discord-hl-pop,
+html[data-sherpa-desc="0"] .sherpa-why-panel {
   display: none !important;
 }
 

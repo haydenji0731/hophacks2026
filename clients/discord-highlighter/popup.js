@@ -11,7 +11,7 @@
 
   const COPY = {
     warn: "Highlight flagged text. Links open normally.",
-    block: "Highlighted links ask Continue / Go back first.",
+    block: "Highlighted links prompt to continue/go back when clicked.",
   };
 
   function setStatus(ok, title, detail) {
