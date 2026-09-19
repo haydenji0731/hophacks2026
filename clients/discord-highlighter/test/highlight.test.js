@@ -115,4 +115,5 @@ setTimeout(() => {
   showPop(document, incomingMark);
   assert.match(document.getElementById("discord-hl-pop").textContent, /BE CAREFUL BEFORE CLICKING THIS/);
   console.log("ok");
+  process.exit(0);
 }, 20);
