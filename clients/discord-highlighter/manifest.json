@@ -1,13 +1,33 @@
 {
   "manifest_version": 3,
   "name": "Sherpa",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "description": "Highlighter for suspicious Discord, Instagram, Reddit, Google Docs, Drive, and Google Slides text. Warn or Block before a bad link opens.",
   "action": {
     "default_title": "Sherpa",
     "default_popup": "popup.html"
   },
   "permissions": ["activeTab", "storage"],
+  "web_accessible_resources": [
+    {
+      "resources": ["report.html", "fonts/*"],
+      "matches": [
+        "https://discord.com/*",
+        "https://ptb.discord.com/*",
+        "https://canary.discord.com/*",
+        "https://www.instagram.com/*",
+        "https://instagram.com/*",
+        "https://www.reddit.com/*",
+        "https://old.reddit.com/*",
+        "https://new.reddit.com/*",
+        "https://sh.reddit.com/*",
+        "https://reddit.com/*",
+        "https://docs.google.com/*",
+        "https://slides.google.com/*",
+        "https://drive.google.com/*"
+      ]
+    }
+  ],
   "content_scripts": [
     {
       "matches": [
