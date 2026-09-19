@@ -165,13 +165,29 @@
         font-size: 12px;
         color: #b5bac1;
       }
+      .g-pane {
+        margin: 0 0 12px;
+        padding: 10px 12px;
+        border-radius: 8px;
+        background: #2b2d31;
+      }
+      .g-meta {
+        margin: 0 0 6px;
+        font-size: 12px;
+        color: #b5bac1;
+      }
+      .docos-replyview-body,
+      .docs-chat-message,
+      .punch-viewer-speakernotes-text {
+        margin: 0;
+      }
     </style>
   </head>
   <body>
     <div class="page">
       <h1>Sherpa</h1>
       <p class="lede">
-        Offline warnings for Discord, Instagram, and Reddit. Yellow is caution, red is high risk.
+        Offline warnings for Discord, Instagram, Reddit, Docs, and Slides. Yellow is caution, red is high risk.
         Click a highlight to read why. Point never interrupts a click. Warn and Block ask before a
         risky or mismatched link opens. This is a signal, not a verdict.
       </p>
@@ -306,6 +322,47 @@
           </div>
         </div>
       </shreddit-comment>
+      <h2 class="section-title">Google Docs comment</h2>
+      <div data-sherpa-google>
+        <div class="g-pane">
+          <p class="g-meta">Comment · shared doc</p>
+          <div class="docos-replyview-body">
+            hey, pizza at 8 still good? posting the agenda here.
+          </div>
+        </div>
+        <div class="g-pane">
+          <p class="g-meta">Comment · unknown</p>
+          <div class="docos-replyview-body">
+            Click to verify your account
+          </div>
+        </div>
+        <div class="g-pane">
+          <p class="g-meta">Comment · IRS-Help</p>
+          <div class="docos-replyview-body">
+            IRS: pay overdue tax with Apple gift cards today, don't tell anyone.
+            <a href="https://not-irs.example/pay">Open payment portal</a>
+          </div>
+        </div>
+        <div class="g-pane">
+          <p class="g-meta">Chat</p>
+          <div class="docs-chat-message">
+            Click to verify your account at <a href="https://evil.example/paypal">paypal.com/login</a>
+          </div>
+        </div>
+      </div>
+      <h2 class="section-title">Google Slides speaker notes</h2>
+      <div data-sherpa-google>
+        <div class="g-pane">
+          <p class="g-meta">Speaker notes</p>
+          <div class="punch-viewer-speakernotes-text" aria-label="Speaker notes">
+            IRS: pay overdue tax with Apple gift cards today, don't tell anyone
+          </div>
+        </div>
+        <div class="g-pane">
+          <p class="g-meta">On-slide text</p>
+          <div class="sketchy-text-content">Click to verify your account</div>
+        </div>
+      </div>
     </div>
     <script src="scorer.js"></script>
     <script src="settings.js"></script>
