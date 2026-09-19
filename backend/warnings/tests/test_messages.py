@@ -39,16 +39,18 @@ def test_high_tier_is_more_forceful():
     assert "Urgent" not in low
 
 
-def test_confidence_rendered_as_percent():
+def test_confidence_not_in_body():
     cfg = _cfg()
     body = build_body(tier="medium", reason="x", scam_confidence=0.82, cfg=cfg)
-    assert "82%" in body
+    assert "82%" not in body
+    assert "sure" not in body
 
 
 def test_falls_back_to_scam_type_when_reason_empty():
     cfg = _cfg()
     body = build_body(tier="medium", reason="", scam_type="IRS refund", cfg=cfg)
     assert "IRS refund" in body
+    assert "82%" not in body
 
 
 def test_site_url_not_in_sms():

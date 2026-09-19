@@ -3,11 +3,13 @@ import { Routes, Route, useNavigate } from "react-router-dom";
 import BootScreen from "./components/BootScreen.jsx";
 import Layout from "./components/Layout.jsx";
 import Home from "./pages/Home.jsx";
+import OurGoal from "./pages/OurGoal.jsx";
 import Questionnaire from "./pages/Questionnaire.jsx";
 import Results from "./pages/Results.jsx";
 import Repository from "./pages/Repository.jsx";
 import ScamDetail from "./pages/ScamDetail.jsx";
 import NotFound from "./pages/NotFound.jsx";
+import BandWipe from "./components/BandWipe.jsx";
 
 export default function App() {
   const navigate = useNavigate();
@@ -21,10 +23,12 @@ export default function App() {
   return (
     <>
       {booting ? <BootScreen onDone={finishBoot} /> : null}
+      <BandWipe />
       <div className={booting ? "app-shell" : "app-shell is-ready"}>
         <Routes>
           <Route element={<Layout />}>
             <Route index element={<Home />} />
+            <Route path="our-goal" element={<OurGoal />} />
             <Route path="questionnaire" element={<Questionnaire />} />
             <Route path="results" element={<Results />} />
             <Route path="scams" element={<Repository />} />

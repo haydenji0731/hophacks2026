@@ -3,6 +3,8 @@ from __future__ import annotations
 from collections.abc import Iterable, Sequence
 from typing import Literal
 
+from datetime import datetime, timedelta, timezone
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -116,3 +118,21 @@ def upsert_scam_from_detection(
     session.commit()
     session.refresh(existing)
     return existing, "updated"
+
+
+def list_recent_scams(
+    session: Session,
+    *,
+    days: int = 14,
+    limit: int = 20,
+) -> list[Scam]:
+    """Patterns touched in the lookback window, hottest first."""
+    cutoff = datetime.now(timezone.utc) - timedelta(days=max(1, days))
+    stmt = (
+        select(Scam)
+        .where(Scam.updated_at >= cutoff)
+        .order_by(Scam.frequency.desc(), Scam.updated_at.desc())
+        .limit(limit)
+    )
+    return list(session.scalars(stmt))
+
