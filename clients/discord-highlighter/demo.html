@@ -13,10 +13,69 @@
         color: #dbdee1;
         font: 16px/1.375 "gg sans", "Noto Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
       }
-      .chat {
+      .page {
         max-width: 720px;
-        margin: 48px auto;
-        padding: 24px;
+        margin: 0 auto;
+        padding: 28px 20px 64px;
+      }
+      h1 {
+        margin: 0 0 8px;
+        font-size: 1.35rem;
+        color: #f2f3f5;
+      }
+      .lede {
+        margin: 0 0 20px;
+        color: #b5bac1;
+      }
+      .paste {
+        margin-bottom: 28px;
+        padding: 14px;
+        border-radius: 12px;
+        background: #2b2d31;
+      }
+      label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #f2f3f5;
+      }
+      textarea {
+        box-sizing: border-box;
+        width: 100%;
+        min-height: 96px;
+        padding: 10px 12px;
+        border: 1px solid #3f4147;
+        border-radius: 8px;
+        background: #1e1f22;
+        color: #dbdee1;
+        font: inherit;
+        resize: vertical;
+      }
+      button {
+        margin-top: 10px;
+        padding: 8px 14px;
+        border: 0;
+        border-radius: 8px;
+        background: #5865f2;
+        color: #fff;
+        font: inherit;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .result {
+        margin-top: 12px;
+        min-height: 1.4em;
+        color: #b5bac1;
+      }
+      .result[data-band="caution"] {
+        color: #facc15;
+      }
+      .result[data-band="high"] {
+        color: #f87171;
+      }
+      .chat {
+        margin: 0;
+        padding: 0;
       }
       li[id^="chat-messages-"] {
         display: flex;
@@ -40,32 +99,83 @@
     </style>
   </head>
   <body>
-    <ol class="chat" data-list-id="chat-messages">
-      <li id="chat-messages-1-100">
-        <div class="avatar" aria-hidden="true"></div>
-        <div>
-          <h3 class="name">Mira</h3>
-          <div id="message-content-100">hey, pizza at 8 still good?</div>
-        </div>
-      </li>
-      <li id="chat-messages-1-200">
-        <div class="avatar" aria-hidden="true"></div>
-        <div>
-          <h3 class="name">Unknown</h3>
-          <div id="message-content-200">Click to verify your account</div>
-        </div>
-      </li>
-      <li id="chat-messages-1-300">
-        <div class="avatar" aria-hidden="true"></div>
-        <div>
-          <h3 class="name">IRS-Help</h3>
-          <div id="message-content-300">
-            IRS: pay overdue tax with Apple gift cards today, don't tell anyone
+    <div class="page">
+      <h1>Scam Smell</h1>
+      <p class="lede">
+        Offline warnings for Discord-style messages. Yellow is caution, red is high risk.
+        Hover a highlight for why. Normal chat is left alone — this is a signal, not a verdict.
+      </p>
+      <form class="paste" id="paste-form">
+        <label for="paste-text">Paste a DM, email snippet, or ad</label>
+        <textarea id="paste-text" placeholder="IRS: pay overdue tax with Apple gift cards today…"></textarea>
+        <button type="submit">Check locally</button>
+        <p class="result" id="paste-result" aria-live="polite"></p>
+      </form>
+      <ol class="chat" data-list-id="chat-messages">
+        <li id="chat-messages-1-100">
+          <div class="avatar" aria-hidden="true"></div>
+          <div>
+            <h3 class="name">Mira</h3>
+            <div id="message-content-100">hey, pizza at 8 still good?</div>
           </div>
-        </div>
-      </li>
-    </ol>
+        </li>
+        <li id="chat-messages-1-150">
+          <div class="avatar" aria-hidden="true"></div>
+          <div>
+            <h3 class="name">Amazon</h3>
+            <div id="message-content-150">Your Amazon order has shipped. Tracking number 1Z999 is on the way.</div>
+          </div>
+        </li>
+        <li id="chat-messages-1-200">
+          <div class="avatar" aria-hidden="true"></div>
+          <div>
+            <h3 class="name">Unknown</h3>
+            <div id="message-content-200">Click to verify your account</div>
+          </div>
+        </li>
+        <li id="chat-messages-1-300">
+          <div class="avatar" aria-hidden="true"></div>
+          <div>
+            <h3 class="name">IRS-Help</h3>
+            <div id="message-content-300">
+              IRS: pay overdue tax with Apple gift cards today, don't tell anyone
+            </div>
+          </div>
+        </li>
+        <li id="chat-messages-1-400">
+          <div class="avatar" aria-hidden="true"></div>
+          <div>
+            <h3 class="name">Prince</h3>
+            <div id="message-content-400">
+              I am the son of the late Nigerian prince. You are named as next of kin to transfer $21,000,000. Pay a processing fee via Western Union and keep this confidential.
+            </div>
+          </div>
+        </li>
+        <li id="chat-messages-1-500">
+          <div class="avatar" aria-hidden="true"></div>
+          <div>
+            <h3 class="name">NitroBot</h3>
+            <div id="message-content-500">FREE Discord Nitro giveaway! First 10 people click here: https://discord.gift/abc123</div>
+          </div>
+        </li>
+      </ol>
+    </div>
     <script src="scorer.js"></script>
     <script src="content.js"></script>
+    <script>
+      document.getElementById("paste-form").addEventListener("submit", (event) => {
+        event.preventDefault();
+        const text = document.getElementById("paste-text").value;
+        const out = document.getElementById("paste-result");
+        const result = globalThis.ScamSmell.analyze(text);
+        out.dataset.band = result.band;
+        if (result.band === "ok") {
+          out.textContent = `Looks normal (${result.score}/100). Nothing highlighted.`;
+          return;
+        }
+        const label = result.band === "high" ? "High risk signals" : "Caution";
+        out.textContent = `${label} · ${result.score}/100. ${result.reasons.join(" ")}`;
+      });
+    </script>
   </body>
 </html>
