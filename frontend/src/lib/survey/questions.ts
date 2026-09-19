@@ -407,6 +407,412 @@ export const QUESTIONS: Question[] = [
       return `Fits the “${value}” pattern`;
     },
   },
+  {
+    id: "ask_kind",
+    prompt: "What did they mainly want from you?",
+    kind: "choice",
+    priority: 6,
+    options: [
+      { id: "payment", label: "Gift cards, a wire, crypto, or an app payment" },
+      { id: "safe_account", label: "Move money to a “safe” account" },
+      { id: "access", label: "A code, login, remote access, or wallet approval" },
+      { id: "fee", label: "An upfront fee or deposit" },
+      { id: "ids", label: "SSN, Medicare number, or other ID" },
+      { id: "mule", label: "Receive and forward money or packages" },
+      { id: "other", label: "Something else" },
+    ],
+    matches: (scam, value) => exclusiveTagMatch(scam, value, ASK_TAGS),
+    reason(scam, value) {
+      const labels: Record<string, string> = {
+        payment: "Pushes an untraceable payment",
+        safe_account: "Uses the “move it to a safe account” story",
+        access: "Goes after codes, logins, remote access, or a wallet",
+        fee: "Charges a fee before the prize, job, loan, or rental",
+        ids: "Harvests SSN / Medicare / ID numbers",
+        mule: "Wants you to move other people’s money or parcels",
+      };
+      return reasonIf(scam, value, this.matches, labels[value] ?? "Matches what they asked for");
+    },
+  },
+  {
+    id: "ask_value",
+    prompt: "Did they ask you to send money, gift cards, crypto, or a payment?",
+    kind: "yesno",
+    skipIf: (answers) =>
+      Boolean(answers.ask_kind) &&
+      answers.ask_kind !== "skip" &&
+      answers.ask_kind !== "other",
+    matches(scam, value) {
+      const asks = moneyDemands(scam) || hasTag(scam, "asks", ["gift_card", "wire_transfer", "cryptocurrency", "payment_app"]);
+      return value === "yes" ? asks : !asks;
+    },
+    reason(scam, value) {
+      if (value === "yes" && moneyDemands(scam)) {
+        return `Typically demands ${scam.demands.filter((d) => d !== "other").join(", ") || "payment"}`;
+      }
+      if (value === "no" && !moneyDemands(scam)) {
+        return "This pattern is usually after logins, codes, or access — not a payment";
+      }
+      return null;
+    },
+  },
+  {
+    id: "demand",
+    prompt: "What did they want you to use?",
+    kind: "choice",
+    skipIf: (answers) =>
+      answers.ask_value === "no" || ["access", "ids", "mule"].includes(answers.ask_kind),
+    options: [
+      { id: "gift_card", label: "Gift cards" },
+      { id: "wire", label: "A bank wire" },
+      { id: "crypto", label: "Bitcoin or another cryptocurrency" },
+      { id: "cash", label: "Cash, Zelle, Venmo, Cash App, or PayPal" },
+      { id: "check", label: "A cashier’s check or money order" },
+    ],
+    matches(scam, value) {
+      if (value === "cash") {
+        return (
+          scam.demands.includes("cash") ||
+          hasTag(scam, "asks", ["zelle", "venmo", "cashapp", "payment_app"]) ||
+          hasAny(blob(scam), ["zelle", "venmo", "cashapp", "paypal", "apple pay"])
+        );
+      }
+      if (value === "crypto") {
+        return scam.demands.includes("crypto") || hasTag(scam, "asks", ["cryptocurrency", "cryptocurrency_deposit"]);
+      }
+      if (value === "wire") {
+        return scam.demands.includes("wire") || hasTag(scam, "asks", ["wire_transfer"]);
+      }
+      if (value === "gift_card") {
+        return scam.demands.includes("gift_card") || hasTag(scam, "asks", ["gift_card"]);
+      }
+      if (value === "check") {
+        return scam.demands.includes("check") || hasTag(scam, "asks", ["fake_check"]);
+      }
+      return scam.demands.includes(value as Scam["demands"][number]);
+    },
+    reason(scam, value) {
+      if (!this.matches(scam, value)) return null;
+      return `Known to ask for ${value.replace("_", " ")}`;
+    },
+  },
+  {
+    id: "hook_who",
+    prompt: "Who did they claim to be?",
+    kind: "choice",
+    priority: 7,
+    options: [
+      { id: "government", label: "IRS, Social Security, court, police, or an embassy" },
+      { id: "bank", label: "My bank or credit-card company" },
+      { id: "company", label: "A company I use, or “tech support”" },
+      { id: "romance", label: "A romantic interest or new online friend" },
+      { id: "job", label: "A recruiter or employer" },
+      { id: "marketplace", label: "A buyer or seller" },
+      { id: "prize", label: "A lottery, giveaway, or grant" },
+      { id: "family", label: "A family member in trouble" },
+      { id: "other", label: "Someone else" },
+    ],
+    matches: (scam, value) => exclusiveTagMatch(scam, value, HOOK_TAGS),
+    reason(scam, value) {
+      if (value === "other" || !this.matches(scam, value)) return null;
+      return "Matches the impersonation / hook";
+    },
+  },
+  {
+    id: "gov_detail",
+    prompt: "Which government story did they use?",
+    kind: "choice",
+    priority: 20,
+    skipIf: (answers) => {
+      const hook = answers.hook_who;
+      const theme = themeOf(answers);
+      return hook !== "government" && theme !== "government";
+    },
+    options: [
+      { id: "irs", label: "Back taxes or the IRS" },
+      { id: "ssa", label: "Social Security number or benefits frozen" },
+      { id: "jury", label: "Missed jury duty or an arrest warrant" },
+      { id: "embassy", label: "A parcel, embassy, or police detention" },
+      { id: "utility", label: "Utility shutoff" },
+      { id: "other_gov", label: "Medicare, student loans, a grant, or a debt collector" },
+    ],
+    matches: (scam, value) =>
+      exclusiveMethodMatch(scam, value, {
+        irs: ["irs_tax", "irs_ssa_tax_impersonation"],
+        ssa: ["ssa_freeze"],
+        jury: ["jury_duty_warrant"],
+        embassy: ["chinese_embassy_customs"],
+        utility: ["utility_shutoff", "utility_shutoff_urgency"],
+        other_gov: [
+          "student_loan_forgiveness",
+          "student_loan_forgiveness_phish",
+          "medicare_enrollment",
+          "medicare_genetic_testing",
+          "government_grant",
+          "debt_collection_impersonation",
+          "fake_law_firm_debt_threat",
+        ],
+      }),
+    reason(scam, value) {
+      return this.matches(scam, value) ? "Hard discriminator for this government impersonation" : null;
+    },
+  },
+  {
+    id: "sms_detail",
+    prompt: "What was the text about?",
+    kind: "choice",
+    priority: 21,
+    skipIf: (answers) => channelOf(answers) !== "sms" && themeOf(answers) !== "package",
+    options: [
+      { id: "package", label: "A package or delivery fee" },
+      { id: "toll", label: "Unpaid highway tolls" },
+      { id: "bank", label: "A bank fraud-alert link" },
+      { id: "wrong_number", label: "A friendly “wrong number”" },
+      { id: "task", label: "Easy online tasks" },
+      { id: "otp", label: "They wanted a code that just arrived" },
+    ],
+    matches: (scam, value) =>
+      exclusiveMethodMatch(scam, value, {
+        package: ["package_delivery_sms", "parcel_customs_delivery_fee"],
+        toll: ["unpaid_toll_sms", "toll_road_text_phish"],
+        bank: ["bank_fraud_alert_sms"],
+        wrong_number: ["wrong_number_romance", "wrong_number_text_rapport"],
+        task: ["task_scam", "task_telegram_watch_to_earn"],
+        otp: ["whatsapp_otp_hijack", "whatsapp_otp_code_share"],
+      }),
+    reason(scam, value) {
+      return this.matches(scam, value) ? "Matches that text-message pattern" : null;
+    },
+  },
+  {
+    id: "romance_detail",
+    prompt: "In the romance story, which of these happened?",
+    kind: "choice",
+    priority: 22,
+    skipIf: (answers) => answers.hook_who !== "romance" && themeOf(answers) !== "romance",
+    options: [
+      { id: "crypto_dash", label: "They pushed a crypto trading site with “profits”" },
+      { id: "travel_money", label: "They asked for travel, medical, or visa money" },
+      { id: "sextortion", label: "They threatened to leak intimate images" },
+      { id: "recovery", label: "Someone offered to recover money I already lost" },
+    ],
+    matches: (scam, value) =>
+      exclusiveMethodMatch(scam, value, {
+        crypto_dash: ["romance_crypto", "pig_butchering_crypto_romance"],
+        travel_money: ["dating_app_romance", "e_dating_money_request"],
+        sextortion: ["sextortion_social", "sextortion_webcam_blackmail"],
+        recovery: ["recovery_room", "crypto_recovery_secondary_scam"],
+      }),
+    reason(scam, value) {
+      return this.matches(scam, value) ? "Splits romance, pig-butchering, sextortion, and recovery-room" : null;
+    },
+  },
+  {
+    id: "job_detail",
+    prompt: "In the job story, which fits?",
+    kind: "choice",
+    priority: 23,
+    skipIf: (answers) => answers.hook_who !== "job" && themeOf(answers) !== "job",
+    options: [
+      { id: "equipment", label: "Pay for equipment or training" },
+      { id: "mule", label: "Receive and forward money or packages" },
+      { id: "tasks", label: "Tasks that later require my own deposits" },
+      { id: "linkedin", label: "A recruiter for a well-known company" },
+    ],
+    matches: (scam, value) =>
+      exclusiveMethodMatch(scam, value, {
+        equipment: ["fake_job", "job_offer_training_equipment_fee"],
+        mule: ["money_mule", "check_cashing_mule", "package_mule_reship_job"],
+        tasks: ["task_scam", "task_telegram_watch_to_earn"],
+        linkedin: ["linkedin_fake_recruiter", "linkedin_recruiter_crypto_job"],
+      }),
+    reason(scam, value) {
+      return this.matches(scam, value) ? "Splits fake jobs, mules, and task scams" : null;
+    },
+  },
+  {
+    id: "market_detail",
+    prompt: "On the listing, which of these happened?",
+    kind: "choice",
+    priority: 24,
+    skipIf: (answers) =>
+      answers.hook_who !== "marketplace" &&
+      themeOf(answers) !== "marketplace" &&
+      answers.channel !== "marketplace",
+    options: [
+      { id: "rental", label: "Deposit before touring a rental" },
+      { id: "overpay", label: "Buyer overpaid and asked me to refund the extra" },
+      { id: "escrow", label: "A fake “escrow” or platform invoice" },
+      { id: "off_platform", label: "Off-platform payment or a confirmation code" },
+      { id: "pet", label: "Pet shipping fees sight-unseen" },
+    ],
+    matches: (scam, value) =>
+      exclusiveMethodMatch(scam, value, {
+        rental: ["rental_escrow", "rental_listing_deposit_scam"],
+        overpay: ["marketplace_overpayment", "marketplace_overpayment_fake_check", "fake_check_overpayment", "cashier_check_overpayment"],
+        escrow: ["facebook_marketplace_escrow", "facebook_marketplace_payment_scam"],
+        off_platform: ["marketplace_confirmation_code", "payment_app_goods_scam", "paypal_friends_family_goods"],
+        pet: ["pet_scam", "pet_sale_rehome_fee"],
+      }),
+    reason(scam, value) {
+      return this.matches(scam, value) ? "Splits rental, overpayment, escrow, and listing payment cons" : null;
+    },
+  },
+  {
+    id: "tech_detail",
+    prompt: "How did the “tech support” contact start?",
+    kind: "choice",
+    priority: 25,
+    skipIf: (answers) => answers.hook_who !== "company" && themeOf(answers) !== "account",
+    options: [
+      { id: "popup", label: "A pop-up virus warning" },
+      { id: "search", label: "I searched a support number and called an ad" },
+      { id: "refund", label: "They called about a refund or suspicious charge" },
+      { id: "seed", label: "Wallet “support” asked for my seed phrase" },
+    ],
+    matches: (scam, value) =>
+      exclusiveMethodMatch(scam, value, {
+        popup: ["tech_support", "tech_support_remote_access", "youtube_tech_support_comment"],
+        search: ["seo_poisoned_support", "google_ads_spoofed_support"],
+        refund: ["amazon_apple_refund", "refund_scam_double_dip"],
+        seed: ["seed_phrase_phishing", "crypto_seed_phrase_phish"],
+      }),
+    reason(scam, value) {
+      return this.matches(scam, value) ? "Splits pop-up, SEO, refund, and seed-phrase support" : null;
+    },
+  },
+  {
+    id: "crypto_detail",
+    prompt: "Which crypto pitch was it?",
+    kind: "choice",
+    priority: 26,
+    skipIf: (answers) =>
+      answers.hook_who !== "prize" &&
+      themeOf(answers) !== "investment" &&
+      answers.demand !== "crypto",
+    options: [
+      { id: "trading", label: "Guaranteed high returns on a trading site" },
+      { id: "celebrity", label: "A celebrity said send crypto to double it" },
+      { id: "airdrop", label: "A free airdrop that wanted wallet approval" },
+    ],
+    matches: (scam, value) =>
+      exclusiveMethodMatch(scam, value, {
+        trading: ["crypto_investment", "investment_trading_app_clone", "romance_crypto", "pig_butchering_crypto_romance"],
+        celebrity: ["celebrity_crypto_giveaway", "crypto_giveaway_elon_impersonation", "tiktok_fake_giveaway", "gift_card_tiktok_outreach", "lottery_prize"],
+        airdrop: ["crypto_airdrop_drain", "wallet_drainer_dapp_approve"],
+      }),
+    reason(scam, value) {
+      return this.matches(scam, value) ? "Splits trading platforms, celebrity giveaways, and drainers" : null;
+    },
+  },
+  {
+    id: "account_detail",
+    prompt: "Which account takeover fits?",
+    kind: "choice",
+    priority: 27,
+    skipIf: (answers) => themeOf(answers) !== "account" && answers.ask_kind !== "access",
+    options: [
+      { id: "instagram", label: "Instagram verification, support, or a copyright strike" },
+      { id: "discord", label: "Discord Nitro or QR login" },
+      { id: "sim", label: "Sudden loss of cell service" },
+      { id: "recovery", label: "“Help recover a hacked account”" },
+    ],
+    matches: (scam, value) =>
+      exclusiveMethodMatch(scam, value, {
+        instagram: ["instagram_verification_fee", "instagram_account_report_lure", "instagram_copyright_strike"],
+        discord: ["discord_nitro_phishing", "discord_mod_nitro_phishing"],
+        sim: ["sim_swap", "sim_swap_account_takeover"],
+        recovery: ["account_recovery_social_engineer", "account_hack_spread_warning"],
+      }),
+    reason(scam, value) {
+      return this.matches(scam, value) ? "Splits Instagram, Discord, SIM-swap, and recovery cons" : null;
+    },
+  },
+  {
+    id: "phone_sales",
+    prompt: "If this was a sales call, which pitch?",
+    kind: "choice",
+    priority: 28,
+    skipIf: (answers) => {
+      const channel = channelOf(answers);
+      if (channel && channel !== "phone") return true;
+      if (["romance", "job", "marketplace", "government", "family"].includes(answers.hook_who)) return true;
+      if (["romance", "job", "marketplace", "package", "government", "family"].includes(themeOf(answers))) return true;
+      return false;
+    },
+    options: [
+      { id: "warranty", label: "Car warranty expiring" },
+      { id: "sales", label: "Solar, insurance, timeshare, or a credit-rate cut" },
+      { id: "hear_me", label: "They opened with “Can you hear me?”" },
+      { id: "trial", label: "A free trial that turned into charges" },
+      { id: "charity", label: "A charity after a disaster" },
+    ],
+    matches: (scam, value) =>
+      exclusiveMethodMatch(scam, value, {
+        warranty: ["car_warranty_robocall", "car_warranty_mail_robocall"],
+        sales: ["solar_home_improvement", "timeshare_travel", "timeshare_exit_scam", "burial_insurance_robocall", "credit_rate_reduction"],
+        hear_me: ["can_you_hear_me"],
+        trial: ["free_trial_continuity"],
+        charity: ["fake_charity_disaster", "charity_crisis_donation_scam"],
+      }),
+    reason(scam, value) {
+      return this.matches(scam, value) ? "Matches that robocall / sales pitch" : null;
+    },
+  },
+  {
+    id: "impersonation",
+    prompt: "Did they claim to be a bank, government agency, police, or a company you already use?",
+    kind: "yesno",
+    skipIf: (answers) => Boolean(answers.hook_who) && answers.hook_who !== "skip" && answers.hook_who !== "other",
+    matches(scam, value) {
+      const hit = impersonation(scam);
+      return value === "yes" ? hit : !hit;
+    },
+    reason(scam, value) {
+      if (value === "yes" && impersonation(scam)) {
+        return "Impersonates a trusted institution";
+      }
+      return null;
+    },
+  },
+  {
+    id: "urgency",
+    prompt: "Did they rush you, threaten arrest or a shutoff, or tell you to keep it secret?",
+    kind: "yesno",
+    matches(scam, value) {
+      const hit = urgency(scam);
+      return value === "yes" ? hit : !hit;
+    },
+    reason(scam, value) {
+      if (value === "yes" && urgency(scam)) {
+        return "Uses urgency, secrecy, or a threat";
+      }
+      return null;
+    },
+  },
+  {
+    id: "access",
+    prompt: "Did they ask for a verification code, remote access, or to borrow your phone?",
+    kind: "yesno",
+    skipIf: (answers) => answers.ask_kind === "access",
+    matches(scam, value) {
+      const hit = remoteOrCode(scam);
+      return value === "yes" ? hit : !hit;
+    },
+    reason(scam, value) {
+      if (value === "yes" && remoteOrCode(scam)) {
+        return "Goes after codes, logins, or device access";
+      }
+      return null;
+    },
+  },
+  {
+    id: "details",
+    prompt: "Anything else we should know?",
+    helper: "Names of apps, what they claimed, or a phrase they used.",
+    kind: "text",
+    matches: () => null,
+  },
 ];
 
 export const QUESTION_BY_ID = Object.fromEntries(
