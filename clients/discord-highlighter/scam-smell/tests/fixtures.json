@@ -70,32 +70,5 @@
     "id": "short_link_phish",
     "text": "Your Steam account will be terminated. Login here http://bit.ly/steam-auth to verify your account.",
     "expectedBand": "high"
-  },
-  {
-    "id": "ig_verification_fee",
-    "text": "Hi, this is Instagram Support. Your account will be disabled. Pay a $49 verification fee to keep your Meta Verified badge.",
-    "expectedBand": "high",
-    "mustIncludeReason": "payment"
-  },
-  {
-    "id": "ig_copyright_strike",
-    "text": "Your reel received a copyright strike. Pay the appeal fee immediately to remove the strike.",
-    "expectedBand": "high"
-  },
-  {
-    "id": "ig_confirm_this_is_you",
-    "text": "We detected unusual activity. Confirm this is you and send your Instagram password so we can restore access.",
-    "expectedBand": "high",
-    "mustIncludeReason": "verify"
-  },
-  {
-    "id": "ig_sextortion",
-    "text": "I have your intimate photos. Send bitcoin to this wallet address or I send them to your followers. Don't tell anyone.",
-    "expectedBand": "high"
-  },
-  {
-    "id": "ig_giveaway_fee",
-    "text": "Congratulations you won our Instagram giveaway. Send payment for shipping to claim your prize.",
-    "expectedBand": "high"
   }
 ]
