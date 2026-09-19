@@ -15,7 +15,7 @@ If it is already loaded, click **Reload** after pulling changes.
 
 ## Check that it works
 
-1. Pin **Scam Smell** from the Chrome puzzle-piece menu so the toolbar icon stays visible.
+1. Pin **Scam Smell** from the Chrome puzzle-piece menu so the toolbar button stays visible. Chrome will use its default extension glyph; click it the same way.
 2. Open Discord, Instagram, or Reddit.
 3. Click the icon. It should say **Working on this tab**.
 4. Click **Run a local self-test** — that scores a safe shipping note and a gift-card IRS line offline. You do not need those sites for the self-test.
@@ -37,7 +37,7 @@ Avatars, nav chrome, and composers are never painted.
 | Site | Watched text |
 | --- | --- |
 | Discord | User messages (stable, PTB, Canary). Survives DM / channel switches. |
-| Instagram | Direct messages, captions, and comments. Survives thread switches. |
+| Instagram | Direct messages, captions, and comments — including word-split bubbles inside the DM form. Survives thread switches. |
 | Reddit | Post bodies/titles and comments (new and old Reddit). |
 
 ## Develop
