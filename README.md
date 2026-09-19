@@ -22,7 +22,7 @@ Scams no longer sound like scams. Callers use AI voices, urgency scripts, and fa
 | **Website questionnaire** | “Am I being scammed?” — adaptive questions + optional free-text details → most likely scam type and why. |
 | **Public scam repository** | Browse and search cleaned, categorized incidents (how it unfolds, signals, what to do). |
 | **Learning loop** | Confirmed cases go through Grok to strip PII, categorize, embed, and upsert so detection and the questionnaire get better. |
-| **Chrome extension** | On-device pattern flags on LinkedIn / Facebook / Instagram. Badge first, banner only on high confidence; deep-link to the questionnaire. Lives in [`extension/`](extension/). |
+| **Chrome extension** | On-device pattern flags on Discord / Instagram / Facebook. Badge first, banner only on high confidence; deep-link to the questionnaire. Lives in [`extension/`](extension/). |
 
 **Who it is for**
 
@@ -85,7 +85,7 @@ In progress. The first slice that is in this repo is the **ElevenLabs AI-audio t
 | [`DECISIONS.md`](DECISIONS.md) | Mid-call pipeline: 12s screen → sensitivity → STT/Grok → log/notify |
 | [`backend/detector`](backend/detector) | Combines ElevenLabs + Grok into confidence / notification tier |
 | [`backend/warnings`](backend/warnings) | Severity-tiered Twilio SMS notifier |
-| [`extension/`](extension/) | Chrome extension: on-device LinkedIn / Facebook / Instagram flagger. No message storage. |
+| [`extension/`](extension/) | Chrome extension: on-device Discord / Instagram / Facebook flagger. No message storage. |
 | React questionnaire + scam pages | Planned |
 | Grok clean / categorize + vector DB | Planned |
 | Discord | Stretch (P2) |
