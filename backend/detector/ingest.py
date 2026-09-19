@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-import sys
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Any
 
-from paths import DB, WARNINGS, ensure_import_paths
+from paths import DB, WARNINGS, prefer_package
 from pipeline import analyze_incident
 from schemas import AnalyzeResponse, DbUpsertResult, IngestResponse, NotifyResult
 
@@ -15,17 +13,6 @@ class IngestInputs:
     transcript: str | None
     to: str | None
     audio: tuple[bytes, str, str] | None = None
-
-
-def _prefer_package(path: Path, *,_modules: tuple[str, ...]) -> None:
-    """Put a sibling package first on sys.path and drop colliding module caches."""
-    ensure_import_paths()
-    resolved = str(path)
-    if resolved in sys.path:
-        sys.path.remove(resolved)
-    sys.path.insert(0, resolved)
-    for name in drop_modules:
-        sys.modules.pop(name, None)
 
 
 def _notify_result_from_payload(payload: Any) -> NotifyResult:
@@ -45,7 +32,7 @@ def upsert_report(
     """Save a user-confirmed questionnaire report into scam patterns. No SMS."""
     warnings: list[str] = []
     try:
-        _prefer_package(
+        prefer_package(
             DB,
             drop_modules=("models", "session", "repository", "db_config"),
         )
@@ -117,9 +104,9 @@ def _try_notify(analysis: AnalyzeResponse, to: str | None) -> tuple[NotifyResult
         return None, warnings
 
     try:
-        _prefer_package(
+        prefer_package(
             WARNINGS,
-            ("models", "notifier", "messages", "warn_config"),
+            drop_modules=("models", "notifier", "messages", "warn_config"),
         )
         from models import NotifyRequest
         from notifier import NotifierError, notify

@@ -66,9 +66,12 @@ def map_ai_generated(ai_voice_used: str | None) -> bool | None:
 
 def run_screen(file_bytes: bytes, filename: str, content_type: str) -> ScreenResult:
     """Clip+ElevenLabs (via ai_audio) and openWakeWord; compute alarm."""
-    from paths import ensure_import_paths
+    from paths import AI_AUDIO, prefer_package
 
-    ensure_import_paths()
+    prefer_package(
+        AI_AUDIO,
+        drop_modules=("models", "config", "classifier", "clip_audio"),
+    )
     warnings: list[str] = []
     ai_score = None
     ai_voice_used = None

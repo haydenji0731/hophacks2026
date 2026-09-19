@@ -2,13 +2,16 @@ from __future__ import annotations
 
 from combine import build_analyze_response
 from grok import GrokError, run_grok_flags
-from paths import ensure_import_paths
+from paths import AI_AUDIO, prefer_package
 from schemas import AnalyzeResponse, GrokFlags
 from settings import settings
 
 
 def classify_call_audio(file_bytes: bytes, filename: str, content_type: str):
-    ensure_import_paths()
+    prefer_package(
+        AI_AUDIO,
+        drop_modules=("models", "config", "classifier", "clip_audio"),
+    )
     from classifier import ClassifierError, classify_audio
 
     try:
