@@ -2,8 +2,6 @@ import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { diagnose, reportPayload } from "../data/questions.js";
 
-const GREEN = "#4ade80";
-
 export default function Results() {
   const location = useLocation();
   const answers = location.state?.answers;
@@ -53,12 +51,11 @@ export default function Results() {
   if (!result) {
     return (
       <section className="page">
-        <h1>Your results</h1>
-        <p className="lede" style={{ marginLeft: 0 }}>
-          Start with the questionnaire so we can check what happened.
-        </p>
+        <p className="eyebrow">Results</p>
+        <h1>Start a check first</h1>
+        <p className="lede">Answer a few questions so we can score what happened.</p>
         <Link className="btn btn-primary" to="/questionnaire">
-          Am I being scammed?
+          Find out
         </Link>
       </section>
     );
@@ -66,23 +63,27 @@ export default function Results() {
 
   if (result.insufficient) {
     return (
-      <section className="page a11y-large">
-        <h1>Not enough information yet</h1>
-        <p className="lede" style={{ marginLeft: 0 }}>
-          We don't have enough answers to say whether this is a scam.
+      <section className="page">
+        <p className="verdict">
+          <span className="verdict-dot" />
+          Incomplete
+        </p>
+        <h1>Not enough to call it yet</h1>
+        <p className="lede">
+          We need a few more answers before we can say whether this is a scam.
         </p>
         <div className="result-primary">
           <p>
-            Hang up if you feel pressured, and call the real organization on a number
-            you already trust, not a number from the message or caller.
+            If you feel pressured, hang up. Call the real organization on a number
+            you already trust — not the one in the message.
           </p>
         </div>
         <div className="cta-row" style={{ justifyContent: "flex-start" }}>
           <Link className="btn btn-primary" to="/questionnaire">
-            Answer a few more questions
+            Answer more
           </Link>
           <Link className="btn btn-secondary" to="/scams">
-            Browse the repository
+            Browse patterns
           </Link>
         </div>
       </section>
@@ -92,18 +93,32 @@ export default function Results() {
   const isLikely = result.likely;
 
   return (
-    <section className="page a11y-large">
-      <p className="muted" style={{ margin: 0 }}>
-        Based on your answers
+    <section className="page">
+      <p className={`verdict ${isLikely ? "danger" : "safe"}`}>
+        <span className="verdict-dot" />
+        {isLikely ? "Likely a scam" : "Unlikely a scam"}
       </p>
-      <h1 style={{ color: isLikely ? "var(--accent)" : GREEN }}>
-        {isLikely ? "Likely a scam" : "Unlikely to be a scam"}
-      </h1>
-      <p className="muted">
+      <h1>{isLikely ? "Do not send money or codes." : "This does not look typical."}</h1>
+      <p className="lede">
         {isLikely
-          ? "Several things you described are common warning signs. Do not send money or share codes. Hang up and call the real organization on a number you already trust."
-          : "This does not look like a typical scam based on your answers. That is a guide, not a guarantee. If anything still feels wrong, hang up and call the organization on a number you already trust."}
+          ? "Several things you described match common warning signs. Hang up and call the real organization on a number you already trust."
+          : "Based on your answers this does not look like a typical scam. That is a guide, not a guarantee. If it still feels wrong, hang up and verify independently."}
       </p>
+
+      <div className="metric-row">
+        <div className="metric">
+          <b>{result.riskScore}</b>
+          <span>Risk score</span>
+        </div>
+        <div className="metric">
+          <b>{result.flags.length}</b>
+          <span>Warning signs</span>
+        </div>
+        <div className="metric">
+          <b>{result.answeredCount}</b>
+          <span>Answers used</span>
+        </div>
+      </div>
 
       <div className="result-primary">
         <h2>{isLikely ? "Why we say this" : "What we noticed"}</h2>
@@ -115,8 +130,8 @@ export default function Results() {
           </ul>
         ) : (
           <p>
-            You did not describe any of the usual warning signs: a request for payment,
-            a link or code, pressure to act fast, or a voice that sounded off.
+            You did not describe the usual asks: payment, a link or code, pressure
+            to act fast, or a voice that sounded off.
           </p>
         )}
         {!isLikely && result.flags.length > 0 ? (
@@ -126,12 +141,12 @@ export default function Results() {
 
       {isLikely && result.primary ? (
         <>
-          <h2>Your most likely match</h2>
+          <h2>Most likely match</h2>
           <div className="result-primary">
             <h2>{result.primary.name}</h2>
             <p>{result.primary.summary}</p>
+            <Link to={`/scams/${result.primary.id}`}>Open pattern →</Link>
           </div>
-
           {result.alternatives.length > 0 ? (
             <>
               <h2>Other possibilities</h2>
@@ -150,8 +165,7 @@ export default function Results() {
 
       {isLikely && !result.primary ? (
         <p className="muted">
-          We could not match this to one specific scam type, but the warning signs above
-          still apply.
+          No single pattern scored high enough, but the warning signs still apply.
         </p>
       ) : null}
 
@@ -173,14 +187,14 @@ export default function Results() {
               ? "Saving…"
               : reportState === "done"
                 ? "Reported"
-                : "This is what happened to me"}
+                : "This happened to me"}
           </button>
         ) : null}
         <Link className="btn btn-secondary" to="/questionnaire">
-          Answer again
+          Check again
         </Link>
         <Link className="btn btn-secondary" to="/scams">
-          Browse the repository
+          Repository
         </Link>
       </div>
     </section>
