@@ -224,7 +224,7 @@
         <p id="agg-copy"></p>
         <label class="check">
           <input id="descriptions" type="checkbox" checked />
-          <span>Show descriptions</span>
+          <span>Show highlights</span>
         </label>
       </section>
       <form class="paste" id="paste-form">
@@ -351,8 +351,8 @@
       <h2 class="section-title">Google Docs comment</h2>
       <div data-sherpa-google>
         <div class="g-pane">
-          <p class="g-meta">Type as you would in a Doc</p>
-          <div contenteditable="true" role="textbox" class="docs-live">
+          <p class="g-meta">Type as you would in a Doc (canvas-style keystrokes also score)</p>
+          <div contenteditable="true" role="textbox" class="docs-live" id="docs-live">
             IRS: pay overdue tax with Apple gift cards today
           </div>
         </div>
@@ -379,6 +379,15 @@
           <p class="g-meta">Chat</p>
           <div class="docs-chat-message">
             Click to verify your account at <a href="https://evil.example/paypal">paypal.com/login</a>
+          </div>
+        </div>
+      </div>
+      <h2 class="section-title">Google Drive comment</h2>
+      <div data-sherpa-google>
+        <div class="g-pane">
+          <p class="g-meta">Drive activity · comment</p>
+          <div class="docos-replyview-body">
+            I need 3 ebay gift cards of $200 each. What's the closest store ?
           </div>
         </div>
       </div>
@@ -420,6 +429,7 @@
         persist();
       });
       desc.addEventListener("change", persist);
+      desc.addEventListener("click", persist);
       persist();
 
       document.getElementById("paste-form").addEventListener("submit", (event) => {
