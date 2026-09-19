@@ -2,9 +2,18 @@ from __future__ import annotations
 
 from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 
-from ingest import IngestInputs, ingest_incident
+from fastapi.middleware.cors import CORSMiddleware
+
+from ingest import IngestInputs, ingest_incident, upsert_report
 from pipeline import analyze_incident
-from schemas import AnalyzeResponse, ErrorDetail, HealthResponse, IngestResponse
+from schemas import (
+    AnalyzeResponse,
+    ErrorDetail,
+    HealthResponse,
+    IngestResponse,
+    ReportRequest,
+    ReportResponse,
+)
 from settings import settings
 
 ALLOWED_CONTENT_TYPES = {
@@ -33,6 +42,12 @@ app = FastAPI(
         "ingest upserts scam patterns and sends Twilio warnings."
     ),
     version="0.1.0",
+)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://127.0.0.1:5173", "http://localhost:5173"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 
@@ -155,3 +170,29 @@ async def ingest(
             status_code=502,
             detail=ErrorDetail(error="no_signals", detail=str(exc)).model_dump(),
         ) from exc
+
+
+@app.post(
+    "/v1/report",
+    response_model=ReportResponse,
+    responses={400: {"model": ErrorDetail}},
+)
+def report(req: ReportRequest) -> ReportResponse:
+    """User-confirmed 'this happened to me' — upsert pattern, no SMS."""
+    if not (req.scam_type or "").strip():
+        raise HTTPException(
+            status_code=400,
+            detail=ErrorDetail(
+                error="missing_scam_type",
+                detail="scam_type is required.",
+            ).model_dump(),
+        )
+    db_result, warnings = upsert_report(
+        scam_type=req.scam_type.strip(),
+        method=req.method,
+        target=req.target,
+        reasoning=req.reasoning,
+        ai_generated=req.ai_generated,
+        platform=req.platform,
+    )
+    return ReportResponse(db=db_result, warnings=warnings)
