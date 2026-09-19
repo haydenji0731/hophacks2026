@@ -2,7 +2,7 @@
 
 Python FastAPI service that scores whether call audio sounds like **ElevenLabs-generated speech**. It is the plug-in for spec fields `elevenlabs_ai_score` (incident) and `ai_voice_used` (scam record).
 
-This is **detection only**. Transcription stays with Grok; SMS stays with Twilio.
+This is **detection only**. Transcription stays with Grok; SMS stays with Textbelt.
 
 ## Run
 

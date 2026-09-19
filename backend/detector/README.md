@@ -3,7 +3,7 @@
 Mid-call pipeline:
 
 1. **Screen** (cheap): clip → ElevenLabs AI-voice + openWakeWord keywords → alarm / sensitivity
-2. **Escalate** (if sensitive): Grok STT → Grok scam flags → upsert pattern + Twilio SMS
+2. **Escalate** (if sensitive): Grok STT → Grok scam flags → upsert pattern + Textbelt SMS
 
 Also exposes analyze / ingest / report for transcript-first flows.
 
@@ -18,7 +18,8 @@ uv sync --group dev --extra kws
 # language + STT: XAI_API_KEY
 # audio screen: ELEVENLABS_API_KEY
 # ingest DB: DATABASE_URL (same as backend/db/.env)
-# ingest SMS: TWILIO_* (same as backend/warnings/.env) — missing → dry-run
+# ingest SMS: TEXTBELT_KEY (same as backend/warnings/.env) — missing → dry-run
+#   TEXTBELT_KEY=textbelt  → 1 free SMS/day with custom copy
 uv run uvicorn app:app --reload --host 0.0.0.0 --port 8000
 ```
 
@@ -55,7 +56,7 @@ List mic devices: `… mac_capture.py --list-devices`
 `POST /v1/process` — multipart:
 
 - `file` (required) — mp3/wav/ogg/webm chunk
-- `to` (optional) — E.164 for Twilio if scam
+- `to` (optional) — E.164 for Textbelt if scam
 - `force_escalate` (optional bool) — run STT/Grok even when screen is cold
 
 ```bash
@@ -75,7 +76,7 @@ curl -s -F "transcript=Hi grandma, buy \$500 in gift cards and don't tell mom." 
   http://127.0.0.1:8000/v1/analyze
 ```
 
-`POST /v1/ingest` — same fields plus `to`. When `is_scam`, upserts pattern + Twilio. Soft-fails land in `warnings[]`.
+`POST /v1/ingest` — same fields plus `to`. When `is_scam`, upserts pattern + Textbelt. Soft-fails land in `warnings[]`.
 
 `POST /v1/report` — JSON “this happened to me”. Upserts only; no SMS.
 
@@ -105,4 +106,4 @@ uv sync --group dev
 uv run pytest -q
 ```
 
-No live Grok, ElevenLabs, Postgres, Twilio, or openWakeWord calls in unit tests.
+No live Grok, ElevenLabs, Postgres, Textbelt, or openWakeWord calls in unit tests.

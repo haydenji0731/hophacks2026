@@ -1,0 +1,60 @@
+export const ARTICLES = [
+  {
+    id: "irs-dirty-dozen-2026",
+    source: "IRS",
+    date: "2026-03-05",
+    title: "Dirty Dozen tax scams for 2026 include AI voice impersonation",
+    dek: "The IRS flags phishing, QR-code fake sites, and phone calls that mimic its voice and caller ID. It never demands gift cards, crypto, or same-day payment.",
+    href: "https://www.irs.gov/newsroom/dirty-dozen-tax-scams-for-2026-irs-reminds-taxpayers-to-watch-out-for-dangerous-threats",
+  },
+  {
+    id: "ftc-badge-photo",
+    source: "FTC",
+    date: "2026-06-03",
+    title: "A real FTC employee won’t text you their photo ID",
+    dek: "Impostors spoof the agency, claim they can recover money you already lost, then send a fake badge photo to look official.",
+    href: "https://consumer.ftc.gov/consumer-alerts/2026/06/real-ftc-employee-wont-text-you-their-photo-id-verify-their-identity",
+  },
+  {
+    id: "ftc-captcha",
+    source: "FTC",
+    date: "2026-06-08",
+    title: "Fake CAPTCHA pages that make you run malware",
+    dek: "If a “are you human” check tells you to press Windows+R, Ctrl+V, then Enter, close the tab. Real CAPTCHAs never ask for system commands.",
+    href: "https://consumer.ftc.gov/consumer-alerts/2026/06/how-spot-captcha-scam",
+  },
+  {
+    id: "ftc-pet-scams",
+    source: "FTC",
+    date: "2026-06-24",
+    title: "Pet scams now use stolen photos and AI deepfakes",
+    dek: "Listings and “urgent vet bill” pitches steal real animal images or generate fake video so you wire money for a pet that does not exist.",
+    href: "https://consumer.ftc.gov/consumer-alerts/2026/06/animal-lovers-learn-spot-and-avoid-breed-pet-scams",
+  },
+  {
+    id: "ftc-how-they-ask-to-pay",
+    source: "FTC",
+    date: "2026-07-22",
+    title: "If they only take gift cards, wire, or crypto, it’s a scam",
+    dek: "FTC reports show unexpected “pay now” pitches that ban normal cards are almost always fraud — whether the story is taxes, a prize, or a locked account.",
+    href: "https://consumer.ftc.gov/consumer-alerts/2026/07/way-spot-scams-how-someone-asks-you-pay",
+  },
+  {
+    id: "fcc-tax-season",
+    source: "FCC",
+    date: "2026-03-30",
+    title: "Tax-season phone scams and taxpayer ID theft",
+    dek: "Spoofed IRS caller ID, rushed PINs, and gift-card demands. Hang up, use IRS.gov numbers only, and report the call.",
+    href: "https://www.fcc.gov/consumers/scam-alert/tax-season-phone-scams-and-taxpayer-id-theft",
+  },
+  {
+    id: "ftc-gov-impersonation",
+    source: "FTC",
+    date: "2026-01-15",
+    title: "How to avoid a government impersonation scam",
+    dek: "IRS, SSA, police, and even the FTC itself get cloned. Real agencies do not arrest you by phone or take payment apps.",
+    href: "https://consumer.ftc.gov/articles/how-avoid-government-impersonation-scam",
+  },
+];
+
+export const FEATURED = ARTICLES.slice(0, 3);
