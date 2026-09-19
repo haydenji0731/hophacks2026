@@ -132,7 +132,7 @@ def spot_keywords(
         for window in _iter_windows(audio_48k, _CLAP_SR, _WIN_S, _HOP_S):
             inputs = processor(
                 text=query_list,
-                audios=window.astype(np.float32),
+                audio=window.astype(np.float32),
                 sampling_rate=_CLAP_SR,
                 return_tensors="pt",
                 padding=True,
