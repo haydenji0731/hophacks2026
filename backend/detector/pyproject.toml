@@ -1,7 +1,7 @@
 [project]
 name = "detector"
-version = "0.1.0"
-description = "Scam detector: ElevenLabs audio + Grok language flags"
+version = "0.2.0"
+description = "Scam detector: screen (ElevenLabs + openWakeWord) → STT/Grok → log/notify"
 requires-python = ">=3.11"
 dependencies = [
   "fastapi>=0.115.0",
@@ -13,6 +13,14 @@ dependencies = [
   "requests>=2.32.0",
   "sqlalchemy>=2.0.36",
   "psycopg[binary]>=3.2.0",
+  "numpy>=1.26.0",
+  "pydub>=0.25.1",
+]
+
+[project.optional-dependencies]
+# Linux backend only — onnx/tflite wheels are unreliable on macOS 12.
+kws = [
+  "openwakeword>=0.6.0",
 ]
 
 [dependency-groups]

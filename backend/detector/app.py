@@ -5,14 +5,19 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 
 from ingest import IngestInputs, ingest_incident, upsert_report
+from process import ProcessInputs, process_audio
 from pipeline import analyze_incident
+from screen import run_screen
 from schemas import (
     AnalyzeResponse,
     ErrorDetail,
     HealthResponse,
     IngestResponse,
+    KeywordHitOut,
+    ProcessResponse,
     ReportRequest,
     ReportResponse,
+    ScreenResponse,
 )
 from settings import settings
 
@@ -38,10 +43,10 @@ EXTENSION_TYPES = {
 app = FastAPI(
     title="Scam detector",
     description=(
-        "Combines ElevenLabs AI-voice scores with Grok language flags; "
-        "ingest upserts scam patterns and sends Twilio warnings."
+        "Mid-call screen (ElevenLabs + openWakeWord) → escalate STT/Grok → log + Twilio. "
+        "Also supports analyze/ingest/report."
     ),
-    version="0.1.0",
+    version="0.2.0",
 )
 app.add_middleware(
     CORSMiddleware,
@@ -196,3 +201,64 @@ def report(req: ReportRequest) -> ReportResponse:
         platform=req.platform,
     )
     return ReportResponse(db=db_result, warnings=warnings)
+
+
+@app.post(
+    "/v1/screen",
+    response_model=ScreenResponse,
+    responses={400: {"model": ErrorDetail}, 413: {"model": ErrorDetail}},
+)
+async def screen_audio(file: UploadFile = File(...)) -> ScreenResponse:
+    """Cheap screen only: clip → ElevenLabs + openWakeWord → alarm / sensitivity."""
+    audio = await _read_audio(file)
+    if audio is None:
+        raise HTTPException(
+            status_code=400,
+            detail=ErrorDetail(error="missing_input", detail="Audio file required.").model_dump(),
+        )
+    data, filename, content_type = audio
+    result = run_screen(data, filename, content_type)
+    return ScreenResponse(
+        elevenlabs_ai_score=result.elevenlabs_ai_score,
+        ai_voice_used=result.ai_voice_used,  # type: ignore[arg-type]
+        ai_generated=result.ai_generated,
+        keyword_hits=[KeywordHitOut(**h) for h in result.keyword_hits],
+        alarm_score=result.alarm_score,
+        sensitivity=result.sensitivity,  # type: ignore[arg-type]
+        escalate=result.escalate,
+        clipped_seconds=result.clipped_seconds,
+        warnings=result.warnings,
+    )
+
+
+@app.post(
+    "/v1/process",
+    response_model=ProcessResponse,
+    responses={
+        400: {"model": ErrorDetail},
+        413: {"model": ErrorDetail},
+        502: {"model": ErrorDetail},
+    },
+)
+async def process(
+    file: UploadFile = File(...),
+    to: str | None = Form(default=None),
+    force_escalate: bool = Form(default=False),
+) -> ProcessResponse:
+    """
+    Full demo path: screen → if sensitive, STT + Grok → if scam, log + notify.
+    Mac capture clients should POST audio chunks here (Linux backend).
+    """
+    audio = await _read_audio(file)
+    if audio is None:
+        raise HTTPException(
+            status_code=400,
+            detail=ErrorDetail(error="missing_input", detail="Audio file required.").model_dump(),
+        )
+    return process_audio(
+        ProcessInputs(
+            audio=audio,
+            to=(to or "").strip() or None,
+            force_escalate=force_escalate,
+        )
+    )

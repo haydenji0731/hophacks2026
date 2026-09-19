@@ -19,6 +19,8 @@ class DetectResponse(BaseModel):
     detection_method: DetectionMethod = "elevenlabs_classifier"
     reason: str
     limitations: list[str] = Field(default_factory=lambda: list(CLASSIFIER_LIMITATIONS))
+    clipped_seconds: float | None = None
+    original_seconds: float | None = None
 
 
 class HealthResponse(BaseModel):

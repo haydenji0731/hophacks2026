@@ -4,6 +4,7 @@ from typing import Any
 
 import httpx
 
+from clip_audio import clip_leading_audio
 from config import Settings, settings
 from models import CLASSIFIER_LIMITATIONS, AiVoiceUsed, DetectResponse
 
@@ -31,7 +32,12 @@ def map_ai_voice_used(
     return "unknown"
 
 
-def build_detect_response(probability: float) -> DetectResponse:
+def build_detect_response(
+    probability: float,
+    *,
+    clipped_seconds: float | None = None,
+    original_seconds: float | None = None,
+) -> DetectResponse:
     score = max(0.0, min(1.0, float(probability)))
     used = map_ai_voice_used(score)
     return DetectResponse(
@@ -39,6 +45,8 @@ def build_detect_response(probability: float) -> DetectResponse:
         ai_voice_used=used,
         reason=f"ElevenLabs synthetic-voice score {score:.2f}",
         limitations=list(CLASSIFIER_LIMITATIONS),
+        clipped_seconds=clipped_seconds,
+        original_seconds=original_seconds,
     )
 
 
@@ -62,11 +70,21 @@ def classify_audio(
     cfg: Settings | None = None,
 ) -> DetectResponse:
     cfg = cfg or settings
+    clip = clip_leading_audio(
+        file_bytes,
+        filename,
+        content_type,
+        seconds=cfg.clip_seconds,
+    )
+    send_bytes = clip.data
+    send_name = clip.filename
+    send_type = clip.content_type
+
     headers: dict[str, str] = {}
     if cfg.elevenlabs_api_key:
         headers["xi-api-key"] = cfg.elevenlabs_api_key
 
-    files = {"file": (filename or "audio.mp3", file_bytes, content_type or "application/octet-stream")}
+    files = {"file": (send_name or "audio.wav", send_bytes, send_type or "application/octet-stream")}
     owns_client = client is None
     http = client or httpx.Client(timeout=cfg.request_timeout_seconds)
     try:
@@ -92,4 +110,8 @@ def classify_audio(
     except ValueError as exc:
         raise ClassifierError("ElevenLabs classifier returned non-JSON") from exc
 
-    return build_detect_response(_extract_probability(payload))
+    return build_detect_response(
+        _extract_probability(payload),
+        clipped_seconds=clip.clipped_seconds,
+        original_seconds=clip.original_seconds,
+    )

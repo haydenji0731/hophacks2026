@@ -19,10 +19,6 @@ class GrokFlags(BaseModel):
         default="unclear",
         description="Who the scam appears to target (role/demographic), from detect_scam.",
     )
-    ai_generated: bool | None = Field(
-        default=None,
-        description="Whether Grok judges the speech/message AI-generated; None = unknown.",
-    )
 
 
 class AnalyzeResponse(BaseModel):
@@ -81,3 +77,45 @@ class ReportRequest(BaseModel):
 class ReportResponse(BaseModel):
     db: DbUpsertResult
     warnings: list[str] = Field(default_factory=list)
+
+
+SensitivityTier = Literal["not_sensitive", "low", "medium", "high"]
+
+
+class KeywordHitOut(BaseModel):
+    label: str
+    score: float
+
+
+class ScreenResponse(BaseModel):
+    elevenlabs_ai_score: float | None = None
+    ai_voice_used: AiVoiceUsed | None = None
+    ai_generated: bool | None = None
+    keyword_hits: list[KeywordHitOut] = Field(default_factory=list)
+    alarm_score: float = 0.0
+    sensitivity: SensitivityTier = "not_sensitive"
+    escalate: bool = False
+    clipped_seconds: float | None = None
+    warnings: list[str] = Field(default_factory=list)
+
+
+class ProcessResponse(BaseModel):
+    """Screen → optional STT/Grok escalate → log/notify."""
+
+    elevenlabs_ai_score: float | None = None
+    ai_voice_used: AiVoiceUsed | None = None
+    ai_generated: bool | None = None
+    keyword_hits: list[dict] = Field(default_factory=list)
+    alarm_score: float = 0.0
+    sensitivity: SensitivityTier = "not_sensitive"
+    escalate: bool = False
+    escalated: bool = False
+    clipped_seconds: float | None = None
+    transcript: str | None = None
+    grok: GrokFlags | None = None
+    scam_confidence: float = 0.0
+    notification_tier: NotificationTier = "low"
+    reason: str = ""
+    warnings: list[str] = Field(default_factory=list)
+    db: DbUpsertResult | None = None
+    notify: NotifyResult | None = None

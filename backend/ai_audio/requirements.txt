@@ -5,3 +5,4 @@ pydantic-settings>=2.6.0
 python-multipart>=0.0.12
 python-dotenv>=1.0.0
 pytest>=8.3.0
+pydub>=0.25.1

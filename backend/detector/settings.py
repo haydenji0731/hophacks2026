@@ -11,5 +11,14 @@ class Settings(BaseSettings):
     medium_threshold: float = 0.40
     max_upload_bytes: int = 10 * 1024 * 1024
 
+    # Screen → escalate (dumb v1; replaceable with a statistical model later)
+    ai_escalate_threshold: float = 0.50
+    min_keyword_hits_to_escalate: int = 1
+
+    # Grok STT
+    stt_url: str = "https://api.x.ai/v1/stt"
+    stt_model: str = "grok-voice-transcribe-2.0"
+    stt_timeout_seconds: float = 180.0
+
 
 settings = Settings()

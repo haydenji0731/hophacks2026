@@ -1,31 +1,71 @@
 # Scam detector
 
-Combines **ElevenLabs** synthetic-voice scores with the team's **Grok** transcript classifier (`detect_scam.py`) into one incident payload: `scam_confidence`, `notification_tier`, and a Twilio-ready `reason`.
+Mid-call pipeline:
 
-`POST /v1/ingest` also upserts a scam-pattern row and sends a Twilio warning when Grok says `is_scam`. DB/notify failures are soft (returned in `warnings[]`).
+1. **Screen** (cheap): clip → ElevenLabs AI-voice + openWakeWord keywords → alarm / sensitivity
+2. **Escalate** (if sensitive): Grok STT → Grok scam flags → upsert pattern + Twilio SMS
 
-## Run
+Also exposes analyze / ingest / report for transcript-first flows.
+
+**Runtime split:** run this API on **Linux** (openWakeWord works there). Capture audio on the Mac with [`clients/mac_capture.py`](../../clients/mac_capture.py) and POST chunks here.
+
+## Run (Linux backend)
 
 ```bash
 cd backend/detector
-uv sync --group dev
-# language flags: XAI_API_KEY (same as detect_scam.py)
-# audio (optional): ELEVENLABS_API_KEY
+uv python pin 3.11          # openWakeWord / tflite need 3.11
+uv sync --group dev --extra kws
+# language + STT: XAI_API_KEY
+# audio screen: ELEVENLABS_API_KEY
 # ingest DB: DATABASE_URL (same as backend/db/.env)
-# ingest SMS: TWILIO_* vars (same as backend/warnings/.env) — missing → dry-run
-uv run uvicorn app:app --reload --port 8000
+# ingest SMS: TWILIO_* (same as backend/warnings/.env) — missing → dry-run
+uv run uvicorn app:app --reload --host 0.0.0.0 --port 8000
 ```
+
+First-time KWS models (Linux):
+
+```bash
+uv run python -c "import openwakeword; openwakeword.utils.download_models()"
+```
+
+## Mac capture client
+
+```bash
+# from repo root — no openWakeWord on the Mac
+uv run --with sounddevice --with soundfile --with httpx --with numpy \
+  python clients/mac_capture.py \
+  --url http://LINUX_HOST:8000/v1/process \
+  --seconds 30 \
+  --loop \
+  --to +14105551234
+```
+
+List mic devices: `… mac_capture.py --list-devices`
 
 ## API
 
 `GET /health`
 
-`POST /v1/analyze` — multipart:
+### Screen / process (demo path)
 
-- `transcript` (optional string)
-- `file` (optional mp3/wav/ogg/webm)
+`POST /v1/screen` — multipart `file` only. Returns AI score, keyword hits, alarm, sensitivity, escalate flag. No STT.
 
-Need at least one. Best demo: both.
+`POST /v1/process` — multipart:
+
+- `file` (required) — mp3/wav/ogg/webm chunk
+- `to` (optional) — E.164 for Twilio if scam
+- `force_escalate` (optional bool) — run STT/Grok even when screen is cold
+
+```bash
+curl -s -F "file=@chunk.wav" -F "to=+14105551234" \
+  http://127.0.0.1:8000/v1/process
+```
+
+Escalate gate (env): `AI_ESCALATE_THRESHOLD` (default `0.5`), `MIN_KEYWORD_HITS_TO_ESCALATE` (default `1`).
+
+### Analyze / ingest / report
+
+`POST /v1/analyze` — multipart `transcript` and/or `file`. Need at least one.
 
 ```bash
 curl -s -F "transcript=Hi grandma, buy \$500 in gift cards and don't tell mom." \
@@ -33,19 +73,9 @@ curl -s -F "transcript=Hi grandma, buy \$500 in gift cards and don't tell mom." 
   http://127.0.0.1:8000/v1/analyze
 ```
 
-`POST /v1/ingest` — same fields plus:
+`POST /v1/ingest` — same fields plus `to`. When `is_scam`, upserts pattern + Twilio. Soft-fails land in `warnings[]`.
 
-- `to` — E.164 phone for Twilio (optional; skipped with a warning if missing)
-
-```bash
-curl -s -F "transcript=Hi grandma, buy \$500 in gift cards and don't tell mom." \
-  -F "to=+14105551234" \
-  http://127.0.0.1:8000/v1/ingest
-```
-
-When `is_scam`, response includes `db` (`created` / `updated` / `skipped`) and `notify` (SMS body / dry-run). Raw transcript is never written to Postgres.
-
-`POST /v1/report` — JSON from the website **This is what happened to me** button. Upserts a pattern row. Does **not** send SMS.
+`POST /v1/report` — JSON “this happened to me”. Upserts only; no SMS.
 
 ```bash
 curl -s -X POST http://127.0.0.1:8000/v1/report \
@@ -53,7 +83,7 @@ curl -s -X POST http://127.0.0.1:8000/v1/report \
   -d '{"scam_type":"Family emergency / bail scam","method":"gift card payment request","platform":"phone"}'
 ```
 
-## Scoring
+## Scoring (after escalate)
 
 Default: `0.4 * elevenlabs_ai_score + 0.6 * grok.confidence` (renormalized if one side is missing).
 
@@ -73,4 +103,4 @@ uv sync --group dev
 uv run pytest -q
 ```
 
-No live Grok, ElevenLabs, Postgres, or Twilio calls in unit tests.
+No live Grok, ElevenLabs, Postgres, Twilio, or openWakeWord calls in unit tests.
