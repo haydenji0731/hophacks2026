@@ -1,4 +1,4 @@
-# Your Nigerian Prince Is Not Real
+# Your Prince Is Not Real
 
 **Stop the scam before it starts.**
 
