@@ -145,12 +145,7 @@ function DemoMessage() {
 
       <p className="sherpa-demo-hint">
         Hover or focus a highlight for the reason.{" "}
-        <span className="sherpa-hint-light">
-          Red = high risk. Periwinkle = caution, proceed carefully.
-        </span>
-        <span className="sherpa-hint-dark">
-          Lavender = high risk. Magenta = caution, proceed carefully.
-        </span>
+        Red = high risk. Blue = caution, proceed carefully.
       </p>
     </div>
   );

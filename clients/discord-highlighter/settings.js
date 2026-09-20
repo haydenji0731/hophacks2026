@@ -15,7 +15,7 @@
       highlight: "#EFC3F5",
       h1: "#2F195F",
       h2: "#7353BA",
-      h3: "#FAA6FF",
+      h3: "#99B2DD",
     },
   };
 

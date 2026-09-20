@@ -22,12 +22,12 @@ Open the toolbar popup and use the Warn / Block switch.
 The toolbar has a Light / Dark switch. It restyles the popup, hover cards, Block gate, live Drive bar, and highlight ink.
 
 | Token | Light | Dark |
-| --- | --- | --- |
+| --- | --- |
 | Background | `#F2E8CF` | `#0F1020` |
 | Highlights | `#BC4749` | `#EFC3F5` |
 | H1 | `#011627` | `#2F195F` |
 | H2 | `#658E9C` | `#7353BA` |
-| H3 | `#99B2DD` | `#FAA6FF` |
+| H3 | `#99B2DD` | `#99B2DD` |
 
 ## Report a scam
 
@@ -56,7 +56,7 @@ If it says it is not injected, reload the tab or reload the unpacked extension.
 Offline cue matching + a small association graph + cross-family combos (urgency + payment, authority + credentials, and similar). See [`scam-smell/README.md`](scam-smell/README.md) for how the score is built and how to add cues or association edges in JSON only.
 
 | Band | Score | Highlight |
-| --- | --- | --- |
+| --- | --- |
 | ok | 0–24 | none |
 | caution | 25–54 | H3 ink · SUSPICIOUS |
 | high | 55–100 | Highlights ink · SCAM LIKELY: AVOID LINKS |
