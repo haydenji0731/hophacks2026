@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { SCAM_TYPES } from "../data/questions.js";
+import RelevanceMeter from "../components/RelevanceMeter.jsx";
 
 const PAGE_SIZE = 3;
 const SEARCH_SUGGESTIONS = [
@@ -22,11 +23,18 @@ function fallbackPatterns(query) {
     score: null,
   }));
   if (!q) return rows;
-  return rows.filter(
-    (row) =>
-      row.title.toLowerCase().includes(q) ||
-      row.description.toLowerCase().includes(q),
-  );
+  const words = q.split(/\s+/).filter((w) => w.length > 1);
+  return rows
+    .map((row) => {
+      const hay = `${row.title} ${row.description}`.toLowerCase();
+      const hits = words.filter((w) => hay.includes(w)).length;
+      if (!hits && !hay.includes(q)) return null;
+      const score = hay.includes(q)
+        ? 0.72
+        : Math.min(0.95, 0.22 + (hits / Math.max(words.length, 1)) * 0.7);
+      return { ...row, score };
+    })
+    .filter(Boolean);
 }
 
 export default function Repository() {
@@ -123,10 +131,15 @@ export default function Repository() {
         {patterns.length === 0 && status !== "loading" ? (
           <li className="placeholder-card">No patterns match that search.</li>
         ) : (
-          patterns.slice(0, shown).map((scam) => (
+          patterns.slice(0, shown).map((scam, i) => (
             <li key={scam.id || scam.name}>
               <Link className="scam-card" to={`/scams/${scam.id || scam.name}`}>
-                <strong>{scam.title || scam.name}</strong>
+                <span className="scam-card-top">
+                  <strong>{scam.title || scam.name}</strong>
+                  {debounced.trim() && typeof scam.score === "number" ? (
+                    <RelevanceMeter score={scam.score} delay={i * 70} />
+                  ) : null}
+                </span>
                 <p>{scam.description}</p>
                 {(scam.platforms?.length > 0 || scam.frequency > 0) && (
                   <span className="scam-card-meta">

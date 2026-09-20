@@ -1655,6 +1655,20 @@ textarea:focus,
   letter-spacing: -0.03em;
 }
 
+.result-primary,
+.result-primary h2,
+.result-primary p,
+.result-primary li {
+  color: #EFC3F5;
+}
+
+html[data-theme="light"] .result-primary,
+html[data-theme="light"] .result-primary h2,
+html[data-theme="light"] .result-primary p,
+html[data-theme="light"] .result-primary li {
+  color: #011627;
+}
+
 .result-primary ul {
   list-style: none;
   margin: 0.4rem 0 0;
@@ -1715,11 +1729,13 @@ html[data-theme="light"] .result-alt .muted {
   color: #011627;
 }
 
+.result-primary ::selection,
 .result-alt ::selection {
   color: #EFC3F5;
   background: color-mix(in srgb, #EFC3F5 28%, transparent);
 }
 
+html[data-theme="light"] .result-primary ::selection,
 html[data-theme="light"] .result-alt ::selection {
   color: #011627;
   background: color-mix(in srgb, #011627 18%, transparent);
@@ -1746,6 +1762,14 @@ html[data-theme="light"] .result-alt ::selection {
   transition: border-color 0.15s var(--ease), transform 0.2s var(--ease);
 }
 
+.scam-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.85rem;
+  margin-bottom: 0.25rem;
+}
+
 .scam-card:hover {
   border-color: var(--accent);
   transform: translateX(4px);
@@ -1756,7 +1780,44 @@ html[data-theme="light"] .result-alt ::selection {
   display: block;
   font-family: var(--display);
   letter-spacing: -0.02em;
-  margin-bottom: 0.25rem;
+  margin: 0;
+  flex: 1;
+  min-width: 0;
+}
+
+.relevance {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.28rem;
+  flex: 0 0 7.4rem;
+  min-width: 6.5rem;
+}
+
+.relevance-track {
+  width: 100%;
+  height: 5px;
+  border-radius: 99px;
+  background: color-mix(in srgb, var(--muted) 22%, transparent);
+  overflow: hidden;
+}
+
+.relevance-fill {
+  display: block;
+  height: 100%;
+  width: 0;
+  border-radius: inherit;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--glow);
+  transition: width 0.72s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.relevance-label {
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
 }
 
 .scam-card p {
@@ -2165,7 +2226,8 @@ html[data-theme="light"] .band-wipe-mark {
   .step-swap,
   .step-scan,
   .news-track,
-  .compat-track {
+  .compat-track,
+  .relevance-fill {
     animation: none !important;
     transition: none !important;
   }
