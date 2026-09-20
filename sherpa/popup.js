@@ -75,7 +75,7 @@
 
   async function checkTab() {
     if (typeof chrome === "undefined" || !chrome.tabs || !chrome.tabs.query) {
-      setStatus("maybe", "Toolbar popup is loaded", "Open this from the Chrome toolbar on Discord, Instagram, Reddit, or Drive.");
+      setStatus("maybe", "Toolbar popup is loaded", "Open this from the Chrome toolbar on Discord, Instagram, or Reddit.");
       return;
     }
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -84,7 +84,7 @@
       return;
     }
     const url = tab.url || "";
-    const supported = /discord\.com|instagram\.com|reddit\.com|redd\.it|drive\.google\.com/.test(url);
+    const supported = /discord\.com|instagram\.com|reddit\.com|redd\.it/.test(url);
     try {
       const res = await chrome.tabs.sendMessage(tab.id, { type: "sherpa-ping" });
       if (res && res.ok) {
@@ -111,7 +111,7 @@
     setStatus(
       "maybe",
       "Extension is loaded",
-      "This page is not Discord, Instagram, Reddit, or Drive. Open one of those to see highlights.",
+      "This page is not Discord, Instagram, or Reddit. Open one of those to see highlights.",
     );
   }
 
@@ -134,9 +134,6 @@
     themeSwitch.setAttribute("aria-checked", next ? "true" : "false");
     persist();
   });
-  // Only persist after the checkbox has toggled. A click listener fires
-  // before activation and would write the old value, so the page kept the
-  // previous hover-comment setting until reload.
   descBox.addEventListener("change", persist);
   reportBtn.addEventListener("click", openReport);
   prefs.load(renderPrefs);
