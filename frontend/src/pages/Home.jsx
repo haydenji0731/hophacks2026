@@ -18,7 +18,7 @@ export default function Home() {
     <>
       <section className="hero">
         <h1 className="reveal delay-1">Let's <span>Debrief</span></h1>
-        <p className="lede reveal delay-2">Six questions. A live verdict.</p>
+        <p className="lede reveal delay-2">We hate scammers too.</p>
         <div className="cta-row reveal delay-3">
           <button
             type="button"
