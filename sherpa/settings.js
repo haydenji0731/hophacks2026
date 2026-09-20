@@ -1,6 +1,6 @@
 (() => {
   // Live report form at the bottom of the YPINR homepage.
-  const REPORT_URL = "http://yourprinceisnotreal.net/#:~:text=Report%20a%20scam";
+  const REPORT_URL = "http://yourprinceisnotreal.net/";
 
   const THEMES = {
     light: {
@@ -104,6 +104,7 @@
     if (band) params.set("band", band);
     if (REPORT_URL) {
       const url = new URL(REPORT_URL);
+      url.searchParams.set("sherpa_report", "1");
       params.forEach((value, key) => url.searchParams.set(key, value));
       return url.toString();
     }
