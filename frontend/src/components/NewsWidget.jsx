@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ARTICLES } from "../data/news.js";
+import { apiUrl } from "../lib/api.js";
 
 const POLL_MS = 20_000;
 
@@ -41,7 +42,7 @@ export default function NewsWidget() {
       if (!cancelled && next.length) setArticles(next);
     };
     const load = () => {
-      fetch("/api/v1/news")
+      fetch(apiUrl("/v1/news"))
         .then((r) => (r.ok ? r.json() : Promise.reject()))
         .then(apply)
         .catch(() => {});

@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { apiUrl } from "../lib/api.js";
 
 const PLATFORMS = [
   { value: "phone", label: "Phone" },
@@ -72,7 +73,7 @@ export default function ReportScamForm() {
     setStatus("saving");
     setMessage("");
     try {
-      const response = await fetch("/api/v1/report", {
+      const response = await fetch(apiUrl("/v1/report"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

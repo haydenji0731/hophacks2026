@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { SCAM_TYPES } from "../data/questions.js";
 import RelevanceMeter from "../components/RelevanceMeter.jsx";
+import { apiUrl } from "../lib/api.js";
 
 const PAGE_SIZE = 3;
 const SEARCH_SUGGESTIONS = [
@@ -60,7 +61,7 @@ export default function Repository() {
     if (debounced.trim()) params.set("q", debounced.trim());
     params.set("limit", "200");
     setStatus("loading");
-    fetch(`/api/v1/intel?${params}`, { signal: controller.signal })
+    fetch(apiUrl(`/v1/intel?${params}`), { signal: controller.signal })
       .then((res) => {
         if (!res.ok) throw new Error("intel");
         return res.json();

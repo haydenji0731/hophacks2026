@@ -68,7 +68,6 @@ export default function MicWaveform() {
   const grok = result?.grok;
   const isScam = Boolean(grok?.is_scam);
   const synthetic = result?.ai_voice_used === "yes" || isScam;
-  const sensitivity = result?.sensitivity || (recording ? "low" : "cold");
   const verdict = processVerdict(result);
 
   useEffect(() => {
@@ -299,9 +298,9 @@ export default function MicWaveform() {
 
   const hint = {
     standby:
-      "Mic clip → /v1/process (same as Mac capture): screen → STT → Grok. Talk or play a voicemail into the mic.",
+      "Start listening and speak normally — or play a call through your speakers. We’ll check if it sounds like a scam.",
     record: `Listening… ${elapsed.toFixed(1)}s / ${CLIP_SECONDS}s — press Stop listening to send the clip.`,
-    upload: "Screen → STT → Grok…",
+    upload: "Checking the clip for scam signals…",
     done: verdict?.title || "Done",
   }[phase];
 
@@ -309,7 +308,7 @@ export default function MicWaveform() {
     standby: "Standby",
     record: "Listening",
     upload: "Processing",
-    done: isScam ? "Scam" : verdict?.title || "Done",
+    done: verdict?.title || "Done",
   }[phase];
 
   const chipKind =
@@ -321,7 +320,10 @@ export default function MicWaveform() {
       ref={wrapRef}
     >
       <div className="live-top">
-        <p className="eyebrow">Live intercept · /v1/process</p>
+        <p className="eyebrow live-brand">
+          <img src="/outpost.png" alt="" className="live-outpost-mark" width="18" height="18" />
+          Live · Outpost
+        </p>
         <p
           className={`verdict ${
             chipKind === "yes" ? "danger" : chipKind === "no" ? "safe" : ""
@@ -332,7 +334,7 @@ export default function MicWaveform() {
         </p>
       </div>
 
-      <h2 className="mic-wave-title">Phone intercept</h2>
+      <h2 className="mic-wave-title">Voice scam detector</h2>
       <p className="lede live-hint">{hint}</p>
 
       <canvas ref={canvasRef} className="mic-wave-canvas" aria-hidden="true" />
@@ -341,17 +343,13 @@ export default function MicWaveform() {
           {recording
             ? `mic · up to ${CLIP_SECONDS}s`
             : phase === "upload"
-              ? "analyzing"
+              ? "checking"
               : "mic off"}
-        </span>
-        <span className={`live-sens is-${sensitivity === "not_sensitive" ? "cold" : sensitivity}`}>
-          sensitivity {sensitivity === "not_sensitive" ? "cold" : sensitivity}
         </span>
       </div>
 
       {phase === "done" && verdict ? (
         <div className={`live-banner is-${verdict.kind}`} role="status">
-          <p className="live-banner-title">{verdict.title}</p>
           <p className="live-banner-score">
             {verdict.scoreLabel} {verdict.scoreSuffix}
           </p>
@@ -379,10 +377,8 @@ export default function MicWaveform() {
           </strong>
           <em>
             {result?.escalated
-              ? grok?.scam_type || "escalated"
-              : sensitivity === "not_sensitive"
-                ? "cold"
-                : sensitivity || "—"}
+              ? grok?.scam_type?.replaceAll("_", " ") || "checked"
+              : "screen"}
           </em>
         </article>
       </div>
@@ -397,20 +393,13 @@ export default function MicWaveform() {
           : ["waiting for clip"].map((p) => <span key={p}>{p}</span>)}
       </div>
 
-      {phase === "done" && result?.transcript ? (
-        <div className="live-transcript">
-          <span>Transcript</span>
-          <p>{result.transcript}</p>
-        </div>
-      ) : null}
-
       <div className="live-waiting">
         {phase === "standby" &&
-          "Mic is off. Start listening, then talk or play an AI voicemail into the mic."}
+          "Mic is off. Start listening, we'll monitor if it sounds like a scam."}
         {phase === "record" &&
           "Press Stop listening to analyze now, or wait until 15 seconds."}
-        {phase === "upload" && "Running full process (screen → STT → Grok)…"}
-        {phase === "done" && verdict?.reason}
+        {phase === "upload" && "Listening for scam patterns in the clip…"}
+        {phase === "done" && null}
       </div>
 
       {error ? <p className="live-mic-error">{error}</p> : null}

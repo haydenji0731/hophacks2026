@@ -34,7 +34,6 @@ export default function Live() {
   const grok = result?.grok;
   const isScam = Boolean(grok?.is_scam);
   const synthetic = result?.ai_voice_used === "yes" || isScam;
-  const sensitivity = result?.sensitivity || (recording ? "low" : "cold");
   const verdict = processVerdict(result);
 
   useEffect(() => {
@@ -196,12 +195,11 @@ export default function Live() {
   }
 
   const hint = {
-    standby:
-      "Same path as the Mac capture client: mic clip → /v1/process (screen → STT → Grok when escalated).",
+    standby: "Start listening and speak normally — or play a call through your speakers. We’ll check if it sounds like a scam.",
     record: `Listening… ${elapsed.toFixed(1)}s / ${CLIP_SECONDS}s — press Stop to send.`,
     upload: forceEscalate
-      ? "Screen → STT → Grok (full process)…"
-      : "Screen first; escalates only if sensitive…",
+      ? "Checking the clip for scam signals…"
+      : "Quick screen first; full check only if it looks risky…",
     done: verdict?.title || "Done",
   }[phase];
 
@@ -209,7 +207,7 @@ export default function Live() {
     standby: "Standby",
     record: "Listening",
     upload: "Processing",
-    done: isScam ? "Scam" : verdict?.title || "Done",
+    done: verdict?.title || "Done",
   }[phase];
 
   const chipKind =
@@ -225,7 +223,10 @@ export default function Live() {
   return (
     <section className={`live-monitor is-${phase}${synthetic ? " is-alert" : ""}`}>
       <div className="live-top">
-        <p className="eyebrow">Live intercept · /v1/process</p>
+        <p className="eyebrow live-brand">
+          <img src="/outpost.png" alt="" className="live-outpost-mark" width="18" height="18" />
+          Live · Outpost
+        </p>
         <p
           className={`verdict ${
             chipKind === "yes" ? "danger" : chipKind === "no" ? "safe" : ""
@@ -236,7 +237,7 @@ export default function Live() {
         </p>
       </div>
 
-      <h1>Phone intercept</h1>
+      <h1>Voice scam detector</h1>
       <p className="lede live-hint">{hint}</p>
 
       <div className="live-scope" aria-hidden="true">
@@ -246,20 +247,14 @@ export default function Live() {
             {recording
               ? `mic · ${CLIP_SECONDS}s clip`
               : phase === "upload"
-                ? result?.escalated || forceEscalate
-                  ? "process"
-                  : "screen"
+                ? "checking"
                 : "mic off"}
-          </span>
-          <span className={`live-sens is-${sensitivity === "not_sensitive" ? "cold" : sensitivity}`}>
-            sensitivity {sensitivity === "not_sensitive" ? "cold" : sensitivity}
           </span>
         </div>
       </div>
 
       {phase === "done" && verdict ? (
         <div className={`live-banner is-${verdict.kind}`} role="status">
-          <p className="live-banner-title">{verdict.title}</p>
           <p className="live-banner-score">
             {verdict.scoreLabel} {verdict.scoreSuffix}
           </p>
@@ -295,10 +290,8 @@ export default function Live() {
           </strong>
           <em>
             {result?.escalated
-              ? grok?.scam_type || "escalated"
-              : sensitivity === "not_sensitive"
-                ? "cold"
-                : sensitivity || "—"}
+              ? grok?.scam_type?.replaceAll("_", " ") || "checked"
+              : "screen"}
           </em>
         </article>
       </div>
@@ -313,22 +306,15 @@ export default function Live() {
           : ["waiting for clip"].map((p) => <span key={p}>{p}</span>)}
       </div>
 
-      {phase === "done" && result?.transcript ? (
-        <div className="live-transcript">
-          <span>Transcript</span>
-          <p>{result.transcript}</p>
-        </div>
-      ) : null}
-
       <div className="live-waiting">
         {phase === "standby" &&
-          "Mic off. Start listening, then talk or play a voicemail into the mic — posts to /v1/process like mac_capture."}
+          "Mic is off. Start listening, we'll monitor if it sounds like a scam."}
         {phase === "record" && "Press Stop listening to analyze now, or wait until 15 seconds."}
         {phase === "upload" &&
           (forceEscalate
-            ? "Running full process (screen → STT → Grok)…"
-            : "Screening; will escalate only if sensitive…")}
-        {phase === "done" && verdict?.reason}
+            ? "Listening for scam patterns in the clip…"
+            : "Running a quick check; deeper analysis only if needed…")}
+        {phase === "done" && null}
       </div>
 
       {error ? <p className="live-mic-error">{error}</p> : null}
@@ -341,7 +327,7 @@ export default function Live() {
             onChange={(e) => setForceEscalate(e.target.checked)}
             disabled={busy || recording}
           />
-          Full scan (force STT + Grok)
+          Full check (always run deeper analysis)
         </label>
         <label className="live-to">
           <span>SMS to (optional)</span>

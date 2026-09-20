@@ -12,6 +12,19 @@
   margin-bottom: 0.35rem;
 }
 
+.live-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.live-outpost-mark {
+  width: 1.05rem;
+  height: 1.05rem;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
 .live-hint {
   margin-bottom: 1.25rem;
 }
@@ -183,31 +196,6 @@
   color: #e23d3d;
   font-size: 0.9rem;
   margin: 0 0 0.85rem;
-}
-
-.live-transcript {
-  margin: 0 0 1rem;
-  padding: 0.85rem 1rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--panel);
-}
-
-.live-transcript span {
-  display: block;
-  color: var(--muted);
-  font-size: 0.68rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  margin-bottom: 0.35rem;
-}
-
-.live-transcript p {
-  margin: 0;
-  font-size: 0.95rem;
-  line-height: 1.45;
-  color: var(--text);
-  white-space: pre-wrap;
 }
 
 .live-options {

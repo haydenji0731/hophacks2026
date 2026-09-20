@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { SCAM_TYPES } from "../data/questions.js";
+import { apiUrl } from "../lib/api.js";
 
 export default function ScamDetail() {
   const { id } = useParams();
@@ -23,7 +24,7 @@ export default function ScamDetail() {
 
   useEffect(() => {
     const controller = new AbortController();
-    fetch(`/api/v1/intel/${encodeURIComponent(id)}`, { signal: controller.signal })
+    fetch(apiUrl(`/v1/intel/${encodeURIComponent(id)}`), { signal: controller.signal })
       .then((res) => {
         if (!res.ok) throw new Error("missing");
         return res.json();

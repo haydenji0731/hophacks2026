@@ -2,6 +2,7 @@ import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import RiskGauge from "../components/RiskGauge.jsx";
 import { diagnose, headline, lede, reportPayload } from "../data/questions.js";
+import { apiUrl } from "../lib/api.js";
 
 export default function Results() {
   const location = useLocation();
@@ -15,7 +16,7 @@ export default function Results() {
     setReportState("saving");
     setReportMessage("");
     try {
-      const response = await fetch("/api/v1/report", {
+      const response = await fetch(apiUrl("/v1/report"), {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(reportPayload(result)),
