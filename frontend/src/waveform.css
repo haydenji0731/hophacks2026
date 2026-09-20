@@ -1,0 +1,69 @@
+.goal-wave {
+  width: 100%;
+  max-width: 760px;
+  margin: 0.5rem auto 2.4rem;
+}
+
+.mic-wave {
+  width: 100%;
+  max-width: 760px;
+  margin: 1.1rem auto 0;
+  scroll-margin-top: 5rem;
+}
+
+.mic-wave-title {
+  margin: 0 0 0.45rem;
+  font-family: var(--display);
+  font-size: clamp(1.55rem, 4vw, 2.15rem);
+  font-weight: 750;
+  letter-spacing: -0.03em;
+  color: var(--h2);
+}
+
+html[data-theme="light"] .mic-wave-title {
+  color: var(--h1);
+}
+
+.mic-wave .live-hint {
+  text-align: center;
+  max-width: 34rem;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.mic-wave-canvas {
+  display: block;
+  width: 100%;
+  height: 148px;
+  color: #fff;
+  margin: 0.15rem 0 0;
+}
+
+html[data-theme="light"] .mic-wave-canvas {
+  color: #000;
+}
+
+.mic-wave-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.2rem 0 0.15rem;
+  color: var(--muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.mic-wave-start {
+  min-width: 10.5rem;
+}
+
+.mic-wave .live-actions {
+  justify-content: flex-start;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mic-wave.is-record .verdict-dot {
+    animation: none !important;
+  }
+}

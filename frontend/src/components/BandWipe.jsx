@@ -3,17 +3,39 @@ import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
 
 const STRIPS = 11;
-const STAGGER_MS = 48;
-const IN_MS = 340;
-const OUT_MS = 320;
-const COVER_MS = (STRIPS - 1) * STAGGER_MS + IN_MS + 40;
-const CLEAR_MS = COVER_MS + (STRIPS - 1) * STAGGER_MS + OUT_MS + 40;
+const PLAY_MS = 1180;
+const NAV_MS = Math.round(PLAY_MS * 0.46);
+const CLEAR_MS = PLAY_MS + 40;
+
+function gapTopSkew(i) {
+  const last = STRIPS - 2;
+  if (i > last) return 0;
+  const t = 1 - i / last;
+  const start = 0.48;
+  const u = Math.max(0, (t - start) / (1 - start));
+  return 46 * u * u;
+}
+
+function growTopSkew(i) {
+  const t = i / (STRIPS - 1);
+  return 0.22 + 0.9 * t * t;
+}
+
+function gapBottomSkew(i) {
+  const last = STRIPS - 2;
+  if (i > last) return 0;
+  return gapTopSkew(last - i);
+}
+
+function growBottomSkew(i) {
+  return growTopSkew(STRIPS - 1 - i);
+}
 
 export default function BandWipe() {
   const navigate = useNavigate();
   const navigateRef = useRef(navigate);
-  const [phase, setPhase] = useState(null);
-  const [label, setLabel] = useState("WHS");
+  const [playing, setPlaying] = useState(false);
+  const [label, setLabel] = useState("YPINR");
   const phaseRef = useRef(null);
   const timers = useRef([]);
 
@@ -42,6 +64,8 @@ export default function BandWipe() {
 
       const hit = event.target.closest("button, a");
       if (!hit) return;
+      // The hero's Run Check button plays its own lock animation instead of the band wipe.
+      if (hit.closest(".btn-lock")) return;
       // Only the top bar and the home-page Run check button trigger the wipe.
       if (!hit.closest(".site-header, .hero .cta-row")) return;
       if (hit.closest(".theme-toggle")) return;
@@ -55,8 +79,8 @@ export default function BandWipe() {
       }
 
       setLabel(labelFrom(hit));
-      phaseRef.current = "in";
-      setPhase("in");
+      phaseRef.current = "play";
+      setPlaying(true);
       clearTimers();
 
       timers.current.push(
@@ -65,14 +89,12 @@ export default function BandWipe() {
             window.scrollTo(0, 0);
             navigateRef.current(path);
           }
-          phaseRef.current = "out";
-          setPhase("out");
-        }, COVER_MS),
+        }, NAV_MS),
       );
       timers.current.push(
         window.setTimeout(() => {
           phaseRef.current = null;
-          setPhase(null);
+          setPlaying(false);
         }, CLEAR_MS),
       );
     }
@@ -84,17 +106,20 @@ export default function BandWipe() {
     };
   }, []);
 
-  if (!phase) return null;
+  if (!playing) return null;
 
   return createPortal(
-    <div className="band-wipe" data-phase={phase} aria-hidden="true">
+    <div className="band-wipe" data-phase="play" aria-hidden="true">
       {Array.from({ length: STRIPS }, (_, i) => (
         <span
           key={i}
           className="band-wipe-strip"
           style={{
-            background: "var(--accent)",
-            "--d": `${(i * STAGGER_MS) / 1000}s`,
+            background: "var(--wipe)",
+            "--grow-a": growBottomSkew(i),
+            "--grow-b": growTopSkew(i),
+            "--gap-a": `${gapBottomSkew(i)}px`,
+            "--gap-b": `${gapTopSkew(i)}px`,
           }}
         />
       ))}
@@ -128,11 +153,12 @@ function labelFrom(el) {
   if (href === "/") return "Home";
   if (href.includes("questionnaire")) return "Check";
   if (href.includes("scams")) return "Intel";
+  if (href.includes("live")) return "Live";
   if (href.includes("our-goal")) return "Our Goal";
   if (href.includes("results")) return "Verdict";
 
-  const raw = (el.getAttribute("aria-label") || el.textContent || "WHS")
+  const raw = (el.getAttribute("aria-label") || el.textContent || "YPINR")
     .replace(/\s+/g, " ")
     .trim();
-  return raw.slice(0, 24) || "WHS";
+  return raw.slice(0, 24) || "YPINR";
 }

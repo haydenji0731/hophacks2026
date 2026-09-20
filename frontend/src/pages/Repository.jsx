@@ -1,6 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { SCAM_TYPES } from "../data/questions.js";
+import RelevanceMeter from "../components/RelevanceMeter.jsx";
+
+const PAGE_SIZE = 3;
+const SEARCH_SUGGESTIONS = [
+  "marketplace refund",
+  "WhatsApp romance",
+  "job training fee",
+];
 
 function fallbackPatterns(query) {
   const q = query.trim().toLowerCase();
@@ -15,11 +23,18 @@ function fallbackPatterns(query) {
     score: null,
   }));
   if (!q) return rows;
-  return rows.filter(
-    (row) =>
-      row.title.toLowerCase().includes(q) ||
-      row.description.toLowerCase().includes(q),
-  );
+  const words = q.split(/\s+/).filter((w) => w.length > 1);
+  return rows
+    .map((row) => {
+      const hay = `${row.title} ${row.description}`.toLowerCase();
+      const hits = words.filter((w) => hay.includes(w)).length;
+      if (!hits && !hay.includes(q)) return null;
+      const score = hay.includes(q)
+        ? 0.72
+        : Math.min(0.95, 0.22 + (hits / Math.max(words.length, 1)) * 0.7);
+      return { ...row, score };
+    })
+    .filter(Boolean);
 }
 
 export default function Repository() {
@@ -27,6 +42,8 @@ export default function Repository() {
   const [debounced, setDebounced] = useState("");
   const [patterns, setPatterns] = useState([]);
   const [status, setStatus] = useState("loading");
+  const [shown, setShown] = useState(PAGE_SIZE);
+  const [searchFocused, setSearchFocused] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebounced(query), 220);
@@ -34,10 +51,14 @@ export default function Repository() {
   }, [query]);
 
   useEffect(() => {
+    setShown(PAGE_SIZE);
+  }, [query]);
+
+  useEffect(() => {
     const controller = new AbortController();
     const params = new URLSearchParams();
     if (debounced.trim()) params.set("q", debounced.trim());
-    params.set("limit", "60");
+    params.set("limit", "200");
     setStatus("loading");
     fetch(`/api/v1/intel?${params}`, { signal: controller.signal })
       .then((res) => {
@@ -59,20 +80,45 @@ export default function Repository() {
   return (
     <section className="repo-head">
       <p className="eyebrow">Threat intel</p>
-      <h1>Pattern repository</h1>
+      <h1>Pattern Repository</h1>
       <p className="lede">
-        Seeded catalog of live scam patterns. Search by keyword — semantic match
-        ranks related reports, not just exact titles.
+        These are the types of scams we&apos;ve identified, organized by their
+        key traits. Search using keywords — it will pull up anything close.
       </p>
 
-      <input
-        className="search"
-        type="search"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Try marketplace refund, WhatsApp romance, job training fee…"
-        aria-label="Semantic search scam patterns"
-      />
+      <div className="search-wrap">
+        <input
+          className="search"
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => setSearchFocused(true)}
+          onBlur={() => window.setTimeout(() => setSearchFocused(false), 120)}
+          placeholder="Search here"
+          aria-label="Search scam patterns"
+          aria-describedby="search-hints"
+        />
+        <p className="search-hints" id="search-hints" hidden={!searchFocused}>
+          Try{" "}
+          {SEARCH_SUGGESTIONS.map((hint, i) => (
+            <span key={hint}>
+              {i > 0 ? ", " : ""}
+              <button
+                type="button"
+                className="search-hint"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  setQuery(hint);
+                  setSearchFocused(false);
+                }}
+              >
+                {hint}
+              </button>
+            </span>
+          ))}
+          .
+        </p>
+      </div>
       <p className="muted intel-status">
         {status === "loading"
           ? "Searching catalog…"
@@ -85,10 +131,15 @@ export default function Repository() {
         {patterns.length === 0 && status !== "loading" ? (
           <li className="placeholder-card">No patterns match that search.</li>
         ) : (
-          patterns.map((scam) => (
+          patterns.slice(0, shown).map((scam, i) => (
             <li key={scam.id || scam.name}>
               <Link className="scam-card" to={`/scams/${scam.id || scam.name}`}>
-                <strong>{scam.title || scam.name}</strong>
+                <span className="scam-card-top">
+                  <strong>{scam.title || scam.name}</strong>
+                  {debounced.trim() && typeof scam.score === "number" ? (
+                    <RelevanceMeter score={scam.score} delay={i * 70} />
+                  ) : null}
+                </span>
                 <p>{scam.description}</p>
                 {(scam.platforms?.length > 0 || scam.frequency > 0) && (
                   <span className="scam-card-meta">
@@ -102,6 +153,15 @@ export default function Repository() {
           ))
         )}
       </ul>
+      {shown < patterns.length ? (
+        <button
+          type="button"
+          className="btn btn-secondary intel-more"
+          onClick={() => setShown((n) => n + PAGE_SIZE)}
+        >
+          Load more
+        </button>
+      ) : null}
     </section>
   );
 }

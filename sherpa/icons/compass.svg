@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Sherpa compass">
+  <rect width="1024" height="1024" rx="220" fill="#0B1F3A"/>
+  <circle cx="512" cy="512" r="268" fill="none" stroke="#F3E6C8" stroke-width="52"/>
+  <polygon points="512,318 590,560 512,528 434,560" fill="#A9B8DC"/>
+  <polygon points="512,706 434,560 512,528 590,560" fill="#E6D5B3"/>
+</svg>

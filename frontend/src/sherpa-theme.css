@@ -1,0 +1,91 @@
+/* Sherpa page tokens — light matches the hub; dark matches the extension highlighter. */
+
+/* Extension dark: caution = H3 #FAA6FF @ 42%, high = highlight #EFC3F5 @ 46% */
+:root,
+html[data-theme="dark"] {
+  --sherpa-warn: color-mix(in srgb, #faa6ff 42%, transparent);
+  --sherpa-warn-line: #faa6ff;
+  --sherpa-danger: color-mix(in srgb, #efc3f5 46%, transparent);
+  --sherpa-danger-line: #efc3f5;
+}
+
+html[data-theme="light"] {
+  --sherpa-warn: rgb(153 178 221 / 0.55);
+  --sherpa-warn-line: #99B2DD;
+  --sherpa-danger: rgb(188 71 73 / 0.38);
+  --sherpa-danger-line: #BC4749;
+}
+
+html[data-theme="light"] .sherpa-page {
+  --text: #011627;
+  --muted: #658E9C;
+  --faint: #658E9C;
+}
+
+html[data-theme="light"] .sherpa-page h1,
+html[data-theme="light"] .sherpa-mark {
+  color: #011627;
+}
+
+html[data-theme="light"] .sherpa-page h2,
+html[data-theme="light"] .sherpa-page h3,
+html[data-theme="light"] .sherpa-parent,
+html[data-theme="light"] .sherpa-demo-hint,
+html[data-theme="light"] .sherpa-stat-label {
+  color: #658E9C;
+}
+
+html[data-theme="light"] .sherpa-hero .lede,
+html[data-theme="light"] .sherpa-privacy-flag {
+  color: #011627;
+}
+
+html:not([data-theme="light"]) .sherpa-flag {
+  --hl-h: 1.3em;
+  padding: 0.22em 0.5em;
+  margin: 0 -0.12em;
+  border-radius: 0.75em;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  background-position: left center;
+  background-size: 0 var(--hl-h);
+}
+
+html:not([data-theme="light"]) .sherpa-flag.is-lit {
+  animation-name: sherpa-flag-pill;
+  animation-duration: 0.32s;
+  animation-timing-function: cubic-bezier(0.18, 0.82, 0.28, 1);
+}
+
+@keyframes sherpa-flag-pill {
+  from {
+    background-size: 0 var(--hl-h);
+  }
+  to {
+    background-size: 100% var(--hl-h);
+  }
+}
+
+html:not([data-theme="light"]) .sherpa-hint-light,
+html[data-theme="light"] .sherpa-hint-dark {
+  display: none;
+}
+
+.sherpa-pipe-step h3,
+html[data-theme="light"] .sherpa-page .sherpa-pipe-step h3,
+html[data-theme="dark"] .sherpa-page .sherpa-pipe-step h3,
+.sherpa-page .goal-section h2,
+html[data-theme="light"] .sherpa-page .goal-section h2,
+html[data-theme="dark"] .sherpa-page .goal-section h2,
+.sherpa-blurb-title,
+html[data-theme="light"] .sherpa-page .sherpa-blurb-title,
+html[data-theme="dark"] .sherpa-page .sherpa-blurb-title {
+  color: #BC4749;
+}
+
+.sherpa-blurb-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}

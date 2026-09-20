@@ -43,6 +43,7 @@ export const QUESTIONS = [
       { value: "wire", label: "Wire transfer or cash" },
       { value: "crypto", label: "Crypto or Bitcoin" },
       { value: "link", label: "Click a link or share a code" },
+      { value: "personal_info", label: "Your SSN, bank account, or card details" },
       { value: "no", label: "They did not ask for money" },
     ],
   },
@@ -115,6 +116,10 @@ export const SCAM_TYPES = [
 // Each rule adds `weight` points when it matches. Score >= LIKELY_AT => likely a scam.
 const LIKELY_AT = 3;
 
+// Highest possible raw score from FLAG_RULES below (money 3 + urgency 2 +
+// impersonation 1 + ai_voice 1). Used to rescale riskScore onto a /10 display.
+const MAX_RISK_SCORE = 7;
+
 const FLAG_RULES = [
   {
     weight: 3,
@@ -137,6 +142,11 @@ const FLAG_RULES = [
     text: "They asked you to click a link or share a code, a common way scammers steal accounts.",
   },
   {
+    weight: 3,
+    test: (a) => a.money === "personal_info",
+    text: "They asked for your Social Security number, bank account, or card details. No legitimate organization asks for this over the phone, by text, or by email.",
+  },
+  {
     weight: 2,
     test: (a) => a.urgency === "yes",
     text: "They rushed you or told you to keep it secret. Scammers use pressure so you cannot think or check.",
@@ -153,16 +163,92 @@ const FLAG_RULES = [
   },
 ];
 
+// Specific guidance per payment/ask type, so the headline matches what the
+// user actually described instead of a generic "do not send money" line.
+const MONEY_GUIDANCE = {
+  gift_card: "Do not buy gift cards for them.",
+  wire: "Do not wire money or send cash.",
+  crypto: "Do not send crypto or Bitcoin.",
+  link: "Do not click the link or share the code.",
+  personal_info: "Do not give out your SSN, bank account, or card details.",
+};
+
+export function headline(result) {
+  if (!result.likely) return "This does not look typical.";
+  const moneyLine = MONEY_GUIDANCE[result.answers?.money];
+  if (moneyLine) return moneyLine;
+  if (result.textGuidance) return result.textGuidance;
+  if (result.primary) return `This matches a ${result.primary.name.toLowerCase()}.`;
+  return "Do not send money or codes.";
+}
+
+export function lede(result) {
+  if (!result.likely) {
+    return "Based on your answers this does not look like a typical scam. That is a guide, not a guarantee. If it still feels wrong, hang up and verify independently.";
+  }
+  const scamName = result.primary?.name;
+  if (scamName) {
+    return `What you described matches a ${scamName.toLowerCase()}. Hang up and call the real organization or person on a number you already trust — not one they gave you.`;
+  }
+  return "Several things you described match common warning signs. Hang up and call the real organization on a number you already trust.";
+}
+
+// Keyword flags scanned from the free-text "details" box. The multiple-choice
+// questions only capture one "money" answer at a time, so anything the user
+// typed in their own words (e.g. "asked for my SSN, bank info, and crypto
+// wallet") needs its own scan or it silently scores as zero risk.
+const TEXT_FLAG_RULES = [
+  {
+    weight: 3,
+    pattern: /\b(ssn|social security)\b/i,
+    text: "You described them asking for your Social Security number — no legitimate organization asks for this by phone, text, or email.",
+    guidance: "Do not give out your Social Security number.",
+  },
+  {
+    weight: 3,
+    pattern: /\b(bank account|routing number|account number|debit card|credit card|card number|card details)\b/i,
+    text: "You described sharing bank or card details — a common step toward account takeover.",
+    guidance: "Do not give out your bank account or card details.",
+  },
+  {
+    weight: 3,
+    pattern: /\b(crypto|bitcoin|wallet address|usdt|ethereum)\b/i,
+    text: "You described a crypto payment or wallet — crypto is untraceable and a classic scam payout method.",
+    guidance: "Do not send crypto or share a wallet address.",
+  },
+  {
+    weight: 2,
+    pattern: /\b(verification code|one[- ]time code|otp|password)\b/i,
+    text: "You described sharing a code or password — scammers use this to break into accounts.",
+    guidance: "Do not share the code or password with them.",
+  },
+  {
+    weight: 2,
+    pattern: /\b(remote access|teamviewer|anydesk|screen ?share)\b/i,
+    text: "You described giving remote access to your device — a hallmark of tech support scams.",
+    guidance: "Do not give them remote access to your device.",
+  },
+];
+
 export function diagnose(answers) {
   const safe = answers || {};
   const filled = QUESTIONS.filter((q) => Boolean(safe[q.id])).length;
-  const hasDetails = Boolean(String(safe.details || "").trim());
+  const detailsText = String(safe.details || "").trim();
+  const hasDetails = Boolean(detailsText);
   const answeredCount = filled + (hasDetails ? 1 : 0);
 
   // 1) Verdict: how many warning signs did they describe?
   const matched = FLAG_RULES.filter((rule) => rule.test(safe));
-  const riskScore = matched.reduce((sum, rule) => sum + rule.weight, 0);
-  const flags = matched.map((rule) => rule.text);
+  const textMatched = TEXT_FLAG_RULES.filter((rule) => rule.pattern.test(detailsText));
+  const structuredScore = matched.reduce((sum, rule) => sum + rule.weight, 0);
+  const textScore = textMatched.reduce((sum, rule) => sum + rule.weight, 0);
+  const riskScore = structuredScore + textScore;
+  const flags = [...matched.map((rule) => rule.text), ...textMatched.map((rule) => rule.text)];
+
+  // Rescale onto a /10 display. Denominator stays the structured max (7) so a
+  // fully-flagged multiple-choice answer alone still reads as a clean 10; any
+  // text-derived signal on top of that is capped at 10, not allowed to overflow.
+  const riskScore10 = Math.min(10, Math.round((riskScore / MAX_RISK_SCORE) * 10));
 
   let verdict;
   if (filled < 3) verdict = "unsure";
@@ -188,8 +274,9 @@ export function diagnose(answers) {
     likely: verdict === "likely",
     unlikely: verdict === "unlikely",
     insufficient: verdict === "unsure",
-    riskScore,
+    riskScore: riskScore10,
     flags,
+    textGuidance: textMatched[0]?.guidance || null,
     answeredCount,
     primary: hasMatch ? top : null,
     alternatives: hasMatch ? ranked.slice(1, 4).filter((s) => s.score > 0) : [],
@@ -210,6 +297,7 @@ const METHOD = {
   wire: "wire transfer request",
   crypto: "crypto payment request",
   link: "phishing link or code request",
+  personal_info: "personal information theft (SSN, bank, or card details)",
   no: "none",
 };
 

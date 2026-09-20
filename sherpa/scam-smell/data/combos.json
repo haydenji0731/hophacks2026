@@ -1,0 +1,74 @@
+[
+  {
+    "id": "urgency_payment",
+    "families": ["urgency", "payment"],
+    "bonus": 14,
+    "reason": "Urgent money request."
+  },
+  {
+    "id": "authority_credential",
+    "families": ["authority", "credential"],
+    "bonus": 14,
+    "reason": "Someone posing as official is asking you to log in or verify."
+  },
+  {
+    "id": "secrecy_action",
+    "families": ["secrecy", "action"],
+    "bonus": 12,
+    "reason": "Asks you to act while keeping it secret."
+  },
+  {
+    "id": "reward_payment_urgency",
+    "families": ["reward", "payment", "urgency"],
+    "bonus": 16,
+    "reason": "Too-good-to-be-true payout with a rush to pay or claim."
+  },
+  {
+    "id": "authority_payment",
+    "families": ["authority", "payment"],
+    "bonus": 15,
+    "reason": "An official-sounding sender is directing a hard-to-reverse payment."
+  },
+  {
+    "id": "romance_payment",
+    "families": ["job_romance_ops", "payment"],
+    "bonus": 14,
+    "reason": "Relationship or job pitch tied to sending money or a package."
+  },
+  {
+    "id": "credential_action",
+    "families": ["credential", "action"],
+    "bonus": 8,
+    "reason": "Pushes you to click or open something to verify an account."
+  },
+  {
+    "id": "reward_action",
+    "families": ["reward", "action"],
+    "bonus": 10,
+    "reason": "Prize or giveaway that needs you to click or call."
+  },
+  {
+    "id": "payment_secrecy",
+    "families": ["payment", "secrecy"],
+    "bonus": 12,
+    "reason": "Payment request wrapped in secrecy."
+  },
+  {
+    "id": "urgency_credential",
+    "families": ["urgency", "credential"],
+    "bonus": 11,
+    "reason": "Urgent demand to verify or unlock an account."
+  },
+  {
+    "id": "authority_secrecy",
+    "families": ["authority", "secrecy"],
+    "bonus": 10,
+    "reason": "An official-sounding sender wants this kept quiet."
+  },
+  {
+    "id": "reward_payment",
+    "families": ["reward", "payment"],
+    "bonus": 10,
+    "reason": "Payout or prize that requires you to send money first."
+  }
+]

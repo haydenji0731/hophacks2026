@@ -1,0 +1,208 @@
+.live-monitor {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.live-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.35rem;
+}
+
+.live-hint {
+  margin-bottom: 1.25rem;
+}
+
+.live-scope {
+  position: relative;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--window-bg);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+.live-scope canvas {
+  display: block;
+  width: 100%;
+  height: 140px;
+}
+
+.live-monitor.is-record .live-scope {
+  animation: glow-breathe 2.4s ease-in-out infinite;
+}
+
+.live-scope-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.55rem 0.9rem 0.7rem;
+  color: var(--muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-top: 1px solid color-mix(in srgb, var(--highlight) 12%, transparent);
+}
+
+.live-sens {
+  letter-spacing: 0.1em;
+}
+
+.live-sens.is-cold { color: var(--muted); }
+.live-sens.is-low { color: var(--safe); }
+.live-sens.is-medium { color: #eab308; }
+.live-sens.is-high { color: var(--sherpa-danger-line, #e23d3d); }
+
+.live-banner {
+  margin: 1.25rem 0 0.4rem;
+  padding: 1.15rem 1.2rem 1.2rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-strong);
+  text-align: center;
+}
+
+.live-banner.is-yes {
+  background: color-mix(in srgb, #e23d3d 16%, transparent);
+  border-color: color-mix(in srgb, #e23d3d 55%, transparent);
+}
+
+.live-banner.is-no {
+  background: color-mix(in srgb, var(--safe) 14%, transparent);
+  border-color: color-mix(in srgb, var(--safe) 45%, transparent);
+}
+
+.live-banner.is-unknown {
+  background: var(--panel);
+  color: #7353BA;
+}
+
+.live-banner.is-unknown .live-banner-title,
+.live-banner.is-unknown .live-banner-score,
+.live-banner.is-unknown .live-banner-reason {
+  color: #7353BA;
+}
+
+.live-banner-title {
+  margin: 0;
+  font-family: var(--display);
+  font-size: clamp(1.35rem, 4vw, 2.05rem);
+  font-weight: 750;
+  letter-spacing: 0.04em;
+  line-height: 1.15;
+}
+
+.live-banner.is-yes .live-banner-title { color: #e23d3d; }
+.live-banner.is-no .live-banner-title { color: var(--safe); }
+
+.live-banner-score {
+  margin: 0.45rem 0 0;
+  font-size: 0.82rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.live-banner-reason {
+  margin: 0.45rem 0 0;
+  color: var(--text);
+  font-size: 0.92rem;
+}
+
+.live-monitor .risk-gauge {
+  margin: 0.5rem auto 0.25rem;
+}
+
+.live-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.65rem;
+  margin: 1.15rem 0 0.9rem;
+}
+
+.live-metrics article {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 0.85rem 0.9rem;
+  background: var(--panel);
+}
+
+.live-metrics span,
+.live-metrics em {
+  display: block;
+  color: var(--muted);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  font-style: normal;
+}
+
+.live-metrics strong {
+  display: block;
+  font-family: var(--display);
+  font-size: 1.45rem;
+  letter-spacing: -0.03em;
+  margin: 0.2rem 0 0.15rem;
+  color: var(--accent);
+}
+
+.live-phrases {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0 0 1rem;
+}
+
+.live-phrases span {
+  border: 1px solid var(--border);
+  border-radius: 99px;
+  padding: 0.28rem 0.7rem;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.live-phrases span.on {
+  border-color: var(--accent);
+  color: var(--accent);
+  box-shadow: 0 0 12px var(--glow);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+.live-waiting {
+  color: var(--muted);
+  font-size: 0.9rem;
+  min-height: 1.4em;
+  margin-bottom: 0.85rem;
+}
+
+.live-mic-error {
+  color: #e23d3d;
+  font-size: 0.9rem;
+  margin: 0 0 0.85rem;
+}
+
+.live-actions {
+  justify-content: flex-start;
+}
+
+.live-monitor.is-record .verdict-dot {
+  animation: pulse 1.1s ease-in-out infinite;
+}
+
+@media (max-width: 640px) {
+  .live-metrics {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-monitor.is-record .live-scope,
+  .live-phrases span.on,
+  .live-monitor.is-record .verdict-dot {
+    animation: none !important;
+  }
+}
