@@ -1,0 +1,17 @@
+{
+  "name": "sherpa",
+  "version": "1.9.3",
+  "private": true,
+  "description": "Sherpa: Chrome extension that flags suspicious Discord, Instagram, Reddit, and Drive text.",
+  "scripts": {
+    "build": "esbuild scam-smell/src/index.ts --bundle --minify --format=iife --global-name=ScamSmell --outfile=scorer.js --footer:js=\"globalThis.ScamSmell=ScamSmell;if(typeof module!=='undefined'&&module.exports)module.exports=ScamSmell;\"",
+    "test": "npm run build && node test/highlight.test.js && node test/sites.test.js && node test/sherpa.test.js && tsx --test scam-smell/tests/score.test.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.10",
+    "esbuild": "^0.25.3",
+    "jsdom": "^26.1.0",
+    "tsx": "^4.19.3",
+    "typescript": "^5.8.2"
+  }
+}
