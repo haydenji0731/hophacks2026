@@ -1,6 +1,6 @@
 {
   "name": "sherpa",
-  "version": "1.9.2",
+  "version": "1.9.3",
   "private": true,
   "description": "Sherpa: Chrome extension that flags suspicious Discord, Instagram, Reddit, and Drive text.",
   "scripts": {

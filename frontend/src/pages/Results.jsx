@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
+import RiskGauge from "../components/RiskGauge.jsx";
 import { diagnose, headline, lede, reportPayload } from "../data/questions.js";
 
 export default function Results() {
@@ -101,18 +102,17 @@ export default function Results() {
       <h1>{headline(result)}</h1>
       <p className="lede">{lede(result)}</p>
 
-      <div className="metric-row">
-        <div className="metric">
-          <b>{result.riskScore}</b>
-          <span>Risk score</span>
-        </div>
-        <div className="metric">
-          <b>{result.flags.length}</b>
-          <span>Warning signs</span>
-        </div>
-        <div className="metric">
-          <b>{result.answeredCount}</b>
-          <span>Answers used</span>
+      <div className="risk-block">
+        <RiskGauge value={result.riskScore} />
+        <div className="metric-row metric-row--pair">
+          <div className="metric">
+            <b>{result.flags.length}</b>
+            <span>Warning signs</span>
+          </div>
+          <div className="metric">
+            <b>{result.answeredCount}</b>
+            <span>Answers used</span>
+          </div>
         </div>
       </div>
 

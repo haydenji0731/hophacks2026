@@ -21,8 +21,20 @@
         margin: 0 auto;
         padding: 28px 20px 50vh;
       }
-      h1 {
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
         margin: 0 0 10px;
+      }
+      .brand img {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        flex: none;
+      }
+      h1 {
+        margin: 0;
         font-size: 2.4rem;
         font-weight: 700;
         letter-spacing: -0.04em;
@@ -242,7 +254,10 @@
   </head>
   <body>
     <div class="page">
-      <h1>Sherpa</h1>
+      <div class="brand">
+        <img src="icons/compass.svg" alt="" width="56" height="56" />
+        <h1>Sherpa</h1>
+      </div>
       <p class="lede">
         Yellow is SUSPICIOUS. Red is SCAM LIKELY: AVOID LINKS. Hover a highlight for the reason
         when hover comments are on. Warn never interrupts a click. Block: highlighted links prompt

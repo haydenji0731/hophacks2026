@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Outpost ridge">
+  <rect width="1024" height="1024" rx="220" fill="#0B1F3A"/>
+  <polygon points="0,760 280,430 512,620 1024,380 1024,1024 0,1024" fill="#6D8B97"/>
+  <polygon points="0,760 280,430 430,760" fill="#7F9AA8"/>
+  <polygon points="620,760 860,360 1024,560 1024,1024 620,1024" fill="#5F7F8C"/>
+  <ellipse cx="512" cy="860" rx="420" ry="90" fill="#A9B8DC"/>
+  <rect x="496" y="250" width="32" height="430" fill="#F3E6C8"/>
+  <polygon points="528,250 528,330 700,290" fill="#C45C58"/>
+</svg>

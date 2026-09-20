@@ -93,6 +93,7 @@ Then open `http://127.0.0.1:43147/demo.html`.
 | File | Role |
 | --- | --- |
 | `manifest.json` | Manifest V3 |
+| `icons/` | Compass toolbar icon plus cairn, signpost, tent, and ridge SVGs. |
 | `scorer.js` | Bundled offline analyzer |
 | `settings.js` | Warn / Block, descriptions, theme, report URL |
 | `content.js` | Site adapters, highlights, hover popup, link gate |
