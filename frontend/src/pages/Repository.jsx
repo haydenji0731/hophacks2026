@@ -44,7 +44,7 @@ export default function Repository() {
     const controller = new AbortController();
     const params = new URLSearchParams();
     if (debounced.trim()) params.set("q", debounced.trim());
-    params.set("limit", "60");
+    params.set("limit", "200");
     setStatus("loading");
     fetch(`/api/v1/intel?${params}`, { signal: controller.signal })
       .then((res) => {
