@@ -220,9 +220,9 @@ export default function Sherpa() {
           Introducing <span className="sherpa-mark">Sherpa</span>
         </h1>
         <p className="lede reveal delay-3">
-          A browser extension, bundled with YPINR, that highlights risky text the moment
-          it reaches you — money requests, malicious links and misinformation — before
-          it costs you anything.
+          A Chromium browser extension, built by YPINR, that highlights suspicious text
+          the moment it appears on your screen — money requests, malicious links, and
+          scams — before it costs you anything.
         </p>
         <p className="sherpa-privacy-flag reveal delay-4">
           Runs entirely on your device · nothing is uploaded · no account
