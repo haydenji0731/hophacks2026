@@ -153,7 +153,7 @@ function labelFrom(el) {
   if (href === "/") return "Home";
   if (href.includes("questionnaire")) return "Check";
   if (href.includes("scams")) return "Intel";
-  if (href.includes("live")) return "Live";
+  if (href.includes("outpost") || href.includes("live")) return "Outpost";
   if (href.includes("our-goal")) return "Our Goal";
   if (href.includes("results")) return "Verdict";
 

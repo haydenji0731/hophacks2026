@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { Routes, Route, useNavigate } from "react-router-dom";
+import { Navigate, Routes, Route, useNavigate } from "react-router-dom";
 import BootScreen from "./components/BootScreen.jsx";
 import Layout from "./components/Layout.jsx";
 import Home from "./pages/Home.jsx";
@@ -32,7 +32,8 @@ export default function App() {
             <Route index element={<Home />} />
             <Route path="our-goal" element={<OurGoal />} />
             <Route path="sherpa" element={<Sherpa />} />
-            <Route path="live" element={<Live />} />
+            <Route path="outpost" element={<Live />} />
+            <Route path="live" element={<Navigate to="/outpost" replace />} />
             <Route path="questionnaire" element={<Questionnaire />} />
             <Route path="results" element={<Results />} />
             <Route path="scams" element={<Repository />} />

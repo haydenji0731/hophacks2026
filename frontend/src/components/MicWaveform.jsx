@@ -322,7 +322,7 @@ export default function MicWaveform() {
       <div className="live-top">
         <p className="eyebrow live-brand">
           <img src="/outpost.png" alt="" className="live-outpost-mark" width="18" height="18" />
-          Live · Outpost
+          Outpost
         </p>
         <p
           className={`verdict ${
