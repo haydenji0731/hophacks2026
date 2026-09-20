@@ -64,6 +64,8 @@ export default function BandWipe() {
 
       const hit = event.target.closest("button, a");
       if (!hit) return;
+      // The hero's Run Check button plays its own lock animation instead of the band wipe.
+      if (hit.closest(".btn-lock")) return;
       // Only the top bar and the home-page Run check button trigger the wipe.
       if (!hit.closest(".site-header, .hero .cta-row")) return;
       if (hit.closest(".theme-toggle")) return;

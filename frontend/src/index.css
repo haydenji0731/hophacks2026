@@ -2624,3 +2624,122 @@ html[data-theme="light"] .sherpa-privacy-flag {
 .sherpa-stat-num.is-settled {
   transition: color 0.2s var(--ease), text-shadow 0.2s var(--ease);
 }
+
+/* Run-check button: label swaps to an OPEN padlock that clicks shut, then the button fades out.
+   Flicker fixes:
+   - no [disabled] dimming (it dropped the button to 55% opacity, then popped back to 100%)
+   - hover look is pinned while locking, so the button never shifts mid-animation
+   - label and lock crossfade with identical timings, so the button never goes blank
+   - the fade starts from the exact resting state (no transform/opacity jump) */
+.btn-lock {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Handler already ignores repeat clicks; keep the disabled look identical to normal */
+.btn-lock:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+.btn-lock-label {
+  opacity: 1;
+}
+
+.btn-lock-icon {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.btn-lock-body {
+  fill: currentColor;
+}
+
+/* Shackle starts swung open (hinged on its left leg), then clicks down onto the body */
+.btn-lock-shackle {
+  stroke: currentColor;
+  transform-box: view-box;
+  transform-origin: 22px 28px;
+  transform: translateY(-2px) rotate(-30deg);
+}
+
+.btn-lock-dot,
+.btn-lock-slot {
+  fill: var(--accent);
+}
+
+.btn-lock.is-locking {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 28px var(--glow);
+  transition: none;
+  will-change: opacity, transform;
+  animation: btn-lock-fade 0.28s ease 0.5s forwards;
+}
+
+.btn-lock.is-locking .btn-lock-label {
+  animation: btn-lock-label-hide 0.12s linear forwards;
+}
+
+.btn-lock.is-locking .btn-lock-icon {
+  animation:
+    btn-lock-icon-show 0.12s linear forwards,
+    btn-lock-clunk 0.14s ease-out 0.35s;
+}
+
+.btn-lock.is-locking .btn-lock-shackle {
+  animation: btn-lock-snap 0.3s linear 0.2s forwards;
+}
+
+@keyframes btn-lock-snap {
+  0% {
+    transform: translateY(-2px) rotate(-30deg);
+    animation-timing-function: cubic-bezier(0.55, 0, 0.9, 0.55);
+  }
+  52% {
+    transform: translateY(1.5px) rotate(4deg);
+    animation-timing-function: cubic-bezier(0.2, 0.6, 0.4, 1);
+  }
+  76% {
+    transform: translateY(-0.6px) rotate(-1.2deg);
+    animation-timing-function: ease-out;
+  }
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+}
+
+@keyframes btn-lock-label-hide {
+  to { opacity: 0; }
+}
+
+@keyframes btn-lock-icon-show {
+  to { opacity: 1; }
+}
+
+/* Tiny "thunk" as the shackle lands; lock stays the same size */
+@keyframes btn-lock-clunk {
+  0%, 100% { transform: translate(-50%, -50%); }
+  45% { transform: translate(-50%, calc(-50% + 1.5px)); }
+}
+
+@keyframes btn-lock-fade {
+  from { opacity: 1; transform: translateY(-1px) scale(1); }
+  to { opacity: 0; transform: translateY(-1px) scale(0.92); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-lock.is-locking,
+  .btn-lock.is-locking .btn-lock-label,
+  .btn-lock.is-locking .btn-lock-icon,
+  .btn-lock.is-locking .btn-lock-shackle {
+    animation-duration: 0.01s;
+    transition-duration: 0.01s;
+  }
+}
