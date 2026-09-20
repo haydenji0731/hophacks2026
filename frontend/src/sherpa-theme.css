@@ -27,6 +27,7 @@ html[data-theme="light"] .sherpa-mark {
   color: #011627;
 }
 
+html[data-theme="light"] .sherpa-page h1,
 html[data-theme="light"] .sherpa-page h2,
 html[data-theme="light"] .sherpa-page h3,
 html[data-theme="light"] .sherpa-parent,
@@ -69,6 +70,19 @@ html[data-theme="light"] .sherpa-hint-dark {
 
 .sherpa-pipe-step h3,
 html[data-theme="light"] .sherpa-page .sherpa-pipe-step h3,
-html[data-theme="dark"] .sherpa-page .sherpa-pipe-step h3 {
+html[data-theme="dark"] .sherpa-page .sherpa-pipe-step h3,
+.sherpa-page .goal-section h2,
+html[data-theme="light"] .sherpa-page .goal-section h2,
+html[data-theme="dark"] .sherpa-page .goal-section h2,
+.sherpa-blurb-title,
+html[data-theme="light"] .sherpa-page .sherpa-blurb-title,
+html[data-theme="dark"] .sherpa-page .sherpa-blurb-title {
   color: #BC4749;
+}
+
+.sherpa-blurb-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
 }
