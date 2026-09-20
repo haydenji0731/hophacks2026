@@ -145,7 +145,12 @@ function DemoMessage() {
 
       <p className="sherpa-demo-hint">
         Hover or focus a highlight for the reason.{" "}
-        Red = high risk. Blue = caution, proceed carefully.
+        <span className="sherpa-hint-light">
+          Red = high risk. Blue = caution, proceed carefully.
+        </span>
+        <span className="sherpa-hint-dark">
+          Lavender = high risk. Magenta = caution, proceed carefully.
+        </span>
       </p>
     </div>
   );
@@ -215,9 +220,9 @@ export default function Sherpa() {
           Introducing <span className="sherpa-mark">Sherpa</span>
         </h1>
         <p className="lede reveal delay-3">
-          A browser extension, bundled with YPINR, that highlights risky text the moment
-          it reaches you — money requests, malicious links and misinformation — before
-          it costs you anything.
+          A Chromium browser extension, built by YPINR, that highlights suspicious text
+          the moment it appears on your screen — money requests, malicious links, and
+          scams — before it costs you anything.
         </p>
         <p className="sherpa-privacy-flag reveal delay-4">
           Runs entirely on your device · nothing is uploaded · no account
@@ -231,7 +236,7 @@ export default function Sherpa() {
       <Block direction="left">
         <div className="goal-section">
           <div>
-            <h2>What it watches for</h2>
+            <h2>What it Watches For:</h2>
             <ul className="sherpa-list">
               <li>
                 <span className="sherpa-swatch is-danger" aria-hidden="true" />
@@ -273,7 +278,8 @@ export default function Sherpa() {
       <Block direction="right">
         <div className="goal-section goal-section--reverse">
           <div>
-            <h2>Privacy is the product</h2>
+            <h2>Pure Privacy — All Local:</h2>
+            <h3 className="sherpa-blurb-title">Private From the Ground Up:</h3>
             <p>
               Sherpa is our number one commitment before it is a feature. The model
               runs locally in your browser. Your messages, your contacts and the pages
@@ -305,26 +311,34 @@ export default function Sherpa() {
       <Block direction="up">
         <div className="goal-section">
           <div>
-            <h2>How Sherpa reads a message</h2>
-            <p>Three steps, all on-device, in the time it takes to read the line yourself.</p>
+            <h2>How Sherpa Reads:</h2>
 
             <div className="sherpa-pipeline">
               <div className="sherpa-pipe-step">
                 <span className="sherpa-pipe-num">01</span>
                 <h3>Scan</h3>
-                <p>Text is tokenized locally as it renders — nothing buffered, nothing sent out.</p>
+                <p>
+                  Text is tokenized (split into words) locally as it is rendered.
+                  Nothing is stored in memory or outsourced.
+                </p>
               </div>
               <span className="sherpa-pipe-arrow" aria-hidden="true" />
               <div className="sherpa-pipe-step">
                 <span className="sherpa-pipe-num">02</span>
                 <h3>Flag</h3>
-                <p>Risky spans are highlighted in place — softer ink for caution, stronger ink for high risk.</p>
+                <p>
+                  Flagged sentences are highlighted in place with one of two colors,
+                  one for suspicion and the other for high risk.
+                </p>
               </div>
               <span className="sherpa-pipe-arrow" aria-hidden="true" />
               <div className="sherpa-pipe-step">
                 <span className="sherpa-pipe-num">03</span>
                 <h3>Explain</h3>
-                <p>Hover any flag for a plain-language reason — no dashboard, no report to read later.</p>
+                <p>
+                  Hover your mouse over any highlight for an explanation of why
+                  Sherpa flagged it. Keeps it simple, short, and sweet.
+                </p>
               </div>
             </div>
 

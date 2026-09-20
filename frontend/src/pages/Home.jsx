@@ -8,7 +8,7 @@ export default function Home() {
     <>
       <section className="hero">
         <h1 className="reveal delay-1">Got <span>Scammed?</span></h1>
-        <p className="lede reveal delay-2">Six questions. A live Verdict.</p>
+        <p className="lede reveal delay-2">Six questions. A live verdict.</p>
         <div className="cta-row reveal delay-3">
           <Link className="btn btn-primary btn-hero" to="/questionnaire">
             Run check
