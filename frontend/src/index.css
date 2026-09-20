@@ -114,7 +114,9 @@ h3 { color: var(--h3); }
 .scam-card,
 .placeholder-card,
 .sherpa-demo,
-.report-scam-form {
+.report-scam-form,
+.result-primary,
+.result-alt {
   --muted: #EFC3F5;
   --faint: #EFC3F5;
 }
@@ -130,7 +132,9 @@ html[data-theme="light"] .goal-section,
 html[data-theme="light"] .scam-card,
 html[data-theme="light"] .placeholder-card,
 html[data-theme="light"] .sherpa-demo,
-html[data-theme="light"] .report-scam-form {
+html[data-theme="light"] .report-scam-form,
+html[data-theme="light"] .result-primary,
+html[data-theme="light"] .result-alt {
   --muted: #011627;
   --faint: #011627;
 }
@@ -551,6 +555,10 @@ html[data-theme="light"] .theme-toggle {
 .btn-secondary {
   background: transparent;
   border-color: var(--border-strong);
+  color: #EFC3F5;
+}
+
+html[data-theme="light"] .btn-secondary {
   color: var(--text);
 }
 
@@ -1428,6 +1436,17 @@ html[data-theme="light"] .search::placeholder {
   color: #011627;
 }
 
+textarea::placeholder,
+.field input[type="text"]::placeholder {
+  color: #2F195F;
+  opacity: 1;
+}
+
+html[data-theme="light"] textarea::placeholder,
+html[data-theme="light"] .field input[type="text"]::placeholder {
+  color: #011627;
+}
+
 .field {
   border: 0;
   padding: 0;
@@ -1609,6 +1628,30 @@ textarea:focus,
 
 .result-alt p {
   margin: 0.35rem 0 0;
+}
+
+.result-alt,
+.result-alt strong,
+.result-alt p,
+.result-alt .muted {
+  color: #EFC3F5;
+}
+
+html[data-theme="light"] .result-alt,
+html[data-theme="light"] .result-alt strong,
+html[data-theme="light"] .result-alt p,
+html[data-theme="light"] .result-alt .muted {
+  color: #011627;
+}
+
+.result-alt ::selection {
+  color: #EFC3F5;
+  background: color-mix(in srgb, #EFC3F5 28%, transparent);
+}
+
+html[data-theme="light"] .result-alt ::selection {
+  color: #011627;
+  background: color-mix(in srgb, #011627 18%, transparent);
 }
 
 .scam-list {
