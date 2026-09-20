@@ -35,10 +35,11 @@ The toolbar has a Light / Dark switch. It restyles the popup, hover cards, Block
 
 ## Load it in Chrome
 
-1. Open `chrome://extensions`
-2. Turn on **Developer mode**
-3. Click **Load unpacked** and select this folder (the one with `manifest.json`)
-4. Open Discord, Instagram (including DMs), Reddit, or Google Drive
+1. From this folder run `bash icons/decode.sh` so Chrome has PNG toolbar icons
+2. Open `chrome://extensions`
+3. Turn on **Developer mode**
+4. Click **Load unpacked** and select this folder (the one with `manifest.json`)
+5. Open Discord, Instagram (including DMs), Reddit, or Google Drive
 
 If it is already loaded, click **Reload** after pulling changes.
 
@@ -93,6 +94,8 @@ Then open `http://127.0.0.1:43147/demo.html`.
 | File | Role |
 | --- | --- |
 | `manifest.json` | Manifest V3 |
+| `icons/` | Toolbar and store icons. Compass is the primary mark (`icon16`–`icon128`). Also includes cairn, signpost, tent, and ridge. Run `bash icons/decode.sh` after clone to write the PNGs. |
+| `background.js` | Sets the toolbar button to the compass |
 | `scorer.js` | Bundled offline analyzer |
 | `settings.js` | Warn / Block, descriptions, theme, report URL |
 | `content.js` | Site adapters, highlights, hover popup, link gate |

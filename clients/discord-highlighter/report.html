@@ -42,8 +42,20 @@
         margin: 0 auto;
         padding: 36px 20px 60px;
       }
-      h1 {
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
         margin: 0 0 10px;
+      }
+      .brand img {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        flex: none;
+      }
+      h1 {
+        margin: 0;
         font-size: 2.4rem;
         letter-spacing: -0.05em;
         color: var(--sherpa-h3);
@@ -84,7 +96,10 @@
   </head>
   <body>
     <div class="page">
-      <h1>Report a scam</h1>
+      <div class="brand">
+        <img src="icons/compass.svg" alt="" width="56" height="56" />
+        <h1>Report a scam</h1>
+      </div>
       <p class="lede" id="lede">
         The public report form is not connected yet. When it is, this button will open that site
         with the flagged text attached.
