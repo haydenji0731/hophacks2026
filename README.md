@@ -1,8 +1,8 @@
-# We Hate Scammers
+# Your Nigerian Prince is Not Real
 
-**You think you're being scammed? Find out here.**
+**Think you're being scammed? Find out here.**
 
-HopHacks 2026 project. Working name: [wehatescammers.com](https://wehatescammers.com) (pending).
+This is a project for HopHacks 2026, focused on the philanthropy, ElevenLabs, GoDaddy, Auctor, and SpaceX tracks.
 
 A mid-call warning system plus a public, searchable encyclopedia of how scams actually work. We detect synthetic voices, scripted pressure, and known scam patterns *while the interaction is happening*, then send people somewhere they can check what they heard and teach the corpus for the next person.
 
