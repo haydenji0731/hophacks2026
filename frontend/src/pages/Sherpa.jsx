@@ -144,7 +144,13 @@ function DemoMessage() {
       </p>
 
       <p className="sherpa-demo-hint">
-        Hover or focus a highlight for the reason. Red = malicious. Yellow = shady, proceed carefully.
+        Hover or focus a highlight for the reason.{" "}
+        <span className="sherpa-hint-light">
+          Red = high risk. Periwinkle = caution, proceed carefully.
+        </span>
+        <span className="sherpa-hint-dark">
+          Lavender = high risk. Magenta = caution, proceed carefully.
+        </span>
       </p>
     </div>
   );
@@ -317,7 +323,7 @@ export default function Sherpa() {
               <div className="sherpa-pipe-step">
                 <span className="sherpa-pipe-num">02</span>
                 <h3>Flag</h3>
-                <p>Risky spans are underlined in place, yellow for shady, red for malicious.</p>
+                <p>Risky spans are highlighted in place — softer ink for caution, stronger ink for high risk.</p>
               </div>
               <span className="sherpa-pipe-arrow" aria-hidden="true" />
               <div className="sherpa-pipe-step">
