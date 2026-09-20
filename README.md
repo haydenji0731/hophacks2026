@@ -22,6 +22,7 @@ Scams no longer sound like scams. Callers use AI voices, urgency scripts, and fa
 | **Website questionnaire** | “Am I being scammed?” — adaptive questions + optional free-text details → most likely scam type and why. |
 | **Public scam repository** | Browse and search cleaned, categorized incidents (how it unfolds, signals, what to do). |
 | **Learning loop** | Confirmed cases go through Grok to strip PII, categorize, embed, and upsert so detection and the questionnaire get better. |
+| Privacy | Models only get as much information as they need to make a decision, and it is discarded immediately after. Sherpa runs completely local |
 
 **Who it is for**
 
