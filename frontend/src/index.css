@@ -2187,6 +2187,11 @@ html[data-theme="light"] {
   color: var(--muted);
 }
 
+html[data-theme="light"] .sherpa-hero .lede,
+html[data-theme="light"] .sherpa-privacy-flag {
+  color: #011627;
+}
+
 /* demo window */
 .sherpa-demo {
   border: 1px solid var(--border);
