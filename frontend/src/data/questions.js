@@ -157,6 +157,34 @@ const FLAG_RULES = [
   },
 ];
 
+// Specific guidance per payment/ask type, so the headline matches what the
+// user actually described instead of a generic "do not send money" line.
+const MONEY_GUIDANCE = {
+  gift_card: "Do not buy gift cards for them.",
+  wire: "Do not wire money or send cash.",
+  crypto: "Do not send crypto or Bitcoin.",
+  link: "Do not click the link or share the code.",
+};
+
+export function headline(result) {
+  if (!result.likely) return "This does not look typical.";
+  const moneyLine = MONEY_GUIDANCE[result.answers?.money];
+  if (moneyLine) return moneyLine;
+  if (result.primary) return `This matches a ${result.primary.name.toLowerCase()}.`;
+  return "Do not send money or codes.";
+}
+
+export function lede(result) {
+  if (!result.likely) {
+    return "Based on your answers this does not look like a typical scam. That is a guide, not a guarantee. If it still feels wrong, hang up and verify independently.";
+  }
+  const scamName = result.primary?.name;
+  if (scamName) {
+    return `What you described matches a ${scamName.toLowerCase()}. Hang up and call the real organization or person on a number you already trust — not one they gave you.`;
+  }
+  return "Several things you described match common warning signs. Hang up and call the real organization on a number you already trust.";
+}
+
 export function diagnose(answers) {
   const safe = answers || {};
   const filled = QUESTIONS.filter((q) => Boolean(safe[q.id])).length;

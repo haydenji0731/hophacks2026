@@ -1,6 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
-import { diagnose, reportPayload } from "../data/questions.js";
+import { diagnose, headline, lede, reportPayload } from "../data/questions.js";
 
 export default function Results() {
   const location = useLocation();
@@ -98,12 +98,8 @@ export default function Results() {
         <span className="verdict-dot" />
         {isLikely ? "Likely a scam" : "Unlikely a scam"}
       </p>
-      <h1>{isLikely ? "Do not send money or codes." : "This does not look typical."}</h1>
-      <p className="lede">
-        {isLikely
-          ? "Several things you described match common warning signs. Hang up and call the real organization on a number you already trust."
-          : "Based on your answers this does not look like a typical scam. That is a guide, not a guarantee. If it still feels wrong, hang up and verify independently."}
-      </p>
+      <h1>{headline(result)}</h1>
+      <p className="lede">{lede(result)}</p>
 
       <div className="metric-row">
         <div className="metric">
