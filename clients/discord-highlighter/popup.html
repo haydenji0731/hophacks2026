@@ -47,7 +47,16 @@
         color: var(--sherpa-h1);
       }
       header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
         margin-bottom: 16px;
+      }
+      header img {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        flex: none;
       }
       h1 {
         margin: 0;
@@ -177,6 +186,7 @@
   </head>
   <body>
     <header>
+      <img src="icons/compass.svg" alt="" width="48" height="48" />
       <h1>Sherpa</h1>
     </header>
     <div class="status" id="status" data-ok="maybe">
