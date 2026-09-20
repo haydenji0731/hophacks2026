@@ -1,15 +1,11 @@
 import { useEffect, useRef, useState } from "react";
+import { pct, processClip, processVerdict } from "../lib/detectorProcess.js";
 
 const CLIP_SECONDS = 15;
 const BARS = 36;
 
 function clamp(n, a, b) {
   return Math.max(a, Math.min(b, n));
-}
-
-function pct(n) {
-  if (n == null || Number.isNaN(n)) return "—";
-  return `${Math.round(n * 100)}%`;
 }
 
 function pickRecorderMime() {
@@ -52,43 +48,6 @@ function idleHeights(now, count) {
   return out;
 }
 
-function classifierHint(warnings) {
-  const list = warnings || [];
-  if (list.some((w) => /403|401|unavailable|api key/i.test(w))) {
-    return "The voice classifier did not return a score. Add ELEVENLABS_API_KEY to the project .env and restart the detector.";
-  }
-  return "No synthetic-voice score came back. Try another clip.";
-}
-
-function verdictCopy(aiVoice, score, warnings) {
-  if (aiVoice === "yes") {
-    return {
-      kind: "yes",
-      title: "SYNTHETIC VOICE DETECTED",
-      reason: "ElevenLabs classified this clip as a generated voice.",
-    };
-  }
-  if (aiVoice === "no") {
-    return {
-      kind: "no",
-      title: "HUMAN VOICE",
-      reason: "The clip matches a live human voice, not a synthetic one.",
-    };
-  }
-  if (score == null) {
-    return {
-      kind: "unknown",
-      title: "INCONCLUSIVE",
-      reason: classifierHint(warnings),
-    };
-  }
-  return {
-    kind: "unknown",
-    title: "INCONCLUSIVE",
-    reason: "The score sits in the uncertain band. Use a clearer clip (up to 15 seconds).",
-  };
-}
-
 export default function MicWaveform() {
   const [phase, setPhase] = useState("standby");
   const [elapsed, setElapsed] = useState(0);
@@ -105,11 +64,12 @@ export default function MicWaveform() {
   const recording = phase === "record";
   const uploading = phase === "upload";
   const hits = result?.keyword_hits || [];
-  const aiVoice = result?.ai_voice_used || null;
   const score = result?.elevenlabs_ai_score;
-  const synthetic = aiVoice === "yes";
+  const grok = result?.grok;
+  const isScam = Boolean(grok?.is_scam);
+  const synthetic = result?.ai_voice_used === "yes" || isScam;
   const sensitivity = result?.sensitivity || (recording ? "low" : "cold");
-  const verdict = result ? verdictCopy(aiVoice, score, result.warnings) : null;
+  const verdict = processVerdict(result);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -323,39 +283,33 @@ export default function MicWaveform() {
 
   async function uploadClip(blob, filename) {
     setPhase("upload");
-    const data = new FormData();
-    data.append("file", blob, filename);
     try {
-      const resp = await fetch("/api/v1/screen", { method: "POST", body: data });
-      const body = await resp.json().catch(() => ({}));
-      if (!resp.ok) {
-        const detail = body.detail?.detail || body.detail || body.error || resp.statusText;
-        throw new Error(typeof detail === "string" ? detail : "Could not analyze audio.");
-      }
+      const body = await processClip(blob, filename, { forceEscalate: true });
       setResult(body);
       setPhase("done");
     } catch (err) {
       setPhase("standby");
       setError(
         err.message?.includes("fetch")
-          ? "Could not reach the detector. Is it running on port 8000?"
-          : err.message || "Could not analyze audio.",
+          ? "Could not reach the detector. Tunnel + uvicorn on :8000?"
+          : err.message || "Process failed.",
       );
     }
   }
 
   const hint = {
-    standby: "Click Start listening, allow the mic, then talk — or play an AI voicemail into it. Stop anytime, or wait 15 seconds.",
+    standby:
+      "Mic clip → /v1/process (same as Mac capture): screen → STT → Grok. Talk or play a voicemail into the mic.",
     record: `Listening… ${elapsed.toFixed(1)}s / ${CLIP_SECONDS}s — press Stop listening to send the clip.`,
-    upload: "Analyzing audio for a synthetic voice…",
+    upload: "Screen → STT → Grok…",
     done: verdict?.title || "Done",
   }[phase];
 
   const label = {
     standby: "Standby",
     record: "Listening",
-    upload: "Analyzing",
-    done: verdict?.title || "Done",
+    upload: "Processing",
+    done: isScam ? "Scam" : verdict?.title || "Done",
   }[phase];
 
   const chipKind =
@@ -367,7 +321,7 @@ export default function MicWaveform() {
       ref={wrapRef}
     >
       <div className="live-top">
-        <p className="eyebrow">Live intercept · AI voice</p>
+        <p className="eyebrow">Live intercept · /v1/process</p>
         <p
           className={`verdict ${
             chipKind === "yes" ? "danger" : chipKind === "no" ? "safe" : ""
@@ -398,7 +352,9 @@ export default function MicWaveform() {
       {phase === "done" && verdict ? (
         <div className={`live-banner is-${verdict.kind}`} role="status">
           <p className="live-banner-title">{verdict.title}</p>
-          <p className="live-banner-score">{pct(score)} synthetic</p>
+          <p className="live-banner-score">
+            {verdict.scoreLabel} {verdict.scoreSuffix}
+          </p>
           <p className="live-banner-reason">{verdict.reason}</p>
         </div>
       ) : null}
@@ -415,9 +371,19 @@ export default function MicWaveform() {
           <em>keyword hits</em>
         </article>
         <article>
-          <span>Alarm</span>
-          <strong>{pct(result?.alarm_score)}</strong>
-          <em>{sensitivity === "not_sensitive" ? "cold" : sensitivity || "—"}</em>
+          <span>{result?.escalated && grok ? "Scam" : "Alarm"}</span>
+          <strong>
+            {result?.escalated && grok
+              ? pct(result.scam_confidence ?? grok.confidence)
+              : pct(result?.alarm_score)}
+          </strong>
+          <em>
+            {result?.escalated
+              ? grok?.scam_type || "escalated"
+              : sensitivity === "not_sensitive"
+                ? "cold"
+                : sensitivity || "—"}
+          </em>
         </article>
       </div>
 
@@ -431,12 +397,19 @@ export default function MicWaveform() {
           : ["waiting for clip"].map((p) => <span key={p}>{p}</span>)}
       </div>
 
+      {phase === "done" && result?.transcript ? (
+        <div className="live-transcript">
+          <span>Transcript</span>
+          <p>{result.transcript}</p>
+        </div>
+      ) : null}
+
       <div className="live-waiting">
         {phase === "standby" &&
           "Mic is off. Start listening, then talk or play an AI voicemail into the mic."}
         {phase === "record" &&
           "Press Stop listening to analyze now, or wait until 15 seconds."}
-        {phase === "upload" && "Checking the clip for a synthetic voice."}
+        {phase === "upload" && "Running full process (screen → STT → Grok)…"}
         {phase === "done" && verdict?.reason}
       </div>
 
@@ -452,7 +425,7 @@ export default function MicWaveform() {
           {phase === "record"
             ? "Stop listening"
             : phase === "upload"
-              ? "Analyzing…"
+              ? "Processing…"
               : "Start listening"}
         </button>
       </div>

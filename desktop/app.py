@@ -24,22 +24,24 @@ SUPPORT = Path.home() / "Library" / "Application Support" / APP_NAME
 CONFIG = SUPPORT / "listen.json"
 LEGACY_CONFIG = Path.home() / "Library" / "Application Support" / "Lighthouse" / "listen.json"
 
-# coolors.co/386641-6a994e-a7c957-f2e8cf-bc4749 — accents only
-HUNTER = "#386641"
+# coolors.co/99b2dd-658e9c-011627-f2e8cf-bc4749 — quiet page, navy/cadet accents
+POWDER = "#99B2DD"
+CADET = "#658E9C"
+NAVY = "#011627"
 BRICK = "#BC4749"
 
 BG = "#FAFAF8"
-INK = "#1C1C1C"
-MUTE = "#8A8A8A"
+INK = NAVY
+MUTE = CADET
 PANEL = "#F4F4F2"
 LINE = "#E4E4E2"
 DIM = "#D8D8D6"
 PAPER = "#FFFFFF"
 SCAM = BRICK
-NORMAL = HUNTER
-PRIMARY = HUNTER
+NORMAL = CADET
+PRIMARY = NAVY
 PRIMARY_FG = PAPER
-PRIMARY_HOVER = "#2E5536"
+PRIMARY_HOVER = CADET
 UI = "JetBrainsMono Nerd Font Mono"
 ASSETS = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent)) / "assets"
 
@@ -62,7 +64,7 @@ def _font(size: int, weight: str = "normal") -> tuple:
     return (UI, size, weight)
 
 
-def load_icon(root: tk.Misc, name: str = "icon.png", size: int = 64) -> tk.PhotoImage | None:
+def load_icon(root: tk.Misc, name: str = "outpost.png", size: int = 64) -> tk.PhotoImage | None:
     path = ASSETS / name
     if not path.is_file():
         return None
@@ -289,7 +291,7 @@ class ListenApp(tk.Tk):
         style.configure("Panel.TFrame", background=PANEL)
         style.configure("TLabel", background=BG, foreground=INK, font=_font(13))
         style.configure("Mute.TLabel", background=BG, foreground=MUTE, font=_font(10))
-        style.configure("Brand.TLabel", background=BG, foreground=HUNTER, font=_font(16, "bold"))
+        style.configure("Brand.TLabel", background=BG, foreground=NAVY, font=_font(16, "bold"))
         style.configure("Phase.TLabel", background=BG, foreground=INK, font=_font(22, "bold"))
         style.configure(
             "TEntry",
@@ -306,8 +308,8 @@ class ListenApp(tk.Tk):
 
         head = ttk.Frame(root)
         head.pack(fill=tk.X, pady=(0, 10))
-        self._mark = load_icon(self, "icon.png", 40)
-        self._app_icon = load_icon(self, "icon.png", 128)
+        self._mark = load_icon(self, "outpost.png", 40)
+        self._app_icon = load_icon(self, "outpost.png", 128)
         if self._app_icon is not None:
             try:
                 self.iconphoto(True, self._app_icon)
@@ -315,7 +317,7 @@ class ListenApp(tk.Tk):
                 pass
         if self._mark is not None:
             tk.Label(head, image=self._mark, bg=BG, bd=0).pack(side=tk.LEFT, anchor="w", padx=(0, 10))
-        tk.Label(head, text=APP_NAME, bg=BG, fg=HUNTER, font=_font(28, "bold"), anchor="w").pack(
+        tk.Label(head, text=APP_NAME, bg=BG, fg=NAVY, font=_font(28, "bold"), anchor="w").pack(
             side=tk.LEFT, anchor="w"
         )
         self.phase_label = tk.Label(

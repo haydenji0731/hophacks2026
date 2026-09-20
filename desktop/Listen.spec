@@ -2,7 +2,7 @@
 from PyInstaller.utils.hooks import collect_data_files, collect_dynamic_libs
 
 datas = collect_data_files("sounddevice") + collect_data_files("soundfile") + [
-    ("assets/icon.png", "assets"),
+    ("assets/outpost.png", "assets"),
 ]
 binaries = collect_dynamic_libs("sounddevice") + collect_dynamic_libs("soundfile")
 

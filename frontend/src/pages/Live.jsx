@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import RiskGauge from "../components/RiskGauge.jsx";
+import { pct, processClip, processVerdict } from "../lib/detectorProcess.js";
 
 const CLIP_SECONDS = 15;
 
@@ -7,43 +8,9 @@ function clamp(n, a, b) {
   return Math.max(a, Math.min(b, n));
 }
 
-function pct(n) {
-  if (n == null || Number.isNaN(n)) return "—";
-  return `${Math.round(n * 100)}%`;
-}
-
 function pickRecorderMime() {
   const types = ["audio/webm;codecs=opus", "audio/webm", "audio/mp4"];
   return types.find((t) => window.MediaRecorder?.isTypeSupported(t)) || "";
-}
-
-function verdictCopy(aiVoice, score) {
-  if (aiVoice === "yes") {
-    return {
-      kind: "yes",
-      title: "SYNTHETIC VOICE DETECTED",
-      reason: "ElevenLabs classified this clip as a generated voice.",
-    };
-  }
-  if (aiVoice === "no") {
-    return {
-      kind: "no",
-      title: "HUMAN VOICE",
-      reason: "The clip matches a live human voice, not a synthetic one.",
-    };
-  }
-  if (score == null) {
-    return {
-      kind: "unknown",
-      title: "INCONCLUSIVE",
-      reason: "No synthetic-voice score came back. Try another clip.",
-    };
-  }
-  return {
-    kind: "unknown",
-    title: "INCONCLUSIVE",
-    reason: "The score sits in the uncertain band. Use a clearer clip (up to 15 seconds).",
-  };
 }
 
 export default function Live() {
@@ -51,6 +18,8 @@ export default function Live() {
   const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
+  const [forceEscalate, setForceEscalate] = useState(true);
+  const [notifyTo, setNotifyTo] = useState("");
 
   const canvasRef = useRef(null);
   const levelRef = useRef(0);
@@ -61,11 +30,12 @@ export default function Live() {
   const uploading = phase === "upload";
   const busy = uploading;
   const hits = result?.keyword_hits || [];
-  const aiVoice = result?.ai_voice_used || null;
   const score = result?.elevenlabs_ai_score;
-  const synthetic = aiVoice === "yes";
+  const grok = result?.grok;
+  const isScam = Boolean(grok?.is_scam);
+  const synthetic = result?.ai_voice_used === "yes" || isScam;
   const sensitivity = result?.sensitivity || (recording ? "low" : "cold");
-  const verdict = result ? verdictCopy(aiVoice, score) : null;
+  const verdict = processVerdict(result);
 
   useEffect(() => {
     alertRef.current = synthetic;
@@ -208,49 +178,54 @@ export default function Live() {
 
   async function uploadClip(blob, filename) {
     setPhase("upload");
-    const data = new FormData();
-    data.append("file", blob, filename);
-
     try {
-      const resp = await fetch("/api/v1/screen", { method: "POST", body: data });
-      const body = await resp.json().catch(() => ({}));
-      if (!resp.ok) {
-        const detail = body.detail?.detail || body.detail || body.error || resp.statusText;
-        throw new Error(typeof detail === "string" ? detail : "Screen failed.");
-      }
+      const body = await processClip(blob, filename, {
+        forceEscalate,
+        to: notifyTo.trim() || undefined,
+      });
       setResult(body);
       setPhase("done");
     } catch (err) {
       setPhase("standby");
       setError(
         err.message?.includes("fetch")
-          ? "Could not reach the detector. Is it running on port 8000?"
-          : err.message || "Screen failed.",
+          ? "Could not reach the detector. Tunnel + uvicorn on :8000?"
+          : err.message || "Process failed.",
       );
     }
   }
 
   const hint = {
-    standby: "Click Start listening, allow the mic, then talk — or play an AI voicemail into it. Stop anytime, or wait 15 seconds.",
-    record: `Listening… ${elapsed.toFixed(1)}s / ${CLIP_SECONDS}s — press Stop listening to send the clip.`,
-    upload: "Analyzing audio for a synthetic voice…",
+    standby:
+      "Same path as the Mac capture client: mic clip → /v1/process (screen → STT → Grok when escalated).",
+    record: `Listening… ${elapsed.toFixed(1)}s / ${CLIP_SECONDS}s — press Stop to send.`,
+    upload: forceEscalate
+      ? "Screen → STT → Grok (full process)…"
+      : "Screen first; escalates only if sensitive…",
     done: verdict?.title || "Done",
   }[phase];
 
   const label = {
     standby: "Standby",
     record: "Listening",
-    upload: "Analyzing",
-    done: verdict?.title || "Done",
+    upload: "Processing",
+    done: isScam ? "Scam" : verdict?.title || "Done",
   }[phase];
 
   const chipKind =
     phase === "done" ? verdict?.kind : phase === "record" ? "listening" : "";
 
+  const gaugeValue =
+    result?.scam_confidence != null
+      ? Math.round(result.scam_confidence * 100)
+      : score != null
+        ? Math.round(score * 100)
+        : null;
+
   return (
     <section className={`live-monitor is-${phase}${synthetic ? " is-alert" : ""}`}>
       <div className="live-top">
-        <p className="eyebrow">Live intercept · AI voice</p>
+        <p className="eyebrow">Live intercept · /v1/process</p>
         <p
           className={`verdict ${
             chipKind === "yes" ? "danger" : chipKind === "no" ? "safe" : ""
@@ -271,7 +246,9 @@ export default function Live() {
             {recording
               ? `mic · ${CLIP_SECONDS}s clip`
               : phase === "upload"
-                ? "analyzing"
+                ? result?.escalated || forceEscalate
+                  ? "process"
+                  : "screen"
                 : "mic off"}
           </span>
           <span className={`live-sens is-${sensitivity === "not_sensitive" ? "cold" : sensitivity}`}>
@@ -283,16 +260,18 @@ export default function Live() {
       {phase === "done" && verdict ? (
         <div className={`live-banner is-${verdict.kind}`} role="status">
           <p className="live-banner-title">{verdict.title}</p>
-          <p className="live-banner-score">{pct(score)} synthetic</p>
+          <p className="live-banner-score">
+            {verdict.scoreLabel} {verdict.scoreSuffix}
+          </p>
           <p className="live-banner-reason">{verdict.reason}</p>
         </div>
       ) : null}
 
-      {phase === "done" && score != null ? (
+      {phase === "done" && gaugeValue != null ? (
         <RiskGauge
-          value={Math.round(score * 100)}
+          value={gaugeValue}
           max={100}
-          label="Synthetic voice"
+          label={result?.escalated && grok ? "Scam confidence" : "Synthetic voice"}
         />
       ) : null}
 
@@ -308,9 +287,19 @@ export default function Live() {
           <em>keyword hits</em>
         </article>
         <article>
-          <span>Alarm</span>
-          <strong>{pct(result?.alarm_score)}</strong>
-          <em>{sensitivity === "not_sensitive" ? "cold" : sensitivity || "—"}</em>
+          <span>{result?.escalated && grok ? "Scam" : "Alarm"}</span>
+          <strong>
+            {result?.escalated && grok
+              ? pct(result.scam_confidence ?? grok.confidence)
+              : pct(result?.alarm_score)}
+          </strong>
+          <em>
+            {result?.escalated
+              ? grok?.scam_type || "escalated"
+              : sensitivity === "not_sensitive"
+                ? "cold"
+                : sensitivity || "—"}
+          </em>
         </article>
       </div>
 
@@ -324,14 +313,48 @@ export default function Live() {
           : ["waiting for clip"].map((p) => <span key={p}>{p}</span>)}
       </div>
 
+      {phase === "done" && result?.transcript ? (
+        <div className="live-transcript">
+          <span>Transcript</span>
+          <p>{result.transcript}</p>
+        </div>
+      ) : null}
+
       <div className="live-waiting">
-        {phase === "standby" && "Mic is off. Start listening, then talk or play an AI voicemail into the mic."}
+        {phase === "standby" &&
+          "Mic off. Start listening, then talk or play a voicemail into the mic — posts to /v1/process like mac_capture."}
         {phase === "record" && "Press Stop listening to analyze now, or wait until 15 seconds."}
-        {phase === "upload" && "Checking the clip for a synthetic voice."}
+        {phase === "upload" &&
+          (forceEscalate
+            ? "Running full process (screen → STT → Grok)…"
+            : "Screening; will escalate only if sensitive…")}
         {phase === "done" && verdict?.reason}
       </div>
 
       {error ? <p className="live-mic-error">{error}</p> : null}
+
+      <div className="live-options">
+        <label className="live-check">
+          <input
+            type="checkbox"
+            checked={forceEscalate}
+            onChange={(e) => setForceEscalate(e.target.checked)}
+            disabled={busy || recording}
+          />
+          Full scan (force STT + Grok)
+        </label>
+        <label className="live-to">
+          <span>SMS to (optional)</span>
+          <input
+            type="tel"
+            placeholder="+14105551234"
+            value={notifyTo}
+            onChange={(e) => setNotifyTo(e.target.value)}
+            disabled={busy || recording}
+            autoComplete="tel"
+          />
+        </label>
+      </div>
 
       <div className="cta-row live-actions">
         <button
@@ -343,7 +366,7 @@ export default function Live() {
           }}
           disabled={busy}
         >
-          {recording ? "Stop listening" : busy ? "Analyzing…" : "Start listening"}
+          {recording ? "Stop listening" : busy ? "Processing…" : "Start listening"}
         </button>
       </div>
     </section>
