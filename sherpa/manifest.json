@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Sherpa",
-  "version": "1.9.4",
-  "description": "Highlighter for suspicious Discord, Instagram, Reddit, and Google Drive text. Warn or Block before a bad link opens.",
+  "version": "1.9.5",
+  "description": "Highlighter for suspicious Discord, Instagram, and Reddit text. Warn or Block before a bad link opens.",
   "icons": {
     "16": "icons/sherpa-compass-1024.png",
     "32": "icons/sherpa-compass-1024.png",
@@ -36,8 +36,7 @@
         "https://old.reddit.com/*",
         "https://new.reddit.com/*",
         "https://sh.reddit.com/*",
-        "https://reddit.com/*",
-        "https://drive.google.com/*"
+        "https://reddit.com/*"
       ]
     }
   ],
@@ -60,12 +59,13 @@
       "run_at": "document_idle"
     },
     {
-      "matches": ["https://drive.google.com/*"],
-      "all_frames": true,
-      "match_about_blank": true,
-      "match_origin_as_fallback": true,
-      "css": ["content.css"],
-      "js": ["scorer.js", "settings.js", "content.js"],
+      "matches": [
+        "http://yourprinceisnotreal.net/*",
+        "https://yourprinceisnotreal.net/*",
+        "http://www.yourprinceisnotreal.net/*",
+        "https://www.yourprinceisnotreal.net/*"
+      ],
+      "js": ["report-scroll.js"],
       "run_at": "document_idle"
     }
   ]
