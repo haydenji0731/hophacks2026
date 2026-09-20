@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Sherpa",
-  "version": "1.9.3",
+  "version": "1.9.4",
   "description": "Highlighter for suspicious Discord, Instagram, Reddit, and Google Drive text. Warn or Block before a bad link opens.",
   "icons": {
     "16": "icons/sherpa-compass-1024.png",
@@ -18,6 +18,9 @@
       "48": "icons/sherpa-compass-1024.png",
       "128": "icons/sherpa-compass-1024.png"
     }
+  },
+  "background": {
+    "service_worker": "background.js"
   },
   "permissions": ["activeTab", "storage"],
   "web_accessible_resources": [
