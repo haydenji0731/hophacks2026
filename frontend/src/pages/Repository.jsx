@@ -3,6 +3,11 @@ import { Link } from "react-router-dom";
 import { SCAM_TYPES } from "../data/questions.js";
 
 const PAGE_SIZE = 3;
+const SEARCH_SUGGESTIONS = [
+  "marketplace refund",
+  "WhatsApp romance",
+  "job training fee",
+];
 
 function fallbackPatterns(query) {
   const q = query.trim().toLowerCase();
@@ -30,6 +35,7 @@ export default function Repository() {
   const [patterns, setPatterns] = useState([]);
   const [status, setStatus] = useState("loading");
   const [shown, setShown] = useState(PAGE_SIZE);
+  const [searchFocused, setSearchFocused] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => setDebounced(query), 220);
@@ -66,20 +72,45 @@ export default function Repository() {
   return (
     <section className="repo-head">
       <p className="eyebrow">Threat intel</p>
-      <h1>Pattern repository</h1>
+      <h1>Pattern Repository</h1>
       <p className="lede">
-        Seeded catalog of live scam patterns. Search by keyword — semantic match
-        ranks related reports, not just exact titles.
+        These are the types of scams we&apos;ve identified, organized by their
+        key traits. Search using keywords — it will pull up anything close.
       </p>
 
-      <input
-        className="search"
-        type="search"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Try marketplace refund, WhatsApp romance, job training fee…"
-        aria-label="Semantic search scam patterns"
-      />
+      <div className="search-wrap">
+        <input
+          className="search"
+          type="search"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onFocus={() => setSearchFocused(true)}
+          onBlur={() => window.setTimeout(() => setSearchFocused(false), 120)}
+          placeholder="Search here"
+          aria-label="Search scam patterns"
+          aria-describedby="search-hints"
+        />
+        <p className="search-hints" id="search-hints" hidden={!searchFocused}>
+          Try{" "}
+          {SEARCH_SUGGESTIONS.map((hint, i) => (
+            <span key={hint}>
+              {i > 0 ? ", " : ""}
+              <button
+                type="button"
+                className="search-hint"
+                onMouseDown={(e) => e.preventDefault()}
+                onClick={() => {
+                  setQuery(hint);
+                  setSearchFocused(false);
+                }}
+              >
+                {hint}
+              </button>
+            </span>
+          ))}
+          .
+        </p>
+      </div>
       <p className="muted intel-status">
         {status === "loading"
           ? "Searching catalog…"
