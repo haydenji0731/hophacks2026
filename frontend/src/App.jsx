@@ -5,6 +5,7 @@ import Layout from "./components/Layout.jsx";
 import Home from "./pages/Home.jsx";
 import OurGoal from "./pages/OurGoal.jsx";
 import Sherpa from "./pages/Sherpa.jsx";
+import Live from "./pages/Live.jsx";
 import Questionnaire from "./pages/Questionnaire.jsx";
 import Results from "./pages/Results.jsx";
 import Repository from "./pages/Repository.jsx";
@@ -31,6 +32,7 @@ export default function App() {
             <Route index element={<Home />} />
             <Route path="our-goal" element={<OurGoal />} />
             <Route path="sherpa" element={<Sherpa />} />
+            <Route path="live" element={<Live />} />
             <Route path="questionnaire" element={<Questionnaire />} />
             <Route path="results" element={<Results />} />
             <Route path="scams" element={<Repository />} />

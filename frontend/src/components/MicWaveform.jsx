@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import RiskGauge from "../components/RiskGauge.jsx";
 
 const CLIP_SECONDS = 15;
+const BARS = 36;
 
 function clamp(n, a, b) {
   return Math.max(a, Math.min(b, n));
@@ -17,7 +17,50 @@ function pickRecorderMime() {
   return types.find((t) => window.MediaRecorder?.isTypeSupported(t)) || "";
 }
 
-function verdictCopy(aiVoice, score) {
+function prefersReduce() {
+  return (
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
+
+function roundBar(ctx, x, y, w, h, r) {
+  const rad = Math.min(r, w / 2, h / 2);
+  if (h < 1) return;
+  ctx.beginPath();
+  if (typeof ctx.roundRect === "function") {
+    ctx.roundRect(x, y, w, h, rad);
+  } else {
+    ctx.moveTo(x + rad, y);
+    ctx.arcTo(x + w, y, x + w, y + h, rad);
+    ctx.arcTo(x + w, y + h, x, y + h, rad);
+    ctx.arcTo(x, y + h, x, y, rad);
+    ctx.arcTo(x, y, x + w, y, rad);
+  }
+  ctx.fill();
+}
+
+function idleHeights(now, count) {
+  const out = [];
+  for (let i = 0; i < count; i += 1) {
+    const n =
+      0.12 +
+      0.08 * Math.abs(Math.sin(now / 900 + i * 0.33)) +
+      0.05 * Math.abs(Math.sin(now / 1400 + i * 0.11));
+    out.push(n);
+  }
+  return out;
+}
+
+function classifierHint(warnings) {
+  const list = warnings || [];
+  if (list.some((w) => /403|401|unavailable|api key/i.test(w))) {
+    return "The voice classifier did not return a score. Add ELEVENLABS_API_KEY to the project .env and restart the detector.";
+  }
+  return "No synthetic-voice score came back. Try another clip.";
+}
+
+function verdictCopy(aiVoice, score, warnings) {
   if (aiVoice === "yes") {
     return {
       kind: "yes",
@@ -36,7 +79,7 @@ function verdictCopy(aiVoice, score) {
     return {
       kind: "unknown",
       title: "INCONCLUSIVE",
-      reason: "No synthetic-voice score came back. Try another clip.",
+      reason: classifierHint(warnings),
     };
   }
   return {
@@ -46,82 +89,144 @@ function verdictCopy(aiVoice, score) {
   };
 }
 
-export default function Live() {
+export default function MicWaveform() {
   const [phase, setPhase] = useState("standby");
   const [elapsed, setElapsed] = useState(0);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
 
   const canvasRef = useRef(null);
-  const levelRef = useRef(0);
-  const alertRef = useRef(false);
+  const wrapRef = useRef(null);
   const recRef = useRef(null);
+  const listeningRef = useRef(false);
+  const freqRef = useRef(null);
+  const abortedRef = useRef(false);
 
   const recording = phase === "record";
   const uploading = phase === "upload";
-  const busy = uploading;
   const hits = result?.keyword_hits || [];
   const aiVoice = result?.ai_voice_used || null;
   const score = result?.elevenlabs_ai_score;
   const synthetic = aiVoice === "yes";
   const sensitivity = result?.sensitivity || (recording ? "low" : "cold");
-  const verdict = result ? verdictCopy(aiVoice, score) : null;
-
-  useEffect(() => {
-    alertRef.current = synthetic;
-  }, [synthetic]);
+  const verdict = result ? verdictCopy(aiVoice, score, result.warnings) : null;
 
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return undefined;
+    const wrap = wrapRef.current;
+    if (!canvas || !wrap) return undefined;
     const ctx = canvas.getContext("2d");
     let raf = 0;
-    const bars = 42;
+    const reduce = prefersReduce();
+
+    const size = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const w = wrap.clientWidth || 640;
+      const h = 148;
+      canvas.width = Math.floor(w * dpr);
+      canvas.height = Math.floor(h * dpr);
+      canvas.style.width = `${w}px`;
+      canvas.style.height = `${h}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    size();
+    const ro = new ResizeObserver(size);
+    ro.observe(wrap);
+
     const draw = (now) => {
-      const { width, height } = canvas;
-      const live = recRef.current?.listening;
-      const intensity = live ? clamp(0.05 + levelRef.current * 2.4, 0.05, 1) : 0.06;
+      const width = wrap.clientWidth || 640;
+      const height = 148;
       ctx.clearRect(0, 0, width, height);
-      const gap = 3;
-      const bw = (width - gap * (bars - 1)) / bars;
-      const accent =
-        getComputedStyle(document.documentElement).getPropertyValue("--highlight").trim() ||
-        "#EFC3F5";
-      for (let i = 0; i < bars; i += 1) {
-        const n =
-          0.15 +
-          0.55 * Math.abs(Math.sin(now / 180 + i * 0.37)) +
-          0.3 * Math.abs(Math.sin(now / 90 + i * 0.11));
-        const h = Math.max(3, n * intensity * (height - 8));
-        ctx.fillStyle = i % 7 === 0 ? accent : "rgba(239,195,245,0.45)";
-        ctx.globalAlpha = 0.3 + intensity * 0.7;
-        ctx.fillRect(i * (bw + gap), (height - h) / 2, bw, h);
+      const color = getComputedStyle(canvas).color || "#fff";
+      ctx.fillStyle = color;
+
+      const gap = 5;
+      const bw = (width - gap * (BARS - 1)) / BARS;
+      const radius = Math.min(4, bw / 2);
+      let heights;
+      const freq = freqRef.current;
+      const live = listeningRef.current && freq;
+      if (live) {
+        heights = [];
+        const binW = Math.max(1, Math.floor(freq.length / (BARS + 8)));
+        for (let i = 0; i < BARS; i += 1) {
+          const start = 2 + i * binW;
+          let sum = 0;
+          for (let j = 0; j < binW; j += 1) sum += freq[start + j] || 0;
+          heights.push(clamp((sum / binW / 255) ** 0.72, 0.04, 1));
+        }
+      } else if (reduce) {
+        heights = Array.from({ length: BARS }, (_, i) => 0.1 + (i % 5) * 0.03);
+      } else {
+        heights = idleHeights(now, BARS);
       }
-      ctx.globalAlpha = 1;
+
+      for (let i = 0; i < BARS; i += 1) {
+        const h = Math.max(6, heights[i] * (height - 16));
+        const x = i * (bw + gap);
+        const y = (height - h) / 2;
+        roundBar(ctx, x, y, bw, h, radius);
+      }
+
       raf = requestAnimationFrame(draw);
     };
+
     raf = requestAnimationFrame(draw);
-    return () => cancelAnimationFrame(raf);
+    return () => {
+      cancelAnimationFrame(raf);
+      ro.disconnect();
+    };
   }, []);
 
-  useEffect(
-    () => () => {
-      stopCapture();
-    },
-    [],
-  );
+  useEffect(() => {
+    abortedRef.current = false;
+    return () => {
+      abortedRef.current = true;
+      recRef.current?.waitResolve?.();
+      teardownHardware();
+    };
+  }, []);
 
-  function stopCapture() {
+  function teardownHardware() {
     const rec = recRef.current;
+    listeningRef.current = false;
+    freqRef.current = null;
     if (!rec) return;
-    rec.listening = false;
     if (rec.timerId) window.clearInterval(rec.timerId);
+    rec.timerId = 0;
     if (rec.raf) cancelAnimationFrame(rec.raf);
+    rec.raf = 0;
     rec.stream?.getTracks().forEach((t) => t.stop());
-    rec.ctx?.close?.();
-    if (rec.recorder && rec.recorder.state !== "inactive") rec.recorder.stop();
-    recRef.current = null;
-    levelRef.current = 0;
+    try {
+      rec.ctx?.close?.();
+    } catch {
+      /* already closed */
+    }
+  }
+
+  function stopRecorder(recorder) {
+    if (!recorder || recorder.state === "inactive") return Promise.resolve();
+    return new Promise((resolve) => {
+      recorder.addEventListener("stop", resolve, { once: true });
+      try {
+        recorder.stop();
+      } catch {
+        resolve();
+      }
+    });
+  }
+
+  function requestStop() {
+    recRef.current?.waitResolve?.();
+  }
+
+  function onListenClick() {
+    if (uploading) return;
+    if (phase === "record" || listeningRef.current) {
+      requestStop();
+      return;
+    }
+    startListening();
   }
 
   async function startListening() {
@@ -130,7 +235,7 @@ export default function Live() {
     setElapsed(0);
     const mime = pickRecorderMime();
     if (!window.MediaRecorder || !mime) {
-      setError("This browser cannot record audio (need MediaRecorder / webm).");
+      setError("This browser cannot record audio.");
       return;
     }
     let stream;
@@ -142,15 +247,21 @@ export default function Live() {
       setError("Mic blocked — allow microphone for this site, then try again.");
       return;
     }
+    if (abortedRef.current) {
+      stream.getTracks().forEach((t) => t.stop());
+      return;
+    }
 
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     const ctx = new AudioCtx();
     if (ctx.state === "suspended") await ctx.resume();
     const source = ctx.createMediaStreamSource(stream);
     const analyser = ctx.createAnalyser();
-    analyser.fftSize = 512;
+    analyser.fftSize = 256;
+    analyser.smoothingTimeConstant = 0.72;
     source.connect(analyser);
-    const time = new Uint8Array(analyser.fftSize);
+    const freq = new Uint8Array(analyser.frequencyBinCount);
+    freqRef.current = freq;
 
     const chunks = [];
     const recorder = new MediaRecorder(stream, { mimeType: mime });
@@ -158,23 +269,26 @@ export default function Live() {
       if (ev.data.size) chunks.push(ev.data);
     };
 
-    const rec = { stream, ctx, analyser, recorder, raf: 0, listening: true, timerId: 0, waitResolve: null };
+    const rec = {
+      stream,
+      ctx,
+      analyser,
+      recorder,
+      raf: 0,
+      timerId: 0,
+      waitResolve: null,
+    };
     recRef.current = rec;
+    listeningRef.current = true;
 
     const poll = () => {
-      analyser.getByteTimeDomainData(time);
-      let sum = 0;
-      for (let i = 0; i < time.length; i += 1) {
-        const v = (time[i] - 128) / 128;
-        sum += v * v;
-      }
-      levelRef.current = Math.sqrt(sum / time.length);
+      analyser.getByteFrequencyData(freq);
       rec.raf = requestAnimationFrame(poll);
     };
     rec.raf = requestAnimationFrame(poll);
 
     setPhase("record");
-    recorder.start(250);
+    recorder.start(200);
 
     const t0 = performance.now();
     await new Promise((resolve) => {
@@ -185,24 +299,25 @@ export default function Live() {
         if (sec >= CLIP_SECONDS) resolve();
       }, 100);
     });
+
     if (rec.timerId) window.clearInterval(rec.timerId);
+    rec.timerId = 0;
+    rec.waitResolve = null;
 
-    const blobType = mime.split(";")[0];
-    await new Promise((resolve) => {
-      if (recorder.state === "inactive") {
-        resolve();
-        return;
-      }
-      recorder.addEventListener("stop", resolve, { once: true });
-      try {
-        recorder.stop();
-      } catch {
-        resolve();
-      }
-    });
-    stopCapture();
+    if (!abortedRef.current) setPhase("upload");
 
-    const blob = new Blob(chunks, { type: blobType });
+    await stopRecorder(recorder);
+    teardownHardware();
+    recRef.current = null;
+
+    if (abortedRef.current) return;
+
+    const blob = new Blob(chunks, { type: mime.split(";")[0] });
+    if (blob.size < 256) {
+      setPhase("standby");
+      setError("Clip was too short — press Start listening, talk, then Stop listening.");
+      return;
+    }
     await uploadClip(blob, mime.includes("mp4") ? "clip.m4a" : "clip.webm");
   }
 
@@ -210,13 +325,12 @@ export default function Live() {
     setPhase("upload");
     const data = new FormData();
     data.append("file", blob, filename);
-
     try {
       const resp = await fetch("/api/v1/screen", { method: "POST", body: data });
       const body = await resp.json().catch(() => ({}));
       if (!resp.ok) {
         const detail = body.detail?.detail || body.detail || body.error || resp.statusText;
-        throw new Error(typeof detail === "string" ? detail : "Screen failed.");
+        throw new Error(typeof detail === "string" ? detail : "Could not analyze audio.");
       }
       setResult(body);
       setPhase("done");
@@ -225,7 +339,7 @@ export default function Live() {
       setError(
         err.message?.includes("fetch")
           ? "Could not reach the detector. Is it running on port 8000?"
-          : err.message || "Screen failed.",
+          : err.message || "Could not analyze audio.",
       );
     }
   }
@@ -248,7 +362,10 @@ export default function Live() {
     phase === "done" ? verdict?.kind : phase === "record" ? "listening" : "";
 
   return (
-    <section className={`live-monitor is-${phase}${synthetic ? " is-alert" : ""}`}>
+    <div
+      className={`mic-wave live-monitor is-${phase}${synthetic ? " is-alert" : ""}`}
+      ref={wrapRef}
+    >
       <div className="live-top">
         <p className="eyebrow">Live intercept · AI voice</p>
         <p
@@ -261,23 +378,21 @@ export default function Live() {
         </p>
       </div>
 
-      <h1>Phone intercept</h1>
+      <h2 className="mic-wave-title">Phone intercept</h2>
       <p className="lede live-hint">{hint}</p>
 
-      <div className="live-scope" aria-hidden="true">
-        <canvas ref={canvasRef} width={960} height={140} />
-        <div className="live-scope-meta">
-          <span>
-            {recording
-              ? `mic · ${CLIP_SECONDS}s clip`
-              : phase === "upload"
-                ? "analyzing"
-                : "mic off"}
-          </span>
-          <span className={`live-sens is-${sensitivity === "not_sensitive" ? "cold" : sensitivity}`}>
-            sensitivity {sensitivity === "not_sensitive" ? "cold" : sensitivity}
-          </span>
-        </div>
+      <canvas ref={canvasRef} className="mic-wave-canvas" aria-hidden="true" />
+      <div className="mic-wave-meta">
+        <span>
+          {recording
+            ? `mic · up to ${CLIP_SECONDS}s`
+            : phase === "upload"
+              ? "analyzing"
+              : "mic off"}
+        </span>
+        <span className={`live-sens is-${sensitivity === "not_sensitive" ? "cold" : sensitivity}`}>
+          sensitivity {sensitivity === "not_sensitive" ? "cold" : sensitivity}
+        </span>
       </div>
 
       {phase === "done" && verdict ? (
@@ -286,14 +401,6 @@ export default function Live() {
           <p className="live-banner-score">{pct(score)} synthetic</p>
           <p className="live-banner-reason">{verdict.reason}</p>
         </div>
-      ) : null}
-
-      {phase === "done" && score != null ? (
-        <RiskGauge
-          value={Math.round(score * 100)}
-          max={100}
-          label="Synthetic voice"
-        />
       ) : null}
 
       <div className="live-metrics">
@@ -325,8 +432,10 @@ export default function Live() {
       </div>
 
       <div className="live-waiting">
-        {phase === "standby" && "Mic is off. Start listening, then talk or play an AI voicemail into the mic."}
-        {phase === "record" && "Press Stop listening to analyze now, or wait until 15 seconds."}
+        {phase === "standby" &&
+          "Mic is off. Start listening, then talk or play an AI voicemail into the mic."}
+        {phase === "record" &&
+          "Press Stop listening to analyze now, or wait until 15 seconds."}
         {phase === "upload" && "Checking the clip for a synthetic voice."}
         {phase === "done" && verdict?.reason}
       </div>
@@ -336,16 +445,17 @@ export default function Live() {
       <div className="cta-row live-actions">
         <button
           type="button"
-          className={`btn ${recording ? "btn-secondary" : "btn-primary"}`}
-          onClick={() => {
-            if (recording) recRef.current?.waitResolve?.();
-            else if (!busy) startListening();
-          }}
-          disabled={busy}
+          className={`btn mic-wave-start ${recording ? "btn-secondary" : "btn-primary"}`}
+          onClick={onListenClick}
+          disabled={uploading}
         >
-          {recording ? "Stop listening" : busy ? "Analyzing…" : "Start listening"}
+          {phase === "record"
+            ? "Stop listening"
+            : phase === "upload"
+              ? "Analyzing…"
+              : "Start listening"}
         </button>
       </div>
-    </section>
+    </div>
   );
 }

@@ -28,6 +28,7 @@ export default function Layout() {
               SYS {clock}
             </span>
             <NavLink to="/sherpa" className="nav-sherpa">Sherpa</NavLink>
+            <NavLink to="/live">Live</NavLink>
             <NavLink to="/scams">Intel</NavLink>
             <ThemeToggle />
             <Link to="/questionnaire" className="nav-cta">

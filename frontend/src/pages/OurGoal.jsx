@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import ReportScamForm from "../components/ReportScamForm.jsx";
+import MicWaveform from "../components/MicWaveform.jsx";
 
 function useReveal() {
   const ref = useRef(null);
@@ -57,6 +58,10 @@ export default function OurGoal() {
           Not a report you read after your money is gone, but a signal to get
           out while the call is still live.
         </p>
+      </div>
+
+      <div className="goal-wave">
+        <MicWaveform />
       </div>
 
       <GoalBlock direction="left">
