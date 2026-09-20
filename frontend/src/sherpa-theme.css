@@ -66,3 +66,9 @@ html:not([data-theme="light"]) .sherpa-hint-light,
 html[data-theme="light"] .sherpa-hint-dark {
   display: none;
 }
+
+.sherpa-pipe-step h3,
+html[data-theme="light"] .sherpa-page .sherpa-pipe-step h3,
+html[data-theme="dark"] .sherpa-page .sherpa-pipe-step h3 {
+  color: #BC4749;
+}
