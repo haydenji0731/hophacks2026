@@ -27,7 +27,7 @@ The toolbar has a Light / Dark switch. It restyles the popup, hover cards, Block
 | Highlights | `#BC4749` | `#EFC3F5` |
 | H1 | `#011627` | `#2F195F` |
 | H2 | `#658E9C` | `#7353BA` |
-| H3 | `#99B2DD` | `#99B2DD` |
+| H3 | `#99B2DD` | `#FAA6FF` |
 
 ## Report a scam
 
