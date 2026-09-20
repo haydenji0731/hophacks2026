@@ -4,13 +4,13 @@
 
 [yourprinceisnotreal.work](https://yourprinceisnotreal.work) · HopHacks 2026
 
-Scams have outgrown the “suspicious website” checker. Callers harvest AI voice models to sound like family. Robocalls are louder and more frequent. Scripts impersonate banks, the IRS, a grandson in trouble. Carrier labels miss the conversation itself. After the call, there is still nowhere to match *what just happened* to a known pattern.
+Scams have outgrown the “suspicious website” checker. Callers harvest the voices of your loved ones and feed them into AI models to sound like your family. Robocalls are getting sneakier and more frequent. Scripts impersonate banks, the IRS, or a grandson in trouble. SMS providers miss the conversation itself. After that victim picks up the phone, they are at the whim of the scammer.
 
-Enough of tools that tell you what already happened to someone else. It is time to fight AI with AI.
+Enough of tools that tell you what already happened to someone else. It's time to fight AI with AI.
 
-**YPINR** is a living defense: catch a scam while the interaction is still happening, then leave behind a public record of how that scam works so the next person is faster.
+**YPINR** is a living defense: catch and kill the scam while the interaction is still early, then document their methods to help the next thousand people after.
 
-We are not replacing carrier blocking or OS call screening. We do not claim zero false positives. Every warning is a reason to pause — and a link back to the hub.
+We are not replacing carrier blocking or OS call screening. We do not claim zero false positives. But we hate scammers. And we bet you do too.
 
 ---
 
