@@ -52,7 +52,7 @@ assert.equal(prefs.indexOf("block"), 1);
 assert.equal(prefs.THEMES.light.bg, "#F2E8CF");
 assert.equal(prefs.THEMES.light.h3, "#99B2DD");
 assert.equal(prefs.THEMES.dark.highlight, "#EFC3F5");
-assert.equal(prefs.THEMES.dark.h3, "#99B2DD");
+assert.equal(prefs.THEMES.dark.h3, "#FAA6FF");
 assert.match(prefs.reportHref({ text: "gift cards", site: "discord.com", band: "high" }), /report\.html\?/);
 assert.match(prefs.reportHref({ text: "gift cards", site: "discord.com", band: "high" }), /text=gift\+cards/);
 assert.match(prefs.reportHref({ text: "gift cards", site: "discord.com", band: "high" }), /site=discord\.com/);
