@@ -1,6 +1,6 @@
 (() => {
-  // Set this to the live report form when you have it. Empty uses the built-in report page.
-  const REPORT_URL = "";
+  // Live report form at the bottom of the YPINR homepage.
+  const REPORT_URL = "http://yourprinceisnotreal.net/#:~:text=Report%20a%20scam";
 
   const THEMES = {
     light: {
@@ -70,8 +70,6 @@
         if (Object.prototype.hasOwnProperty.call(changes, "theme")) {
           patch.theme = changes.theme.newValue;
         }
-        // Apply the changed keys immediately so descriptions:false is not lost
-        // while chrome.storage.local.get is still in flight.
         load((current) => listener(normalize({ ...current, ...patch })));
       });
     }
@@ -104,14 +102,16 @@
     if (text) params.set("text", text.slice(0, 2000));
     if (site) params.set("site", site);
     if (band) params.set("band", band);
-    const qs = params.toString();
     if (REPORT_URL) {
-      return REPORT_URL + (REPORT_URL.includes("?") ? "&" : "?") + qs;
+      const url = new URL(REPORT_URL);
+      params.forEach((value, key) => url.searchParams.set(key, value));
+      return url.toString();
     }
     const page =
       typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.getURL
         ? chrome.runtime.getURL("report.html")
         : "report.html";
+    const qs = params.toString();
     return qs ? `${page}?${qs}` : page;
   }
 

@@ -53,7 +53,7 @@ assert.equal(prefs.THEMES.light.bg, "#F2E8CF");
 assert.equal(prefs.THEMES.light.h3, "#99B2DD");
 assert.equal(prefs.THEMES.dark.highlight, "#EFC3F5");
 assert.equal(prefs.THEMES.dark.h3, "#FAA6FF");
-assert.match(prefs.reportHref({ text: "gift cards", site: "discord.com", band: "high" }), /report\.html\?/);
+assert.match(prefs.reportHref({ text: "gift cards", site: "discord.com", band: "high" }), /yourprinceisnotreal\.net/);
 assert.match(prefs.reportHref({ text: "gift cards", site: "discord.com", band: "high" }), /text=gift\+cards/);
 assert.match(prefs.reportHref({ text: "gift cards", site: "discord.com", band: "high" }), /site=discord\.com/);
 
@@ -109,7 +109,7 @@ document.defaultView.open = (href) => {
 };
 pop.querySelector(".sherpa-report").click();
 assert.equal(opened.length, 1);
-assert.match(opened[0], /report\.html/);
+assert.match(opened[0], /yourprinceisnotreal\.net/);
 assert.match(opened[0], /band=high/);
 
 const overlay = document.createElement("div");
