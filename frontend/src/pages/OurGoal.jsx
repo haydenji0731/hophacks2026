@@ -54,8 +54,8 @@ export default function OurGoal() {
           while it&apos;s happening.
         </h1>
         <p className="lede reveal delay-3">
-          Not a report you file after the money is gone. A signal while the
-          call is still live.
+          Not a report you read after your money is gone, but a signal to get
+          out while the call is still live.
         </p>
       </div>
 
@@ -63,41 +63,52 @@ export default function OurGoal() {
         <div className="goal-section">
           <span className="goal-index">01</span>
           <div>
-            <h2>Privacy is the whole foundation</h2>
+            <h2>Privacy is key</h2>
             <p>
-              We built this assuming people would only trust it if it never
-              became one more thing watching them. Audio is processed for
-              signal, not stored for surveillance. What leaves your device is
-              a pattern match, not a recording.
+              We like our privacy. We know you do too.
             </p>
             <ul className="goal-list">
-              <li>No permanent audio storage — analysis happens, then it's gone.</li>
-              <li>The public repository only ever holds anonymized scam patterns, never personal data.</li>
-              <li>Nothing is sold, brokered, or handed to advertisers. Ever.</li>
-              <li>You can run the detector fully local if you don't want anything leaving your machine.</li>
+              <li>
+                When we built YPINR, Sherpa, and Outpost, we kept your information
+                out of the hands of advertisers and data brokers.
+              </li>
+              <li>
+                Nothing personal is ever stored — only patterns of scammers&apos;
+                behavior. No accounts needed.
+              </li>
+              <li>
+                Audio and transcriptions are stored only for analysis. Every time
+                we listen in, we&apos;ll let you know by text.
+              </li>
             </ul>
           </div>
         </div>
       </GoalBlock>
 
       <GoalBlock direction="right">
-        <div className="goal-section goal-section--reverse">
+        <div className="goal-section">
           <span className="goal-index">02</span>
           <div>
-            <h2>Live detection, not after-the-fact reports</h2>
+            <h2>Stories change. But the goal is the same.</h2>
             <p>
-              Most tools tell you what already happened to someone else. We
-              want to tell you what's happening to you, right now, before you
-              hang up and wire the money.
+              While scammers will change what they say, they&apos;re always after
+              one thing: taking advantage of you, financially or otherwise.
             </p>
             <div className="goal-compare">
               <div className="goal-compare-col">
                 <span className="goal-compare-tag muted">The old way</span>
-                <p>Victim reports it days later. Pattern gets logged. The next caller uses a new script.</p>
+                <p>
+                  The victim realizes they&apos;ve been scammed after the fact.
+                  They have no recourse.
+                </p>
               </div>
               <div className="goal-compare-col goal-compare-col--accent">
-                <span className="goal-compare-tag">Our way</span>
-                <p>Voice cadence, pressure language, and known TTPs are scored mid-call — while you can still hang up.</p>
+                <span className="goal-compare-tag">The new way</span>
+                <p>
+                  AI doesn&apos;t listen to you — it listens to the patterns that
+                  all scammers share. And when it&apos;s confident, it&apos;s going
+                  to let you know before it&apos;s too late.
+                </p>
               </div>
             </div>
           </div>
@@ -106,11 +117,11 @@ export default function OurGoal() {
 
       <GoalBlock direction="up">
         <div className="goal-closing">
-          <h2>Where this goes next</h2>
+          <h2>What&apos;s next?</h2>
           <p className="lede" style={{ margin: "0 auto" }}>
-            Every call we screen makes the corpus smarter for the next person.
-            The goal isn't a bigger encyclopedia of scams — it's fewer people
-            ever needing to look one up.
+            Every experience you share with us lowers the chance that a scammer
+            will be able to take advantage of somebody else. Our goal isn&apos;t
+            a big list of scams — it&apos;s peace of mind from them.
           </p>
           <ReportScamForm />
         </div>
